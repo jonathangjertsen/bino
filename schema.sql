@@ -1,3 +1,8 @@
+DROP SCHEMA IF EXISTS bino CASCADE;
+
+CREATE SCHEMA bino;
+SET search_path TO bino, public;
+
 CREATE TABLE language (
     id         SERIAL PRIMARY KEY,
     short_name TEXT NOT NULL,
@@ -20,7 +25,7 @@ CREATE TABLE species_language (
     species_id  INTEGER NOT NULL,
     language_id INTEGER NOT NULL,
     name        TEXT NOT NULL,
-    PRIMARY KEY (species_id, language),
+    PRIMARY KEY (species_id, language_id),
     FOREIGN KEY (species_id) REFERENCES species(id),
     FOREIGN KEY (language_id) REFERENCES language(id)
 );
@@ -104,6 +109,6 @@ CREATE TABLE patient_event (
     note       TEXT NOT NULL,
     FOREIGN KEY (event_id) REFERENCES event(id),
     FOREIGN KEY (patient_id) REFERENCES patient(id),
-    FOREIGN KEY (home_id) REFERENCES rehabber(id)
+    FOREIGN KEY (home_id) REFERENCES home(id)
 );
 COMMENT ON TABLE patient_event IS 'Each row represents an event that has occurred to a specific patient';
