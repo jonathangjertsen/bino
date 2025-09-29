@@ -11,6 +11,30 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const getLanguages = `-- name: GetLanguages :many
+SELECT id, short_name, self_name FROM language
+`
+
+func (q *Queries) GetLanguages(ctx context.Context) ([]Language, error) {
+	rows, err := q.db.Query(ctx, getLanguages)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Language
+	for rows.Next() {
+		var i Language
+		if err := rows.Scan(&i.ID, &i.ShortName, &i.SelfName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getSpeciesName = `-- name: GetSpeciesName :many
 SELECT s.id, sl.name FROM species AS s
 LEFT JOIN species_language AS sl
@@ -41,4 +65,43 @@ func (q *Queries) GetSpeciesName(ctx context.Context, languageID int32) ([]GetSp
 		return nil, err
 	}
 	return items, nil
+}
+
+const getUser = `-- name: GetUser :one
+SELECT id, display_name, google_sub, email FROM appuser
+WHERE id = $1
+`
+
+func (q *Queries) GetUser(ctx context.Context, id int32) (Appuser, error) {
+	row := q.db.QueryRow(ctx, getUser, id)
+	var i Appuser
+	err := row.Scan(
+		&i.ID,
+		&i.DisplayName,
+		&i.GoogleSub,
+		&i.Email,
+	)
+	return i, err
+}
+
+const upsertUser = `-- name: UpsertUser :one
+INSERT INTO appuser (display_name, google_sub, email)
+VALUES ($1, $2, $3)
+ON CONFLICT (google_sub) DO UPDATE
+    SET display_name = EXCLUDED.display_name,
+        email        = EXCLUDED.email
+RETURNING id
+`
+
+type UpsertUserParams struct {
+	DisplayName string
+	GoogleSub   string
+	Email       string
+}
+
+func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (int32, error) {
+	row := q.db.QueryRow(ctx, upsertUser, arg.DisplayName, arg.GoogleSub, arg.Email)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
 }

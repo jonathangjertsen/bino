@@ -11,10 +11,10 @@ import (
 // Each row is an app user (person)
 type Appuser struct {
 	ID int32
-	// The user's username, for login
-	Username string
 	// The user's display name
 	DisplayName string
+	GoogleSub   string
+	Email       string
 }
 
 // Each row represents an event that may occur to a patient
