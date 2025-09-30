@@ -14,6 +14,7 @@ import (
 	"github.com/coreos/go-oidc"
 	"github.com/gorilla/sessions"
 	"github.com/jonathangjertsen/bino/sql"
+	"github.com/jonathangjertsen/bino/views"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -66,34 +67,32 @@ func startServer(ctx context.Context, queries *sql.Queries) error {
 	if err != nil {
 		return err
 	}
-	verifier := provider.Verifier(&oidc.Config{
-		ClientID: c.Web.ClientID,
-	})
-	oauthConfig := &oauth2.Config{
-		ClientID:     c.Web.ClientID,
-		ClientSecret: c.Web.ClientSecret,
-		RedirectURL:  c.Web.RedirectURIs[0],
-		Endpoint:     google.Endpoint,
-		Scopes:       []string{oidc.ScopeOpenID, "email", "profile"},
+
+	cookies := sessions.NewCookieStore(sessionKey)
+	cookies.Options.HttpOnly = true
+	cookies.Options.SameSite = http.SameSiteLaxMode
+	cookies.Options.Secure = true
+
+	server := &Server{
+		Queries: queries,
+		Cookies: cookies,
+		OAuthConfig: &oauth2.Config{
+			ClientID:     c.Web.ClientID,
+			ClientSecret: c.Web.ClientSecret,
+			RedirectURL:  c.Web.RedirectURIs[0],
+			Endpoint:     google.Endpoint,
+			Scopes:       []string{oidc.ScopeOpenID, "email", "profile"},
+		},
+		TokenVerifier: provider.Verifier(&oidc.Config{
+			ClientID: c.Web.ClientID,
+		}),
 	}
 
-	store := sessions.NewCookieStore(sessionKey)
-	store.Options.HttpOnly = true
-	store.Options.SameSite = http.SameSiteLaxMode
-	store.Options.Secure = true
-
-	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		loginHandler(w, r, store, oauthConfig)
-	})
-	http.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
-		logoutHandler(w, r, store)
-	})
-	http.HandleFunc("/oauth2/callback", func(w http.ResponseWriter, r *http.Request) {
-		callbackHandler(w, r, store, oauthConfig, verifier, queries)
-	})
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		rootHandler(w, r, store, queries)
-	})
+	http.HandleFunc("/login", server.loginHandler)
+	http.HandleFunc("/logout", server.logoutHandler)
+	http.HandleFunc("/oauth2/callback", server.callbackHandler)
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	http.HandleFunc("/", server.rootHandler)
 
 	go func() {
 		log.Fatal(http.ListenAndServe(":8080", nil))
@@ -108,39 +107,35 @@ func randState() string {
 	return base64.RawURLEncoding.EncodeToString(b)
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request, store *sessions.CookieStore, oauthConfig *oauth2.Config) {
+func (server *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 	state := randState()
-	session, _ := store.Get(r, "auth")
+	session, _ := server.Cookies.Get(r, "auth")
 	session.Values["state"] = state
 	if err := session.Save(r, w); err != nil {
 		fmt.Fprintf(os.Stderr, "saving cookie: %v", err)
 	}
-	http.Redirect(w, r, oauthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline), http.StatusFound)
+	http.Redirect(w, r, server.OAuthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline), http.StatusFound)
 }
 
-func logoutHandler(w http.ResponseWriter, r *http.Request, store *sessions.CookieStore) {
-	sess, _ := store.Get(r, "auth")
+func (server *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
+	sess, _ := server.Cookies.Get(r, "auth")
 	sess.Options.MaxAge = -1
 	_ = sess.Save(r, w)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func callbackHandler(
+func (server *Server) callbackHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	store *sessions.CookieStore,
-	oauthConfig *oauth2.Config,
-	verifier *oidc.IDTokenVerifier,
-	queries *sql.Queries,
 ) {
 	ctx := r.Context()
-	sess, _ := store.Get(r, "auth")
+	sess, _ := server.Cookies.Get(r, "auth")
 	if r.URL.Query().Get("state") != sess.Values["state"] {
 		http.Error(w, "invalid state", http.StatusBadRequest)
 		return
 	}
 	code := r.URL.Query().Get("code")
-	token, err := oauthConfig.Exchange(ctx, code)
+	token, err := server.OAuthConfig.Exchange(ctx, code)
 	if err != nil {
 		http.Error(w, "exchange failed", http.StatusUnauthorized)
 		return
@@ -150,7 +145,7 @@ func callbackHandler(
 		http.Error(w, "no id_token", http.StatusUnauthorized)
 		return
 	}
-	idToken, err := verifier.Verify(ctx, rawIDToken)
+	idToken, err := server.TokenVerifier.Verify(ctx, rawIDToken)
 	if err != nil {
 		http.Error(w, "verify failed", http.StatusUnauthorized)
 	}
@@ -163,7 +158,7 @@ func callbackHandler(
 		http.Error(w, "claims failed", http.StatusUnauthorized)
 		return
 	}
-	userID, err := queries.UpsertUser(ctx, sql.UpsertUserParams{
+	userID, err := server.Queries.UpsertUser(ctx, sql.UpsertUserParams{
 		GoogleSub:   claims.Sub,
 		Email:       claims.Email,
 		DisplayName: claims.Name,
@@ -178,20 +173,49 @@ func callbackHandler(
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func rootHandler(w http.ResponseWriter, r *http.Request, store *sessions.CookieStore, queries *sql.Queries) {
-	user, err := authenticate(r, store, queries)
+func (server *Server) rootHandler(w http.ResponseWriter, r *http.Request) {
+	user, err := server.authenticate(w, r)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, err.Error())
-		http.Error(w, "authentication failed", getStatusCode(err))
 		return
 	}
-	fmt.Fprintf(w, "user=%+v", user)
+
+	userData := views.UserData{
+		DisplayName: user.DisplayName,
+		Email:       user.Email,
+	}
+
+	// TODO: placeholder
+	species := []views.Species{
+		{ID: 1, Name: "Feral pigeon"},
+		{ID: 2, Name: "Wood pigeon"},
+	}
+
+	// TODO: placeholder
+	labels := []views.Label{
+		{ID: 1, Name: "Critical", Checked: false},
+		{ID: 1, Name: "Disease", Checked: false},
+		{ID: 1, Name: "Injury", Checked: false},
+		{ID: 1, Name: "Force feeding", Checked: false},
+		{ID: 1, Name: "Juvenile", Checked: false},
+	}
+
+	_ = views.DashboardPage(userData, species, labels).Render(r.Context(), w)
 }
 
-func authenticate(r *http.Request, store *sessions.CookieStore, queries *sql.Queries) (sql.Appuser, error) {
+func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (sql.Appuser, error) {
+	user, err := server.getUser(r)
+
+	if err != nil {
+		server.loginHandler(w, r)
+	}
+
+	return user, err
+}
+
+func (server *Server) getUser(r *http.Request) (sql.Appuser, error) {
 	ctx := r.Context()
 
-	sess, _ := store.Get(r, "auth")
+	sess, _ := server.Cookies.Get(r, "auth")
 	uidIF, ok := sess.Values["user_id"]
 	if !ok {
 		return sql.Appuser{}, ErrUnauthorized
@@ -201,10 +225,17 @@ func authenticate(r *http.Request, store *sessions.CookieStore, queries *sql.Que
 		return sql.Appuser{}, fmt.Errorf("%w: uid is %T", ErrInternalServerError, uid)
 	}
 
-	user, err := queries.GetUser(ctx, uid)
+	user, err := server.Queries.GetUser(ctx, uid)
 	if err != nil {
 		return sql.Appuser{}, fmt.Errorf("%w: database error", ErrInternalServerError)
 	}
 
 	return user, nil
+}
+
+type Server struct {
+	Queries       *sql.Queries
+	Cookies       *sessions.CookieStore
+	OAuthConfig   *oauth2.Config
+	TokenVerifier *oidc.IDTokenVerifier
 }

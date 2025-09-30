@@ -1,0 +1,21 @@
+{
+  "name": "bino",
+  "version": "1.0.0",
+  "main": "tailwind.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@iconify-json/tabler": "^1.2.23",
+    "@iconify/tailwind4": "^1.0.6"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.13",
+    "bootstrap": "^5.3.8",
+    "flyonui": "^2.4.1"
+  }
+}

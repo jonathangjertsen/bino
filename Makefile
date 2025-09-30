@@ -22,3 +22,11 @@ psql:
 
 session_key:
 	openssl rand -base64 32 > secret/session_key
+
+css:
+	npx @tailwindcss/cli -i ./static/input.css -o ./static/styles.css
+	cp node_modules/flyonui/flyonui.js ./static/flyonui.js
+
+templ:
+	go tool templ generate
+

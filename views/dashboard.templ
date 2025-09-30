@@ -1,0 +1,56 @@
+package views
+
+import "fmt"
+
+type Species struct {
+    ID int
+    Name string
+}
+
+type Label struct {
+    ID int
+    Name string
+    Checked bool
+}
+
+func (l Label) HTMLID() string {
+    return fmt.Sprintf("patient-label-%d", l.ID)
+}
+
+templ DashboardPage(data UserData, species []Species, labels []Label) {
+	@Layout(data) {
+        <div class="card b-card">
+            <form>
+                <div class="form-group">
+                    <label for="patient-input-name">Name</label>
+                    <input class="form-control" id="patient-input-name">
+                </div>
+                <div class="form-group">
+                    <label for="patient-input-species">Species</label>
+                    <select class="form-control" id="patient-input-species">
+                        for _, sp := range species {
+                            <option value={sp.ID}>{sp.Name}</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Details</label>
+                    <br/>
+                    for _, label := range labels {
+                        @Checkbox(label.HTMLID(), label.Name, label.Checked)
+                    }
+                </div>
+                <button type="submit" class="b-create-patient btn btn-primary">Check in patient</button>
+            </form>
+        </div>
+    }
+}
+
+templ Checkbox(id, name string, checked bool) {
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="checkbox" id={id} checked?={checked}>
+        <label class="form-check-label" for={id}>
+            {name}
+        </label>
+    </div>
+}

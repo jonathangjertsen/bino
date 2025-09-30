@@ -1,0 +1,52 @@
+.display-name {
+    font-weight: bold
+}
+
+.logged-in-as {
+    margin-right: 1em;
+}
+
+.b-app {
+    width: 100%;
+}
+
+.b-container {
+    max-width: 1000px;
+    margin: auto;
+}
+
+.b-color-lightgray {
+    color: rgb(200, 200, 200) !important;
+}
+
+.b-color-darkgray {
+    color: rgb(80, 80, 80) !important;
+}
+
+.b-color-purple {
+    color: rgb(102, 51, 153) !important;
+}
+
+.b-color-green {
+    color: #198754 !important;
+}
+
+.b-new-patient {
+    width: 100%;
+    margin: 1em;
+}
+
+.b-navbar {
+    padding: 0.5em !important;
+    background-color: #dddddd !important;
+}
+
+.b-card {
+    padding: 0.5em !important;
+    margin: 0.5em !important;
+}
+
+.b-create-patient {
+    width: 100% !important;
+    margin-top: 0.5em !important;
+}
