@@ -1,6 +1,7 @@
 package views
 
 import "fmt"
+import "github.com/jonathangjertsen/bino/ln"
 
 type Species struct {
     ID int
@@ -17,16 +18,16 @@ func (l Label) HTMLID() string {
     return fmt.Sprintf("patient-label-%d", l.ID)
 }
 
-templ DashboardPage(data UserData, species []Species, labels []Label) {
+templ DashboardPage(data CommonData, species []Species, labels []Label) {
 	@Layout(data) {
         <div class="card b-card">
             <form>
                 <div class="form-group">
-                    <label for="patient-input-name">Name</label>
+                    <label for="patient-input-name">{data.Ln(ln.KeyPatientName)}</label>
                     <input class="form-control" id="patient-input-name">
                 </div>
                 <div class="form-group">
-                    <label for="patient-input-species">Species</label>
+                    <label for="patient-input-species">{data.Ln(ln.KeySpecies)}</label>
                     <select class="form-control" id="patient-input-species">
                         for _, sp := range species {
                             <option value={sp.ID}>{sp.Name}</option>
@@ -40,7 +41,7 @@ templ DashboardPage(data UserData, species []Species, labels []Label) {
                         @Checkbox(label.HTMLID(), label.Name, label.Checked)
                     }
                 </div>
-                <button type="submit" class="b-create-patient btn btn-primary">Check in patient</button>
+                <button type="submit" class="b-create-patient btn btn-primary">{data.Ln(ln.KeyCheckInPatient)}</button>
             </form>
         </div>
     }

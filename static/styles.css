@@ -2,6 +2,22 @@
     font-weight: bold
 }
 
+.collapsing, .navbar-toggler, .navbar-collapse {
+    -webkit-transition: none !important;
+    transition: none !important;
+}
+
+.navbar-collapse {
+    display: flex;
+    justify-content: right;
+}
+
+.b-navbar-item {
+    margin: 0.5em;
+    font-weight: bold;
+    text-decoration: none;
+}
+
 .logged-in-as {
     margin-right: 1em;
 }

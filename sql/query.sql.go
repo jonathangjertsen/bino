@@ -68,20 +68,48 @@ func (q *Queries) GetSpeciesName(ctx context.Context, languageID int32) ([]GetSp
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, display_name, google_sub, email FROM appuser
+SELECT au.id, au.display_name, au.google_sub, au.email, COALESCE(al.language_id, 1) FROM appuser AS au
+LEFT JOIN appuser_language AS al
+ON au.id = al.appuser_id
 WHERE id = $1
 `
 
-func (q *Queries) GetUser(ctx context.Context, id int32) (Appuser, error) {
+type GetUserRow struct {
+	ID          int32
+	DisplayName string
+	GoogleSub   string
+	Email       string
+	LanguageID  int32
+}
+
+func (q *Queries) GetUser(ctx context.Context, id int32) (GetUserRow, error) {
 	row := q.db.QueryRow(ctx, getUser, id)
-	var i Appuser
+	var i GetUserRow
 	err := row.Scan(
 		&i.ID,
 		&i.DisplayName,
 		&i.GoogleSub,
 		&i.Email,
+		&i.LanguageID,
 	)
 	return i, err
+}
+
+const setUserLanguage = `-- name: SetUserLanguage :exec
+INSERT INTO appuser_language (appuser_id, language_id)
+VALUES ($1, $2)
+ON CONFLICT (appuser_id) DO UPDATE
+    SET language_id = EXCLUDED.language_id
+`
+
+type SetUserLanguageParams struct {
+	AppuserID  int32
+	LanguageID int32
+}
+
+func (q *Queries) SetUserLanguage(ctx context.Context, arg SetUserLanguageParams) error {
+	_, err := q.db.Exec(ctx, setUserLanguage, arg.AppuserID, arg.LanguageID)
+	return err
 }
 
 const upsertUser = `-- name: UpsertUser :one

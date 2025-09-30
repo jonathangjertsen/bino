@@ -1,5 +1,5 @@
 development:
-  dialect: postgresql
+  dialect: postgres
   datasource: host=localhost dbname=bino user=bino password=${BINO_DB_PASSWORD} sslmode=require
   dir: sql/migrations
   table: migrations

@@ -17,5 +17,15 @@ ON CONFLICT (google_sub) DO UPDATE
 RETURNING id;
 
 -- name: GetUser :one
-SELECT * FROM appuser
-WHERE id = $1;
+SELECT au.*, COALESCE(al.language_id, 1) FROM appuser AS au
+LEFT JOIN appuser_language AS al
+ON au.id = al.appuser_id
+WHERE id = $1
+;
+
+-- name: SetUserLanguage :exec
+INSERT INTO appuser_language (appuser_id, language_id)
+VALUES ($1, $2)
+ON CONFLICT (appuser_id) DO UPDATE
+    SET language_id = EXCLUDED.language_id
+;

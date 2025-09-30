@@ -17,6 +17,12 @@ type Appuser struct {
 	Email       string
 }
 
+// Language preference for each user
+type AppuserLanguage struct {
+	AppuserID  int32
+	LanguageID int32
+}
+
 // Each row represents an event that may occur to a patient
 type Event struct {
 	ID        int32

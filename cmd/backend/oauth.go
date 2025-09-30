@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/coreos/go-oidc"
 	"github.com/gorilla/sessions"
@@ -93,6 +94,7 @@ func startServer(ctx context.Context, queries *sql.Queries) error {
 	http.HandleFunc("/oauth2/callback", server.callbackHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	http.HandleFunc("/", server.rootHandler)
+	http.HandleFunc("POST /language", server.postLanguageHandler)
 
 	go func() {
 		log.Fatal(http.ListenAndServe(":8080", nil))
@@ -173,15 +175,48 @@ func (server *Server) callbackHandler(
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func (server *Server) rootHandler(w http.ResponseWriter, r *http.Request) {
-	user, err := server.authenticate(w, r)
+func (server *Server) postLanguageHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	commonData, err := server.authenticate(w, r)
 	if err != nil {
+		// TODO
 		return
 	}
 
-	userData := views.UserData{
-		DisplayName: user.DisplayName,
-		Email:       user.Email,
+	lang, err := getSelectedLanguage(r.FormValue("language"), &commonData)
+	if err == nil {
+		err = server.Queries.SetUserLanguage(ctx, sql.SetUserLanguageParams{
+			AppuserID:  commonData.User.AppuserID,
+			LanguageID: lang,
+		})
+	}
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+	}
+
+	// TODO: should redirect back to where we came from
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func getSelectedLanguage(langStr string, commonData *views.CommonData) (int32, error) {
+	langID, err := strconv.Atoi(langStr)
+	if err != nil {
+		return 0, fmt.Errorf("invalid language ID: %w", langStr)
+	}
+	for _, lang := range commonData.Languages {
+		if lang.ID == int32(langID) {
+			return lang.ID, nil
+		}
+	}
+	return 0, fmt.Errorf("unsupported language ID: %d", langID)
+}
+
+func (server *Server) rootHandler(w http.ResponseWriter, r *http.Request) {
+	commonData, err := server.authenticate(w, r)
+	if err != nil {
+		return
 	}
 
 	// TODO: placeholder
@@ -199,35 +234,59 @@ func (server *Server) rootHandler(w http.ResponseWriter, r *http.Request) {
 		{ID: 1, Name: "Juvenile", Checked: false},
 	}
 
-	_ = views.DashboardPage(userData, species, labels).Render(r.Context(), w)
+	_ = views.DashboardPage(commonData, species, labels).Render(r.Context(), w)
 }
 
-func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (sql.Appuser, error) {
+func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (views.CommonData, error) {
+	ctx := r.Context()
+
 	user, err := server.getUser(r)
 
 	if err != nil {
 		server.loginHandler(w, r)
 	}
 
-	return user, err
+	userData := views.UserData{
+		AppuserID:   user.ID,
+		DisplayName: user.DisplayName,
+		Email:       user.Email,
+		LanguageID:  user.LanguageID,
+	}
+
+	languages, err := server.Queries.GetLanguages(ctx)
+	if err != nil {
+		return views.CommonData{}, fmt.Errorf("couldn't read languages: %w", err)
+	}
+
+	viewLanguages := make([]views.Language, 0, len(languages))
+	for _, lang := range languages {
+		viewLanguages = append(viewLanguages, views.Language{ID: lang.ID, Emoji: lang.ShortName})
+	}
+
+	commonData := views.CommonData{
+		User:      userData,
+		Languages: viewLanguages,
+	}
+
+	return commonData, err
 }
 
-func (server *Server) getUser(r *http.Request) (sql.Appuser, error) {
+func (server *Server) getUser(r *http.Request) (sql.GetUserRow, error) {
 	ctx := r.Context()
 
 	sess, _ := server.Cookies.Get(r, "auth")
 	uidIF, ok := sess.Values["user_id"]
 	if !ok {
-		return sql.Appuser{}, ErrUnauthorized
+		return sql.GetUserRow{}, ErrUnauthorized
 	}
 	uid, ok := uidIF.(int32)
 	if !ok {
-		return sql.Appuser{}, fmt.Errorf("%w: uid is %T", ErrInternalServerError, uid)
+		return sql.GetUserRow{}, fmt.Errorf("%w: uid is %T", ErrInternalServerError, uid)
 	}
 
 	user, err := server.Queries.GetUser(ctx, uid)
 	if err != nil {
-		return sql.Appuser{}, fmt.Errorf("%w: database error", ErrInternalServerError)
+		return sql.GetUserRow{}, fmt.Errorf("%w: database error", ErrInternalServerError)
 	}
 
 	return user, nil
