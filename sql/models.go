@@ -78,8 +78,6 @@ type PatientEvent struct {
 // Each row is a species
 type Species struct {
 	ID int32
-	// A short name used to refer to this species in code
-	ShortName string
 	// The scientific name for this species
 	ScientificName string
 }

@@ -1,4 +1,4 @@
-//go:generate go-enum
+//go:generate go-enum --noprefix
 package ln
 
 // ENUM(
@@ -8,24 +8,36 @@ package ln
 // Species,
 // Details,
 // CheckInPatient,
+// ManageSpecies,
+// Latin,
+// Update,
+// AddSpecies,
 //
 // )
-type Key int
+type L int
 
 var NO = []string{
-	KeyLogOut:         "Logg ut",
-	KeyPatientName:    "Pasientens navn",
-	KeySpecies:        "Art",
-	KeyDetails:        "Detaljer",
-	KeyCheckInPatient: "Sjekk in pasient",
+	LogOut:         "Logg ut",
+	PatientName:    "Pasientens navn",
+	Species:        "Art",
+	Details:        "Detaljer",
+	CheckInPatient: "Sjekk in pasient",
+	ManageSpecies:  "Administrer arter",
+	Latin:          "Latin",
+	Update:         "Oppdater",
+	AddSpecies:     "Legg til art",
 }
 
 var EN = []string{
-	KeyLogOut:         "Log out",
-	KeyPatientName:    "Name of the patient",
-	KeySpecies:        "Species",
-	KeyDetails:        "Details",
-	KeyCheckInPatient: "Check in",
+	LogOut:         "Log out",
+	PatientName:    "Name of the patient",
+	Species:        "Species",
+	Details:        "Details",
+	CheckInPatient: "Check in",
+	ManageSpecies:  "Manage species",
+	Latin:          "Latin",
+	Update:         "Update",
+	AddSpecies:     "Add species",
 }
 
 var LANG = [][]string{
@@ -34,7 +46,7 @@ var LANG = [][]string{
 	EN,
 }
 
-func Ln(id int32, key Key) string {
+func Ln(id int32, key L) string {
 	if int(id) > len(LANG) {
 		return key.String()
 	}

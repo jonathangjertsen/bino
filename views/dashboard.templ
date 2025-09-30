@@ -4,12 +4,12 @@ import "fmt"
 import "github.com/jonathangjertsen/bino/ln"
 
 type Species struct {
-    ID int
+    ID int32
     Name string
 }
 
 type Label struct {
-    ID int
+    ID int32
     Name string
     Checked bool
 }
@@ -23,11 +23,11 @@ templ DashboardPage(data CommonData, species []Species, labels []Label) {
         <div class="card b-card">
             <form>
                 <div class="form-group">
-                    <label for="patient-input-name">{data.Ln(ln.KeyPatientName)}</label>
+                    <label for="patient-input-name">{data.Ln(ln.PatientName)}</label>
                     <input class="form-control" id="patient-input-name">
                 </div>
                 <div class="form-group">
-                    <label for="patient-input-species">{data.Ln(ln.KeySpecies)}</label>
+                    <label for="patient-input-species">{data.Ln(ln.Species)}</label>
                     <select class="form-control" id="patient-input-species">
                         for _, sp := range species {
                             <option value={sp.ID}>{sp.Name}</option>
@@ -35,13 +35,13 @@ templ DashboardPage(data CommonData, species []Species, labels []Label) {
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Details</label>
+                    <label>{data.Ln(ln.Details)}</label>
                     <br/>
                     for _, label := range labels {
                         @Checkbox(label.HTMLID(), label.Name, label.Checked)
                     }
                 </div>
-                <button type="submit" class="b-create-patient btn btn-primary">{data.Ln(ln.KeyCheckInPatient)}</button>
+                <button type="submit" class="b-create-patient btn btn-primary">{data.Ln(ln.CheckInPatient)}</button>
             </form>
         </div>
     }

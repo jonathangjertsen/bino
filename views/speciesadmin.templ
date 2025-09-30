@@ -1,0 +1,74 @@
+package views
+
+import (
+    "fmt"
+    "github.com/jonathangjertsen/bino/ln"
+)
+
+type SpeciesLangs struct {
+    ID int32
+    LatinName string
+    Names map[int32]string
+}
+
+templ SpeciesPage(data CommonData, species []SpeciesLangs) {
+	@Layout(data) {
+        <div class="card b-card">
+            <h1>{data.Ln(ln.ManageSpecies)}</h1>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>{data.Ln(ln.Latin)}</th>
+                        for _, lang := range data.Languages {
+                            <th>{lang.SelfName}</th>
+                        }
+                        <th><!-- Update button --></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    for _, species := range species {
+                        <tr class="update-species-form">
+                            <td>
+                                <input class="form-control" data-field="latin" value={species.LatinName}/>
+                            </td>
+                            for _, lang := range data.Languages {
+                                <td>
+                                    if name, ok := species.Names[lang.ID]; ok {
+                                        <input class="form-control" data-field="lang" data-lang={fmt.Sprintf("%d", lang.ID)} value={name}/>
+                                    } else {
+                                        <input class="form-control"  data-field="lang" data-lang={fmt.Sprintf("%d", lang.ID)} value="?"/>
+                                    }
+                                </input>
+                                </td>
+                            }
+                            <td>
+                                <button class="btn btn-outline-primary update-species-submit" data-id={fmt.Sprintf("%d", species.ID)}>
+                                    {data.Ln(ln.Update)}
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                    <tr id="new-species-form">
+                        <td>
+                            <input class="form-control" value="" data-field="latin" placeholder={data.Ln(ln.Latin)}/>
+                        </td>
+                        for _, lang := range data.Languages {
+                            <td>
+                                <input class="form-control" value="" data-field="lang" data-lang={fmt.Sprintf("%d", lang.ID)} placeholder={lang.SelfName}/>
+                            </input>
+                            </td>
+                        }
+                        <td>
+                            <button class="btn btn-outline-success" id="new-species-submit">
+                                {data.Ln(ln.AddSpecies)}
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <script src="/static/speciesadmin.js"></script>
+}

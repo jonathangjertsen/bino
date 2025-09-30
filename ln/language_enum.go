@@ -12,57 +12,73 @@ import (
 )
 
 const (
-	// KeyLogOut is a Key of type LogOut.
-	KeyLogOut Key = iota
-	// KeyPatientName is a Key of type PatientName.
-	KeyPatientName
-	// KeySpecies is a Key of type Species.
-	KeySpecies
-	// KeyDetails is a Key of type Details.
-	KeyDetails
-	// KeyCheckInPatient is a Key of type CheckInPatient.
-	KeyCheckInPatient
+	// LogOut is a L of type LogOut.
+	LogOut L = iota
+	// PatientName is a L of type PatientName.
+	PatientName
+	// Species is a L of type Species.
+	Species
+	// Details is a L of type Details.
+	Details
+	// CheckInPatient is a L of type CheckInPatient.
+	CheckInPatient
+	// ManageSpecies is a L of type ManageSpecies.
+	ManageSpecies
+	// Latin is a L of type Latin.
+	Latin
+	// Update is a L of type Update.
+	Update
+	// AddSpecies is a L of type AddSpecies.
+	AddSpecies
 )
 
-var ErrInvalidKey = errors.New("not a valid Key")
+var ErrInvalidL = errors.New("not a valid L")
 
-const _KeyName = "LogOutPatientNameSpeciesDetailsCheckInPatient"
+const _LName = "LogOutPatientNameSpeciesDetailsCheckInPatientManageSpeciesLatinUpdateAddSpecies"
 
-var _KeyMap = map[Key]string{
-	KeyLogOut:         _KeyName[0:6],
-	KeyPatientName:    _KeyName[6:17],
-	KeySpecies:        _KeyName[17:24],
-	KeyDetails:        _KeyName[24:31],
-	KeyCheckInPatient: _KeyName[31:45],
+var _LMap = map[L]string{
+	LogOut:         _LName[0:6],
+	PatientName:    _LName[6:17],
+	Species:        _LName[17:24],
+	Details:        _LName[24:31],
+	CheckInPatient: _LName[31:45],
+	ManageSpecies:  _LName[45:58],
+	Latin:          _LName[58:63],
+	Update:         _LName[63:69],
+	AddSpecies:     _LName[69:79],
 }
 
 // String implements the Stringer interface.
-func (x Key) String() string {
-	if str, ok := _KeyMap[x]; ok {
+func (x L) String() string {
+	if str, ok := _LMap[x]; ok {
 		return str
 	}
-	return fmt.Sprintf("Key(%d)", x)
+	return fmt.Sprintf("L(%d)", x)
 }
 
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
-func (x Key) IsValid() bool {
-	_, ok := _KeyMap[x]
+func (x L) IsValid() bool {
+	_, ok := _LMap[x]
 	return ok
 }
 
-var _KeyValue = map[string]Key{
-	_KeyName[0:6]:   KeyLogOut,
-	_KeyName[6:17]:  KeyPatientName,
-	_KeyName[17:24]: KeySpecies,
-	_KeyName[24:31]: KeyDetails,
-	_KeyName[31:45]: KeyCheckInPatient,
+var _LValue = map[string]L{
+	_LName[0:6]:   LogOut,
+	_LName[6:17]:  PatientName,
+	_LName[17:24]: Species,
+	_LName[24:31]: Details,
+	_LName[31:45]: CheckInPatient,
+	_LName[45:58]: ManageSpecies,
+	_LName[58:63]: Latin,
+	_LName[63:69]: Update,
+	_LName[69:79]: AddSpecies,
 }
 
-// ParseKey attempts to convert a string to a Key.
-func ParseKey(name string) (Key, error) {
-	if x, ok := _KeyValue[name]; ok {
+// ParseL attempts to convert a string to a L.
+func ParseL(name string) (L, error) {
+	if x, ok := _LValue[name]; ok {
 		return x, nil
 	}
-	return Key(0), fmt.Errorf("%s is %w", name, ErrInvalidKey)
+	return L(0), fmt.Errorf("%s is %w", name, ErrInvalidL)
 }

@@ -49,14 +49,3 @@ func dbSetup(ctx context.Context) (*pgxpool.Pool, error) {
 
 	return conn, nil
 }
-
-func dbTest(ctx context.Context, queries *sql.Queries) error {
-	languages, err := queries.GetLanguages(ctx)
-	if err != nil {
-		return err
-	}
-	for i, lang := range languages {
-		fmt.Printf("language %d is id=%d, short_name=%s, self_name=%s\n", i, lang.ID, lang.ShortName, lang.SelfName)
-	}
-	return nil
-}

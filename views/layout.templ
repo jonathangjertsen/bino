@@ -9,13 +9,14 @@ type UserData struct {
     LanguageID int32
 }
 
-func (ud *UserData) Ln(key ln.Key) string {
+func (ud *UserData) Ln(key ln.L) string {
     return ln.Ln(ud.LanguageID, key)
 }
 
 type Language struct {
     ID int32
     Emoji string
+    SelfName string
 }
 
 type CommonData struct {
@@ -23,7 +24,7 @@ type CommonData struct {
     Languages []Language
 }
 
-func (cd *CommonData) Ln(key ln.Key) string {
+func (cd *CommonData) Ln(key ln.L) string {
     return cd.User.Ln(key)
 }
 
@@ -56,18 +57,25 @@ templ Head() {
 
 templ Navbar(data CommonData) {
     <nav class="b-navbar b-bg-color-darkgray navbar navbar-expand-lg">
-        <a class="navbar-brand b-color-purple" href="#">Bino</a>
+        <a class="navbar-brand b-color-purple" href="/">Bino</a>
         
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            @LanguageSelect(data)            
+            @NavbarPageLink(data.Ln(ln.ManageSpecies), "/species")
+            @LanguageSelect(data)
             @SelfInfo(data.User)
             @Logout(data.User)
         </div>
     </nav>
+}
+
+templ NavbarPageLink(text, loc string) {
+    <div class="b-navbar-item">
+        <a href={loc}>{text}</a>
+    </div>
 }
 
 templ LanguageSelect(data CommonData) {
@@ -90,6 +98,6 @@ templ SelfInfo(data UserData) {
 
 templ Logout(data UserData) {
     <form class="d-flex" role="logout" action="/logout">
-        <button class="btn btn-outline-success" type="submit">{data.Ln(ln.KeyLogOut)}</button>
+        <button class="btn btn-outline-success" type="submit">{data.Ln(ln.LogOut)}</button>
     </form>
 }

@@ -18,12 +18,7 @@ func main() {
 
 	queries := sql.New(conn)
 
-	err = dbTest(ctx, queries)
-	if err != nil {
-		panic(err)
-	}
-
-	err = startServer(ctx, queries)
+	err = startServer(ctx, conn, queries)
 	if err != nil {
 		panic(err)
 	}
