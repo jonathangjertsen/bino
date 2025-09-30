@@ -10,10 +10,10 @@ templ AdminRootPage(data *CommonData) {
             <h1>{data.Ln(ln.AdminRoot)}</h1>
             <ul>
                 <li>@NavbarPageLink(data.Ln(ln.ManageSpecies), "/species")</li>
-                <li>@NavbarPageLink(data.Ln(ln.ManageEvents), "/events")</li>
-                <li>@NavbarPageLink(data.Ln(ln.ManageTags), "/tags")</li>
+                <li>@NavbarPageLink(data.Ln(ln.ManageEvents), "/event")</li>
+                <li>@NavbarPageLink(data.Ln(ln.ManageTags), "/tag")</li>
                 <li>@NavbarPageLink(data.Ln(ln.ManageHomes), "/homes")</li>
-                <li>@NavbarPageLink(data.Ln(ln.ManageStatuses), "/statuses")</li>
+                <li>@NavbarPageLink(data.Ln(ln.ManageStatuses), "/status")</li>
             </ul>
         </div>
     }

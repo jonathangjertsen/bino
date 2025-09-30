@@ -89,11 +89,20 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *sql.Queries) 
 
 	// Pages
 	mux.HandleFunc("GET /species", server.requireLogin(server.getSpeciesHandler))
+	mux.HandleFunc("GET /status", server.requireLogin(server.getStatusHandler))
+	mux.HandleFunc("GET /event", server.requireLogin(server.getEventHandler))
+	mux.HandleFunc("GET /tag", server.requireLogin(server.getTagHandler))
 	mux.HandleFunc("GET /admin", server.requireLogin(server.adminRootHandler))
 
 	// Admin AJAX
 	mux.HandleFunc("POST /species", server.requireLogin(server.postSpeciesHandler))
 	mux.HandleFunc("PUT /species", server.requireLogin(server.putSpeciesHandler))
+	mux.HandleFunc("POST /status", server.requireLogin(server.postStatusHandler))
+	mux.HandleFunc("PUT /status", server.requireLogin(server.putStatusHandler))
+	mux.HandleFunc("POST /event", server.requireLogin(server.postEventHandler))
+	mux.HandleFunc("PUT /event", server.requireLogin(server.putEventHandler))
+	mux.HandleFunc("POST /tag", server.requireLogin(server.postTagHandler))
+	mux.HandleFunc("PUT /tag", server.requireLogin(server.putTagHandler))
 
 	// Available to all
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))

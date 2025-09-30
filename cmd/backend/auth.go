@@ -36,7 +36,6 @@ func (server *Server) requireLogin(f func(w http.ResponseWriter, r *http.Request
 	return func(w http.ResponseWriter, r *http.Request) {
 		commonData, err := server.authenticate(w, r)
 		if err != nil {
-			// TODO
 			return
 		}
 

@@ -28,8 +28,8 @@ const (
 	Latin
 	// Update is a L of type Update.
 	Update
-	// AddSpecies is a L of type AddSpecies.
-	AddSpecies
+	// Add is a L of type Add.
+	Add
 	// ManageHomes is a L of type ManageHomes.
 	ManageHomes
 	// Dashboard is a L of type Dashboard.
@@ -54,7 +54,7 @@ const (
 
 var ErrInvalidL = errors.New("not a valid L")
 
-const _LName = "LogOutPatientNameSpeciesTagsCheckInPatientManageSpeciesLatinUpdateAddSpeciesManageHomesDashboardManageTagsCalendarManageStatusesManageEventsAdminRootViewHomesErrorPageHeadErrorPageInstructions"
+const _LName = "LogOutPatientNameSpeciesTagsCheckInPatientManageSpeciesLatinUpdateAddManageHomesDashboardManageTagsCalendarManageStatusesManageEventsAdminRootViewHomesErrorPageHeadErrorPageInstructions"
 
 var _LMap = map[L]string{
 	LogOut:                _LName[0:6],
@@ -65,17 +65,17 @@ var _LMap = map[L]string{
 	ManageSpecies:         _LName[42:55],
 	Latin:                 _LName[55:60],
 	Update:                _LName[60:66],
-	AddSpecies:            _LName[66:76],
-	ManageHomes:           _LName[76:87],
-	Dashboard:             _LName[87:96],
-	ManageTags:            _LName[96:106],
-	Calendar:              _LName[106:114],
-	ManageStatuses:        _LName[114:128],
-	ManageEvents:          _LName[128:140],
-	AdminRoot:             _LName[140:149],
-	ViewHomes:             _LName[149:158],
-	ErrorPageHead:         _LName[158:171],
-	ErrorPageInstructions: _LName[171:192],
+	Add:                   _LName[66:69],
+	ManageHomes:           _LName[69:80],
+	Dashboard:             _LName[80:89],
+	ManageTags:            _LName[89:99],
+	Calendar:              _LName[99:107],
+	ManageStatuses:        _LName[107:121],
+	ManageEvents:          _LName[121:133],
+	AdminRoot:             _LName[133:142],
+	ViewHomes:             _LName[142:151],
+	ErrorPageHead:         _LName[151:164],
+	ErrorPageInstructions: _LName[164:185],
 }
 
 // String implements the Stringer interface.
@@ -102,17 +102,17 @@ var _LValue = map[string]L{
 	_LName[42:55]:   ManageSpecies,
 	_LName[55:60]:   Latin,
 	_LName[60:66]:   Update,
-	_LName[66:76]:   AddSpecies,
-	_LName[76:87]:   ManageHomes,
-	_LName[87:96]:   Dashboard,
-	_LName[96:106]:  ManageTags,
-	_LName[106:114]: Calendar,
-	_LName[114:128]: ManageStatuses,
-	_LName[128:140]: ManageEvents,
-	_LName[140:149]: AdminRoot,
-	_LName[149:158]: ViewHomes,
-	_LName[158:171]: ErrorPageHead,
-	_LName[171:192]: ErrorPageInstructions,
+	_LName[66:69]:   Add,
+	_LName[69:80]:   ManageHomes,
+	_LName[80:89]:   Dashboard,
+	_LName[89:99]:   ManageTags,
+	_LName[99:107]:  Calendar,
+	_LName[107:121]: ManageStatuses,
+	_LName[121:133]: ManageEvents,
+	_LName[133:142]: AdminRoot,
+	_LName[142:151]: ViewHomes,
+	_LName[151:164]: ErrorPageHead,
+	_LName[164:185]: ErrorPageInstructions,
 }
 
 // ParseL attempts to convert a string to a L.

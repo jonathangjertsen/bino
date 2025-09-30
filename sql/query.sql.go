@@ -9,6 +9,18 @@ import (
 	"context"
 )
 
+const addEvent = `-- name: AddEvent :one
+INSERT INTO event DEFAULT VALUES
+RETURNING id
+`
+
+func (q *Queries) AddEvent(ctx context.Context) (int32, error) {
+	row := q.db.QueryRow(ctx, addEvent)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
 const addSpecies = `-- name: AddSpecies :one
 INSERT INTO species (scientific_name)
 VALUES ($1)
@@ -20,6 +32,111 @@ func (q *Queries) AddSpecies(ctx context.Context, scientificName string) (int32,
 	var id int32
 	err := row.Scan(&id)
 	return id, err
+}
+
+const addStatus = `-- name: AddStatus :one
+INSERT INTO status DEFAULT VALUES
+RETURNING id
+`
+
+func (q *Queries) AddStatus(ctx context.Context) (int32, error) {
+	row := q.db.QueryRow(ctx, addStatus)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
+const addTag = `-- name: AddTag :one
+INSERT INTO tag DEFAULT VALUES
+RETURNING id
+`
+
+func (q *Queries) AddTag(ctx context.Context) (int32, error) {
+	row := q.db.QueryRow(ctx, addTag)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
+const getEventWithLanguage = `-- name: GetEventWithLanguage :many
+SELECT event_id, name FROM event_language
+WHERE language_id = $1
+ORDER BY (event_id)
+`
+
+type GetEventWithLanguageRow struct {
+	EventID int32
+	Name    string
+}
+
+func (q *Queries) GetEventWithLanguage(ctx context.Context, languageID int32) ([]GetEventWithLanguageRow, error) {
+	rows, err := q.db.Query(ctx, getEventWithLanguage, languageID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetEventWithLanguageRow
+	for rows.Next() {
+		var i GetEventWithLanguageRow
+		if err := rows.Scan(&i.EventID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getEvents = `-- name: GetEvents :many
+SELECT id FROM event
+ORDER BY id
+`
+
+func (q *Queries) GetEvents(ctx context.Context) ([]int32, error) {
+	rows, err := q.db.Query(ctx, getEvents)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int32
+	for rows.Next() {
+		var id int32
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getEventsLanguage = `-- name: GetEventsLanguage :many
+SELECT event_id, language_id, name FROM event_language
+ORDER BY (event_id, language_id)
+`
+
+func (q *Queries) GetEventsLanguage(ctx context.Context) ([]EventLanguage, error) {
+	rows, err := q.db.Query(ctx, getEventsLanguage)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []EventLanguage
+	for rows.Next() {
+		var i EventLanguage
+		if err := rows.Scan(&i.EventID, &i.LanguageID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getLanguages = `-- name: GetLanguages :many
@@ -128,6 +245,168 @@ func (q *Queries) GetSpeciesWithLanguage(ctx context.Context, languageID int32) 
 	return items, nil
 }
 
+const getStatusWithLanguage = `-- name: GetStatusWithLanguage :many
+SELECT status_id, name FROM status_language
+WHERE language_id = $1
+ORDER BY (status_id)
+`
+
+type GetStatusWithLanguageRow struct {
+	StatusID int32
+	Name     string
+}
+
+func (q *Queries) GetStatusWithLanguage(ctx context.Context, languageID int32) ([]GetStatusWithLanguageRow, error) {
+	rows, err := q.db.Query(ctx, getStatusWithLanguage, languageID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetStatusWithLanguageRow
+	for rows.Next() {
+		var i GetStatusWithLanguageRow
+		if err := rows.Scan(&i.StatusID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getStatuses = `-- name: GetStatuses :many
+SELECT id FROM status
+ORDER BY id
+`
+
+func (q *Queries) GetStatuses(ctx context.Context) ([]int32, error) {
+	rows, err := q.db.Query(ctx, getStatuses)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int32
+	for rows.Next() {
+		var id int32
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getStatusesLanguage = `-- name: GetStatusesLanguage :many
+SELECT status_id, language_id, name FROM status_language
+ORDER BY (status_id, language_id)
+`
+
+func (q *Queries) GetStatusesLanguage(ctx context.Context) ([]StatusLanguage, error) {
+	rows, err := q.db.Query(ctx, getStatusesLanguage)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []StatusLanguage
+	for rows.Next() {
+		var i StatusLanguage
+		if err := rows.Scan(&i.StatusID, &i.LanguageID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTagWithLanguage = `-- name: GetTagWithLanguage :many
+SELECT tag_id, name FROM tag_language
+WHERE language_id = $1
+ORDER BY (tag_id)
+`
+
+type GetTagWithLanguageRow struct {
+	TagID int32
+	Name  string
+}
+
+func (q *Queries) GetTagWithLanguage(ctx context.Context, languageID int32) ([]GetTagWithLanguageRow, error) {
+	rows, err := q.db.Query(ctx, getTagWithLanguage, languageID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTagWithLanguageRow
+	for rows.Next() {
+		var i GetTagWithLanguageRow
+		if err := rows.Scan(&i.TagID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTags = `-- name: GetTags :many
+SELECT id FROM tag
+ORDER BY id
+`
+
+func (q *Queries) GetTags(ctx context.Context) ([]int32, error) {
+	rows, err := q.db.Query(ctx, getTags)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int32
+	for rows.Next() {
+		var id int32
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTagsLanguage = `-- name: GetTagsLanguage :many
+SELECT tag_id, language_id, name FROM tag_language
+ORDER BY (tag_id, language_id)
+`
+
+func (q *Queries) GetTagsLanguage(ctx context.Context) ([]TagLanguage, error) {
+	rows, err := q.db.Query(ctx, getTagsLanguage)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TagLanguage
+	for rows.Next() {
+		var i TagLanguage
+		if err := rows.Scan(&i.TagID, &i.LanguageID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUser = `-- name: GetUser :one
 SELECT au.id, au.display_name, au.google_sub, au.email, COALESCE(al.language_id, 1) FROM appuser AS au
 LEFT JOIN appuser_language AS al
@@ -173,6 +452,24 @@ func (q *Queries) SetUserLanguage(ctx context.Context, arg SetUserLanguageParams
 	return err
 }
 
+const upsertEventLanguage = `-- name: UpsertEventLanguage :exec
+INSERT INTO event_language (event_id, language_id, name)
+VALUES ($1, $2, $3)
+ON CONFLICT (event_id, language_id) DO UPDATE
+    SET name = EXCLUDED.name
+`
+
+type UpsertEventLanguageParams struct {
+	EventID    int32
+	LanguageID int32
+	Name       string
+}
+
+func (q *Queries) UpsertEventLanguage(ctx context.Context, arg UpsertEventLanguageParams) error {
+	_, err := q.db.Exec(ctx, upsertEventLanguage, arg.EventID, arg.LanguageID, arg.Name)
+	return err
+}
+
 const upsertSpeciesLanguage = `-- name: UpsertSpeciesLanguage :exec
 INSERT INTO species_language (species_id, language_id, name)
 VALUES ($1, $2, $3)
@@ -188,6 +485,42 @@ type UpsertSpeciesLanguageParams struct {
 
 func (q *Queries) UpsertSpeciesLanguage(ctx context.Context, arg UpsertSpeciesLanguageParams) error {
 	_, err := q.db.Exec(ctx, upsertSpeciesLanguage, arg.SpeciesID, arg.LanguageID, arg.Name)
+	return err
+}
+
+const upsertStatusLanguage = `-- name: UpsertStatusLanguage :exec
+INSERT INTO status_language (status_id, language_id, name)
+VALUES ($1, $2, $3)
+ON CONFLICT (status_id, language_id) DO UPDATE
+    SET name = EXCLUDED.name
+`
+
+type UpsertStatusLanguageParams struct {
+	StatusID   int32
+	LanguageID int32
+	Name       string
+}
+
+func (q *Queries) UpsertStatusLanguage(ctx context.Context, arg UpsertStatusLanguageParams) error {
+	_, err := q.db.Exec(ctx, upsertStatusLanguage, arg.StatusID, arg.LanguageID, arg.Name)
+	return err
+}
+
+const upsertTagLanguage = `-- name: UpsertTagLanguage :exec
+INSERT INTO tag_language (tag_id, language_id, name)
+VALUES ($1, $2, $3)
+ON CONFLICT (tag_id, language_id) DO UPDATE
+    SET name = EXCLUDED.name
+`
+
+type UpsertTagLanguageParams struct {
+	TagID      int32
+	LanguageID int32
+	Name       string
+}
+
+func (q *Queries) UpsertTagLanguage(ctx context.Context, arg UpsertTagLanguageParams) error {
+	_, err := q.db.Exec(ctx, upsertTagLanguage, arg.TagID, arg.LanguageID, arg.Name)
 	return err
 }
 

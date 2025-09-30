@@ -70,7 +70,7 @@ func AdminRootPage(data *CommonData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = NavbarPageLink(data.Ln(ln.ManageEvents), "/events").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = NavbarPageLink(data.Ln(ln.ManageEvents), "/event").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -78,7 +78,7 @@ func AdminRootPage(data *CommonData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = NavbarPageLink(data.Ln(ln.ManageTags), "/tags").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = NavbarPageLink(data.Ln(ln.ManageTags), "/tag").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -94,7 +94,7 @@ func AdminRootPage(data *CommonData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = NavbarPageLink(data.Ln(ln.ManageStatuses), "/statuses").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = NavbarPageLink(data.Ln(ln.ManageStatuses), "/status").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -1,6 +1,4 @@
-// Submit a new species
-document.getElementById("new-species-submit").addEventListener('click', (event) => {
-    const formFields = event.target.parentElement.parentElement.getElementsByClassName("form-control");
+setupCreateButton((formFields) => {
     let req = {
         Latin: "",
         Languages: {},
@@ -12,21 +10,10 @@ document.getElementById("new-species-submit").addEventListener('click', (event) 
             req.Languages[field.dataset["lang"]] = field.value;
         }
     }
-    fetch("/species", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(req),
-    }).then(() => location.reload());
+    return { url: "/species", req: req }
 });
 
-// Update an existing species
-document.addEventListener('click', event => {
-if (!event.target.classList.contains('update-species-submit')) return;
-    const id = parseInt(event.target.dataset["id"]);
-
-    const formFields = event.target.parentElement.parentElement.getElementsByClassName("form-control");
+setupUpdateButtons((id, formFields) => {
     let req = {
         ID: id,
         Latin: "",
@@ -39,12 +26,6 @@ if (!event.target.classList.contains('update-species-submit')) return;
             req.Languages[field.dataset["lang"]] = field.value;
         }
     }
-    console.log(req);
-    fetch("/species", {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(req),
-    }).then(() => location.reload());
+    return { url: "/species", req: req }
 });
+

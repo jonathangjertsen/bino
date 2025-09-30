@@ -1,0 +1,22 @@
+package views
+
+import (
+    "github.com/jonathangjertsen/bino/ln"
+)
+
+type TagLangs struct {
+    ID int32
+    Names
+}
+
+templ TagPage(data *CommonData, tags []TagLangs) {
+    @CRUDPage{
+        Header: ln.ManageTags,
+    }.Component(data) {
+        for _, tag := range tags {
+            @UpdateRow(data, tag.ID, tag) {}
+        }
+        @CreateRow(data) {}
+    }
+    <script src="/static/tagadmin.js"></script>
+}

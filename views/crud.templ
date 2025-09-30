@@ -1,0 +1,82 @@
+package views
+
+import (
+    "fmt"
+
+    "github.com/jonathangjertsen/bino/ln"
+)
+
+type CRUDPage struct {
+    Header ln.L
+    LangIndependent []ln.L
+}
+
+type Names map[int32]string
+
+func (n Names) Name(i int32) (string, bool) {
+    name, found := n[i]
+    return name, found
+}
+
+templ (page CRUDPage) Component(data *CommonData) {
+    @Layout(data) {
+        <div class="card b-card">
+            <h1>{data.Ln(page.Header)}</h1>
+            <table class="table">
+            <thead>
+                <tr>
+                    for _, key := range page.LangIndependent {
+                        <th>{data.Ln(key)}</th>
+                    }
+                    for _, lang := range data.Languages {
+                        <th>{lang.SelfName}</th>
+                    }
+                    <th><!-- Update button --></th>
+                </tr>
+            </thead>
+            <tbody>
+                { children... }
+            </tbody>
+            </table>
+        </div>
+        <script src="/static/crud.js"></script>
+    }
+}
+
+templ UpdateRow(data *CommonData,  id int32, obj interface{Name(id int32) (string, bool)}) {
+    <tr>
+        {children...}
+        for _, lang := range data.Languages {
+            <td>
+                if name, ok := obj.Name(lang.ID); ok {
+                    <input class="form-control" data-field="lang" data-lang={fmt.Sprintf("%d", lang.ID)} value={name}/>
+                } else {
+                    <input class="form-control"  data-field="lang" data-lang={fmt.Sprintf("%d", lang.ID)} value="?"/>
+                }
+            </input>
+            </td>
+        }
+        <td>
+            <button class="btn btn-outline-primary update-submit" data-id={fmt.Sprintf("%d", id)}>
+                {data.Ln(ln.Update)}
+            </button>
+        </td>
+    </tr>
+}
+
+templ CreateRow(data *CommonData) {
+    <tr>
+        {children...}
+        for _, lang := range data.Languages {
+            <td>
+                <input class="form-control" value="" data-field="lang" data-lang={fmt.Sprintf("%d", lang.ID)} placeholder={lang.SelfName}/>
+                </input>
+            </td>
+        }
+        <td>
+            <button class="btn btn-outline-success" id="new-submit">
+                {data.Ln(ln.Add)}
+            </button>
+        </td>
+    </tr>
+}

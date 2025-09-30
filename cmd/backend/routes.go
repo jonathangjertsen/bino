@@ -53,6 +53,15 @@ func getSelectedLanguage(langStr string, commonData *views.CommonData) (int32, e
 func (server *Server) renderError(w http.ResponseWriter, r *http.Request, commonData *views.CommonData, err error) {
 	ctx := r.Context()
 	_ = views.ErrorPage(commonData, err).Render(ctx, w)
+	logError(r, err)
+}
+
+func ajaxError(w http.ResponseWriter, r *http.Request, err error, statusCode int) {
+	logError(r, err)
+	w.WriteHeader(statusCode)
+}
+
+func logError(r *http.Request, err error) {
 	log.Printf("%s %s ERROR: %v", r.Method, r.URL.Path, err)
 }
 
@@ -60,124 +69,87 @@ func (server *Server) fourOhFourHandler(w http.ResponseWriter, r *http.Request, 
 	server.renderError(w, r, commonData, fmt.Errorf("not found: %s", r.RequestURI))
 }
 
-func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request, commonData *views.CommonData) {
-	ctx := r.Context()
-
-	rows, err := server.Queries.GetSpeciesWithLanguage(ctx, commonData.User.LanguageID)
-	if err != nil {
-		server.renderError(w, r, commonData, err)
-		return
-	}
-
-	species := make([]views.Species, 0, len(rows))
-	for _, row := range rows {
-		species = append(species, views.Species{
-			ID:   row.SpeciesID,
-			Name: row.Name,
-		})
-	}
-
-	// TODO: placeholder
-	labels := []views.Label{
-		{ID: 1, Name: "Critical", Checked: false},
-		{ID: 1, Name: "Disease", Checked: false},
-		{ID: 1, Name: "Injury", Checked: false},
-		{ID: 1, Name: "Force feeding", Checked: false},
-		{ID: 1, Name: "Juvenile", Checked: false},
-	}
-
-	_ = views.DashboardPage(commonData, species, labels).Render(r.Context(), w)
-}
-
-func (server *Server) postSpeciesHandler(w http.ResponseWriter, r *http.Request, commonData *views.CommonData) {
+func jsonHandler[T any](
+	server *Server,
+	w http.ResponseWriter,
+	r *http.Request,
+	f func(q *sql.Queries, req T) error,
+) {
 	ctx := r.Context()
 
 	bytes, err := io.ReadAll(r.Body)
 	if err != nil {
-		server.renderError(w, r, commonData, err)
+		ajaxError(w, r, err, http.StatusBadRequest)
 		return
 	}
-	var req struct {
-		Latin     string
-		Languages map[int32]string
-	}
-	if err := json.Unmarshal(bytes, &req); err != nil {
-		server.renderError(w, r, commonData, err)
+	var recv T
+	if err := json.Unmarshal(bytes, &recv); err != nil {
+		ajaxError(w, r, err, http.StatusBadRequest)
 		return
 	}
-
 	tx, err := server.Conn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-		server.renderError(w, r, commonData, err)
+		ajaxError(w, r, err, http.StatusInternalServerError)
 		return
 	}
 	defer func() {
 		_ = tx.Rollback(ctx)
 	}()
 	q := server.Queries.WithTx(tx)
-	id, err := q.AddSpecies(ctx, req.Latin)
-	if err != nil {
-		server.renderError(w, r, commonData, err)
+	if err := f(q, recv); err != nil {
+		ajaxError(w, r, err, http.StatusInternalServerError)
 		return
 	}
-	for langID, name := range req.Languages {
-		if err := q.UpsertSpeciesLanguage(ctx, sql.UpsertSpeciesLanguageParams{
-			SpeciesID:  id,
-			LanguageID: langID,
-			Name:       name,
-		}); err != nil {
-			server.renderError(w, r, commonData, err)
-			return
-		}
+	if err := tx.Commit(ctx); err != nil {
+		ajaxError(w, r, err, http.StatusInternalServerError)
+		return
 	}
-	_ = tx.Commit(ctx)
-
 	w.WriteHeader(http.StatusOK)
 }
 
-func (server *Server) putSpeciesHandler(w http.ResponseWriter, r *http.Request, commonData *views.CommonData) {
-	ctx := r.Context()
-
-	bytes, err := io.ReadAll(r.Body)
-	if err != nil {
-		server.renderError(w, r, commonData, err)
-		return
+func (server *Server) postSpeciesHandler(w http.ResponseWriter, r *http.Request, commonData *views.CommonData) {
+	type reqT struct {
+		Latin     string
+		Languages map[int32]string
 	}
-	var req struct {
+	jsonHandler(server, w, r, func(q *sql.Queries, req reqT) error {
+		ctx := r.Context()
+		id, err := q.AddSpecies(ctx, req.Latin)
+		if err != nil {
+			return err
+		}
+		for langID, name := range req.Languages {
+			if err := q.UpsertSpeciesLanguage(ctx, sql.UpsertSpeciesLanguageParams{
+				SpeciesID:  id,
+				LanguageID: langID,
+				Name:       name,
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (server *Server) putSpeciesHandler(w http.ResponseWriter, r *http.Request, commonData *views.CommonData) {
+	type reqT struct {
 		ID        int32
 		Latin     string
 		Languages map[int32]string
 	}
-	if err := json.Unmarshal(bytes, &req); err != nil {
-		server.renderError(w, r, commonData, err)
-		return
-	}
-
-	tx, err := server.Conn.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
-		server.renderError(w, r, commonData, err)
-		return
-	}
-	defer func() {
-		_ = tx.Rollback(ctx)
-	}()
-	q := server.Queries.WithTx(tx)
-	for langID, name := range req.Languages {
-		if err := q.UpsertSpeciesLanguage(ctx, sql.UpsertSpeciesLanguageParams{
-			SpeciesID:  req.ID,
-			LanguageID: langID,
-			Name:       name,
-		}); err != nil {
-			server.renderError(w, r, commonData, err)
-			return
+	jsonHandler(server, w, r, func(q *sql.Queries, req reqT) error {
+		ctx := r.Context()
+		for langID, name := range req.Languages {
+			if err := q.UpsertSpeciesLanguage(ctx, sql.UpsertSpeciesLanguageParams{
+				SpeciesID:  req.ID,
+				LanguageID: langID,
+				Name:       name,
+			}); err != nil {
+				return err
+			}
 		}
-	}
-	if err := tx.Commit(ctx); err != nil {
-		server.renderError(w, r, commonData, err)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
+		return nil
+	})
 }
 
 func (server *Server) getSpeciesHandler(w http.ResponseWriter, r *http.Request, commonData *views.CommonData) {
@@ -220,4 +192,262 @@ func (server *Server) getSpeciesHandler(w http.ResponseWriter, r *http.Request, 
 	}
 
 	_ = views.SpeciesPage(commonData, speciesView).Render(ctx, w)
+}
+
+func (server *Server) postStatusHandler(w http.ResponseWriter, r *http.Request, commonData *views.CommonData) {
+	type reqT struct {
+		Latin     string
+		Languages map[int32]string
+	}
+	jsonHandler(server, w, r, func(q *sql.Queries, req reqT) error {
+		ctx := r.Context()
+		id, err := q.AddStatus(ctx)
+		if err != nil {
+			return err
+		}
+		for langID, name := range req.Languages {
+			if err := q.UpsertStatusLanguage(ctx, sql.UpsertStatusLanguageParams{
+				StatusID:   id,
+				LanguageID: langID,
+				Name:       name,
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (server *Server) putStatusHandler(w http.ResponseWriter, r *http.Request, commonData *views.CommonData) {
+	type reqT struct {
+		ID        int32
+		Latin     string
+		Languages map[int32]string
+	}
+	jsonHandler(server, w, r, func(q *sql.Queries, req reqT) error {
+		ctx := r.Context()
+		for langID, name := range req.Languages {
+			if err := q.UpsertStatusLanguage(ctx, sql.UpsertStatusLanguageParams{
+				StatusID:   req.ID,
+				LanguageID: langID,
+				Name:       name,
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (server *Server) getStatusHandler(w http.ResponseWriter, r *http.Request, commonData *views.CommonData) {
+	ctx := r.Context()
+
+	rows, err := server.Queries.GetStatuses(ctx)
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	langRows, err := server.Queries.GetStatusesLanguage(ctx)
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	statusView := make([]views.StatusLangs, 0, len(rows))
+	iLangRows := 0
+	for _, row := range rows {
+		status := views.StatusLangs{
+			ID:    row,
+			Names: map[int32]string{},
+		}
+		for {
+			if iLangRows >= len(langRows) {
+				break
+			}
+			langRow := langRows[iLangRows]
+			if langRow.StatusID == row {
+				status.Names[langRow.LanguageID] = langRow.Name
+				iLangRows++
+			} else {
+				break
+			}
+		}
+
+		statusView = append(statusView, status)
+	}
+
+	_ = views.StatusPage(commonData, statusView).Render(ctx, w)
+}
+
+func (server *Server) postEventHandler(w http.ResponseWriter, r *http.Request, commonData *views.CommonData) {
+	type reqT struct {
+		Latin     string
+		Languages map[int32]string
+	}
+	jsonHandler(server, w, r, func(q *sql.Queries, req reqT) error {
+		ctx := r.Context()
+		id, err := q.AddEvent(ctx)
+		if err != nil {
+			return err
+		}
+		for langID, name := range req.Languages {
+			if err := q.UpsertEventLanguage(ctx, sql.UpsertEventLanguageParams{
+				EventID:    id,
+				LanguageID: langID,
+				Name:       name,
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (server *Server) putEventHandler(w http.ResponseWriter, r *http.Request, commonData *views.CommonData) {
+	type reqT struct {
+		ID        int32
+		Latin     string
+		Languages map[int32]string
+	}
+	jsonHandler(server, w, r, func(q *sql.Queries, req reqT) error {
+		ctx := r.Context()
+		for langID, name := range req.Languages {
+			if err := q.UpsertEventLanguage(ctx, sql.UpsertEventLanguageParams{
+				EventID:    req.ID,
+				LanguageID: langID,
+				Name:       name,
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (server *Server) getEventHandler(w http.ResponseWriter, r *http.Request, commonData *views.CommonData) {
+	ctx := r.Context()
+
+	rows, err := server.Queries.GetEvents(ctx)
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	langRows, err := server.Queries.GetEventsLanguage(ctx)
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	eventView := make([]views.EventLangs, 0, len(rows))
+	iLangRows := 0
+	for _, row := range rows {
+		status := views.EventLangs{
+			ID:    row,
+			Names: map[int32]string{},
+		}
+		for {
+			if iLangRows >= len(langRows) {
+				break
+			}
+			langRow := langRows[iLangRows]
+			if langRow.EventID == row {
+				status.Names[langRow.LanguageID] = langRow.Name
+				iLangRows++
+			} else {
+				break
+			}
+		}
+
+		eventView = append(eventView, status)
+	}
+
+	_ = views.EventPage(commonData, eventView).Render(ctx, w)
+}
+
+func (server *Server) postTagHandler(w http.ResponseWriter, r *http.Request, commonData *views.CommonData) {
+	type reqT struct {
+		Latin     string
+		Languages map[int32]string
+	}
+	jsonHandler(server, w, r, func(q *sql.Queries, req reqT) error {
+		ctx := r.Context()
+		id, err := q.AddTag(ctx)
+		if err != nil {
+			return err
+		}
+		for langID, name := range req.Languages {
+			if err := q.UpsertTagLanguage(ctx, sql.UpsertTagLanguageParams{
+				TagID:      id,
+				LanguageID: langID,
+				Name:       name,
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (server *Server) putTagHandler(w http.ResponseWriter, r *http.Request, commonData *views.CommonData) {
+	type reqT struct {
+		ID        int32
+		Latin     string
+		Languages map[int32]string
+	}
+	jsonHandler(server, w, r, func(q *sql.Queries, req reqT) error {
+		ctx := r.Context()
+		for langID, name := range req.Languages {
+			if err := q.UpsertTagLanguage(ctx, sql.UpsertTagLanguageParams{
+				TagID:      req.ID,
+				LanguageID: langID,
+				Name:       name,
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (server *Server) getTagHandler(w http.ResponseWriter, r *http.Request, commonData *views.CommonData) {
+	ctx := r.Context()
+
+	rows, err := server.Queries.GetTags(ctx)
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	langRows, err := server.Queries.GetTagsLanguage(ctx)
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	tagView := make([]views.TagLangs, 0, len(rows))
+	iLangRows := 0
+	for _, row := range rows {
+		status := views.TagLangs{
+			ID:    row,
+			Names: map[int32]string{},
+		}
+		for {
+			if iLangRows >= len(langRows) {
+				break
+			}
+			langRow := langRows[iLangRows]
+			if langRow.TagID == row {
+				status.Names[langRow.LanguageID] = langRow.Name
+				iLangRows++
+			} else {
+				break
+			}
+		}
+
+		tagView = append(tagView, status)
+	}
+
+	_ = views.TagPage(commonData, tagView).Render(ctx, w)
 }

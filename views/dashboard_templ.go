@@ -16,17 +16,16 @@ type Species struct {
 	Name string
 }
 
-type Label struct {
-	ID      int32
-	Name    string
-	Checked bool
+type Tag struct {
+	ID   int32
+	Name string
 }
 
-func (l Label) HTMLID() string {
+func (l Tag) HTMLID() string {
 	return fmt.Sprintf("patient-label-%d", l.ID)
 }
 
-func DashboardPage(data *CommonData, species []Species, labels []Label) templ.Component {
+func DashboardPage(data *CommonData, species []Species, tags []Tag) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -66,7 +65,7 @@ func DashboardPage(data *CommonData, species []Species, labels []Label) templ.Co
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(data.Ln(ln.PatientName))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/dashboard.templ`, Line: 26, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/dashboard.templ`, Line: 25, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -79,7 +78,7 @@ func DashboardPage(data *CommonData, species []Species, labels []Label) templ.Co
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(data.Ln(ln.Species))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/dashboard.templ`, Line: 30, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/dashboard.templ`, Line: 29, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -97,7 +96,7 @@ func DashboardPage(data *CommonData, species []Species, labels []Label) templ.Co
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(sp.ID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/dashboard.templ`, Line: 33, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/dashboard.templ`, Line: 32, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -110,7 +109,7 @@ func DashboardPage(data *CommonData, species []Species, labels []Label) templ.Co
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(sp.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/dashboard.templ`, Line: 33, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/dashboard.templ`, Line: 32, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -128,7 +127,7 @@ func DashboardPage(data *CommonData, species []Species, labels []Label) templ.Co
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(data.Ln(ln.Tags))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/dashboard.templ`, Line: 38, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/dashboard.templ`, Line: 37, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -138,8 +137,8 @@ func DashboardPage(data *CommonData, species []Species, labels []Label) templ.Co
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, label := range labels {
-				templ_7745c5c3_Err = Checkbox(label.HTMLID(), label.Name, label.Checked).Render(ctx, templ_7745c5c3_Buffer)
+			for _, tag := range tags {
+				templ_7745c5c3_Err = Checkbox(tag.HTMLID(), tag.Name).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -151,7 +150,7 @@ func DashboardPage(data *CommonData, species []Species, labels []Label) templ.Co
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(data.Ln(ln.CheckInPatient))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/dashboard.templ`, Line: 44, Col: 106}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/dashboard.templ`, Line: 43, Col: 106}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -171,7 +170,7 @@ func DashboardPage(data *CommonData, species []Species, labels []Label) templ.Co
 	})
 }
 
-func Checkbox(id, name string, checked bool) templ.Component {
+func Checkbox(id, name string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -199,49 +198,39 @@ func Checkbox(id, name string, checked bool) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/dashboard.templ`, Line: 52, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/dashboard.templ`, Line: 51, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		if checked {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, " checked")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "> <label class=\"form-check-label\" for=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\"> <label class=\"form-check-label\" for=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/dashboard.templ`, Line: 53, Col: 47}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/dashboard.templ`, Line: 52, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/dashboard.templ`, Line: 54, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/dashboard.templ`, Line: 53, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</label></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</label></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

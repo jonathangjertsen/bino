@@ -8,17 +8,16 @@ type Species struct {
     Name string
 }
 
-type Label struct {
+type Tag struct {
     ID int32
     Name string
-    Checked bool
 }
 
-func (l Label) HTMLID() string {
+func (l Tag) HTMLID() string {
     return fmt.Sprintf("patient-label-%d", l.ID)
 }
 
-templ DashboardPage(data *CommonData, species []Species, labels []Label) {
+templ DashboardPage(data *CommonData, species []Species, tags []Tag) {
 	@Layout(data) {
         <div class="card b-card">
             <form>
@@ -37,8 +36,8 @@ templ DashboardPage(data *CommonData, species []Species, labels []Label) {
                 <div class="form-group">
                     <label>{data.Ln(ln.Tags)}</label>
                     <br/>
-                    for _, label := range labels {
-                        @Checkbox(label.HTMLID(), label.Name, label.Checked)
+                    for _, tag := range tags {
+                        @Checkbox(tag.HTMLID(), tag.Name)
                     }
                 </div>
                 <button type="submit" class="b-create-patient btn btn-primary">{data.Ln(ln.CheckInPatient)}</button>
@@ -47,9 +46,9 @@ templ DashboardPage(data *CommonData, species []Species, labels []Label) {
     }
 }
 
-templ Checkbox(id, name string, checked bool) {
+templ Checkbox(id, name string) {
     <div class="form-check form-check-inline">
-        <input class="form-check-input" type="checkbox" id={id} checked?={checked}>
+        <input class="form-check-input" type="checkbox" id={id}>
         <label class="form-check-label" for={id}>
             {name}
         </label>

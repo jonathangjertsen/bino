@@ -25,8 +25,7 @@ type AppuserLanguage struct {
 
 // Each row represents an event that may occur to a patient
 type Event struct {
-	ID        int32
-	ShortName string
+	ID int32
 }
 
 // Internationalization for event
@@ -75,6 +74,12 @@ type PatientEvent struct {
 	Note      string
 }
 
+// Each row represents a tag on a patient
+type PatientTag struct {
+	PatientID int32
+	TagID     int32
+}
+
 // Each row is a species
 type Species struct {
 	ID int32
@@ -93,8 +98,6 @@ type SpeciesLanguage struct {
 // Each row represents a possible status for a patient
 type Status struct {
 	ID int32
-	// A short name that may be used to refer to this status in code
-	ShortName string
 }
 
 // Internationalization for status
@@ -102,5 +105,18 @@ type StatusLanguage struct {
 	StatusID   int32
 	LanguageID int32
 	// The name of the status in the given language
+	Name string
+}
+
+// Each row represents a possible tag for a patient
+type Tag struct {
+	ID int32
+}
+
+// Internationalization for tag
+type TagLanguage struct {
+	TagID      int32
+	LanguageID int32
+	// The name of the tag in the given language
 	Name string
 }
