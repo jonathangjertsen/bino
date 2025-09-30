@@ -1,0 +1,20 @@
+package views
+
+import (
+    "github.com/jonathangjertsen/bino/ln"
+)
+
+templ AdminRootPage(data *CommonData) {
+	@Layout(data) {
+        <div class="card b-card">
+            <h1>{data.Ln(ln.AdminRoot)}</h1>
+            <ul>
+                <li>@NavbarPageLink(data.Ln(ln.ManageSpecies), "/species")</li>
+                <li>@NavbarPageLink(data.Ln(ln.ManageEvents), "/events")</li>
+                <li>@NavbarPageLink(data.Ln(ln.ManageTags), "/tags")</li>
+                <li>@NavbarPageLink(data.Ln(ln.ManageHomes), "/homes")</li>
+                <li>@NavbarPageLink(data.Ln(ln.ManageStatuses), "/statuses")</li>
+            </ul>
+        </div>
+    }
+}

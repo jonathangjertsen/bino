@@ -11,7 +11,7 @@ type SpeciesLangs struct {
     Names map[int32]string
 }
 
-templ SpeciesPage(data CommonData, species []SpeciesLangs) {
+templ SpeciesPage(data *CommonData, species []SpeciesLangs) {
 	@Layout(data) {
         <div class="card b-card">
             <h1>{data.Ln(ln.ManageSpecies)}</h1>

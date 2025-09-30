@@ -18,8 +18,8 @@ const (
 	PatientName
 	// Species is a L of type Species.
 	Species
-	// Details is a L of type Details.
-	Details
+	// Tags is a L of type Tags.
+	Tags
 	// CheckInPatient is a L of type CheckInPatient.
 	CheckInPatient
 	// ManageSpecies is a L of type ManageSpecies.
@@ -30,22 +30,52 @@ const (
 	Update
 	// AddSpecies is a L of type AddSpecies.
 	AddSpecies
+	// ManageHomes is a L of type ManageHomes.
+	ManageHomes
+	// Dashboard is a L of type Dashboard.
+	Dashboard
+	// ManageTags is a L of type ManageTags.
+	ManageTags
+	// Calendar is a L of type Calendar.
+	Calendar
+	// ManageStatuses is a L of type ManageStatuses.
+	ManageStatuses
+	// ManageEvents is a L of type ManageEvents.
+	ManageEvents
+	// AdminRoot is a L of type AdminRoot.
+	AdminRoot
+	// ViewHomes is a L of type ViewHomes.
+	ViewHomes
+	// ErrorPageHead is a L of type ErrorPageHead.
+	ErrorPageHead
+	// ErrorPageInstructions is a L of type ErrorPageInstructions.
+	ErrorPageInstructions
 )
 
 var ErrInvalidL = errors.New("not a valid L")
 
-const _LName = "LogOutPatientNameSpeciesDetailsCheckInPatientManageSpeciesLatinUpdateAddSpecies"
+const _LName = "LogOutPatientNameSpeciesTagsCheckInPatientManageSpeciesLatinUpdateAddSpeciesManageHomesDashboardManageTagsCalendarManageStatusesManageEventsAdminRootViewHomesErrorPageHeadErrorPageInstructions"
 
 var _LMap = map[L]string{
-	LogOut:         _LName[0:6],
-	PatientName:    _LName[6:17],
-	Species:        _LName[17:24],
-	Details:        _LName[24:31],
-	CheckInPatient: _LName[31:45],
-	ManageSpecies:  _LName[45:58],
-	Latin:          _LName[58:63],
-	Update:         _LName[63:69],
-	AddSpecies:     _LName[69:79],
+	LogOut:                _LName[0:6],
+	PatientName:           _LName[6:17],
+	Species:               _LName[17:24],
+	Tags:                  _LName[24:28],
+	CheckInPatient:        _LName[28:42],
+	ManageSpecies:         _LName[42:55],
+	Latin:                 _LName[55:60],
+	Update:                _LName[60:66],
+	AddSpecies:            _LName[66:76],
+	ManageHomes:           _LName[76:87],
+	Dashboard:             _LName[87:96],
+	ManageTags:            _LName[96:106],
+	Calendar:              _LName[106:114],
+	ManageStatuses:        _LName[114:128],
+	ManageEvents:          _LName[128:140],
+	AdminRoot:             _LName[140:149],
+	ViewHomes:             _LName[149:158],
+	ErrorPageHead:         _LName[158:171],
+	ErrorPageInstructions: _LName[171:192],
 }
 
 // String implements the Stringer interface.
@@ -64,15 +94,25 @@ func (x L) IsValid() bool {
 }
 
 var _LValue = map[string]L{
-	_LName[0:6]:   LogOut,
-	_LName[6:17]:  PatientName,
-	_LName[17:24]: Species,
-	_LName[24:31]: Details,
-	_LName[31:45]: CheckInPatient,
-	_LName[45:58]: ManageSpecies,
-	_LName[58:63]: Latin,
-	_LName[63:69]: Update,
-	_LName[69:79]: AddSpecies,
+	_LName[0:6]:     LogOut,
+	_LName[6:17]:    PatientName,
+	_LName[17:24]:   Species,
+	_LName[24:28]:   Tags,
+	_LName[28:42]:   CheckInPatient,
+	_LName[42:55]:   ManageSpecies,
+	_LName[55:60]:   Latin,
+	_LName[60:66]:   Update,
+	_LName[66:76]:   AddSpecies,
+	_LName[76:87]:   ManageHomes,
+	_LName[87:96]:   Dashboard,
+	_LName[96:106]:  ManageTags,
+	_LName[106:114]: Calendar,
+	_LName[114:128]: ManageStatuses,
+	_LName[128:140]: ManageEvents,
+	_LName[140:149]: AdminRoot,
+	_LName[149:158]: ViewHomes,
+	_LName[158:171]: ErrorPageHead,
+	_LName[171:192]: ErrorPageInstructions,
 }
 
 // ParseL attempts to convert a string to a L.

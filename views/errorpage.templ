@@ -1,0 +1,15 @@
+package views
+
+import (
+    "github.com/jonathangjertsen/bino/ln"
+)
+
+templ ErrorPage(data *CommonData, err error) {
+	@Layout(data) {
+        <div class="card b-card">
+            <h1>{data.Ln(ln.ErrorPageHead)}</h1>
+            <p>{data.Ln(ln.ErrorPageInstructions)}</p>
+            <pre>{err.Error()}</pre>
+        </div>
+    }
+}
