@@ -50,11 +50,13 @@ const (
 	ErrorPageHead
 	// ErrorPageInstructions is a L of type ErrorPageInstructions.
 	ErrorPageInstructions
+	// DefaultIncludeTag is a L of type DefaultIncludeTag.
+	DefaultIncludeTag
 )
 
 var ErrInvalidL = errors.New("not a valid L")
 
-const _LName = "LogOutPatientNameSpeciesTagsCheckInPatientManageSpeciesLatinUpdateAddManageHomesDashboardManageTagsCalendarManageStatusesManageEventsAdminRootViewHomesErrorPageHeadErrorPageInstructions"
+const _LName = "LogOutPatientNameSpeciesTagsCheckInPatientManageSpeciesLatinUpdateAddManageHomesDashboardManageTagsCalendarManageStatusesManageEventsAdminRootViewHomesErrorPageHeadErrorPageInstructionsDefaultIncludeTag"
 
 var _LMap = map[L]string{
 	LogOut:                _LName[0:6],
@@ -76,6 +78,7 @@ var _LMap = map[L]string{
 	ViewHomes:             _LName[142:151],
 	ErrorPageHead:         _LName[151:164],
 	ErrorPageInstructions: _LName[164:185],
+	DefaultIncludeTag:     _LName[185:202],
 }
 
 // String implements the Stringer interface.
@@ -113,6 +116,7 @@ var _LValue = map[string]L{
 	_LName[142:151]: ViewHomes,
 	_LName[151:164]: ErrorPageHead,
 	_LName[164:185]: ErrorPageInstructions,
+	_LName[185:202]: DefaultIncludeTag,
 }
 
 // ParseL attempts to convert a string to a L.

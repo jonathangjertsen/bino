@@ -6,17 +6,27 @@ import (
 
 type TagLangs struct {
     ID int32
+    DefaultShow bool
     Names
 }
 
 templ TagPage(data *CommonData, tags []TagLangs) {
     @CRUDPage{
         Header: ln.ManageTags,
+        LangIndependent: []ln.L{ln.DefaultIncludeTag},
     }.Component(data) {
         for _, tag := range tags {
-            @UpdateRow(data, tag.ID, tag) {}
+            @UpdateRow(data, tag.ID, tag) {
+                <td align="center">
+                    <input class="form-check-input form-control" data-field="default-show" type="checkbox" checked?={tag.DefaultShow}></input>
+                </td>
+            }
         }
-        @CreateRow(data) {}
+        @CreateRow(data) {
+            <td align="center">
+                <input class="form-check-input form-control" data-field="default-show" type="checkbox"></input>
+            </td>
+        }
     }
     <script src="/static/tagadmin.js"></script>
 }

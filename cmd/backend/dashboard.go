@@ -23,7 +23,7 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request, c
 		})
 	}
 
-	tagRows, err := server.Queries.GetTagWithLanguage(ctx, commonData.User.LanguageID)
+	tagRows, err := server.Queries.GetTagWithLanguageCheckin(ctx, commonData.User.LanguageID)
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return

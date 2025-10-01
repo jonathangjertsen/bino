@@ -109,9 +109,16 @@ SELECT * FROM tag_language
 ORDER BY (tag_id, language_id);
 
 -- name: AddTag :one
-INSERT INTO tag DEFAULT VALUES
+INSERT INTO tag (default_show)
+    VALUES ($1)
 RETURNING id
 ;
+
+-- name: UpdateTagDefaultShown :exec
+UPDATE tag SET default_show = $1
+WHERE id = $2
+;
+
 -- name: UpsertTagLanguage :exec
 INSERT INTO tag_language (tag_id, language_id, name)
 VALUES ($1, $2, $3)
@@ -122,5 +129,14 @@ ON CONFLICT (tag_id, language_id) DO UPDATE
 -- name: GetTagWithLanguage :many
 SELECT tag_id, name FROM tag_language
 WHERE language_id = $1
+ORDER BY (tag_id)
+;
+
+-- name: GetTagWithLanguageCheckin :many
+SELECT tag_id, name FROM tag_language
+INNER JOIN tag AS t
+    ON t.id = tag_language.tag_id
+WHERE language_id = $1
+    AND t.default_show
 ORDER BY (tag_id)
 ;

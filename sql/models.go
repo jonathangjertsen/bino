@@ -111,6 +111,8 @@ type StatusLanguage struct {
 // Each row represents a possible tag for a patient
 type Tag struct {
 	ID int32
+	// Whether to show this tag by default when creating a patient
+	DefaultShow bool
 }
 
 // Internationalization for tag

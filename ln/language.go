@@ -22,6 +22,7 @@ package ln
 // ViewHomes,
 // ErrorPageHead,
 // ErrorPageInstructions,
+// DefaultIncludeTag,
 //
 // )
 type L int
@@ -46,6 +47,7 @@ var NO = []string{
 	ViewHomes:             "Rehabhjem",
 	ErrorPageHead:         "Feilmelding",
 	ErrorPageInstructions: "Det skjedde noe feil under lasting av siden. Feilen har blitt logget og vil bli undersøkt. Send melding til administrator for hjelp. Den tekniske feilmeldingen følger under.",
+	DefaultIncludeTag:     "Vis ved innsjekk",
 }
 
 var EN = []string{
@@ -68,6 +70,7 @@ var EN = []string{
 	ViewHomes:             "Rehab homes",
 	ErrorPageHead:         "Error",
 	ErrorPageInstructions: "An error occurred while loading the page. The error has been logged and will be investigated. Send a message to the site admin for help. The technical error message is as follows.",
+	DefaultIncludeTag:     "Show at check-in",
 }
 
 var LANG = [][]string{

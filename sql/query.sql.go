@@ -47,12 +47,13 @@ func (q *Queries) AddStatus(ctx context.Context) (int32, error) {
 }
 
 const addTag = `-- name: AddTag :one
-INSERT INTO tag DEFAULT VALUES
+INSERT INTO tag (default_show)
+    VALUES ($1)
 RETURNING id
 `
 
-func (q *Queries) AddTag(ctx context.Context) (int32, error) {
-	row := q.db.QueryRow(ctx, addTag)
+func (q *Queries) AddTag(ctx context.Context, defaultShow bool) (int32, error) {
+	row := q.db.QueryRow(ctx, addTag, defaultShow)
 	var id int32
 	err := row.Scan(&id)
 	return id, err
@@ -357,24 +358,58 @@ func (q *Queries) GetTagWithLanguage(ctx context.Context, languageID int32) ([]G
 	return items, nil
 }
 
+const getTagWithLanguageCheckin = `-- name: GetTagWithLanguageCheckin :many
+SELECT tag_id, name FROM tag_language
+INNER JOIN tag AS t
+    ON t.id = tag_language.tag_id
+WHERE language_id = $1
+    AND t.default_show
+ORDER BY (tag_id)
+`
+
+type GetTagWithLanguageCheckinRow struct {
+	TagID int32
+	Name  string
+}
+
+func (q *Queries) GetTagWithLanguageCheckin(ctx context.Context, languageID int32) ([]GetTagWithLanguageCheckinRow, error) {
+	rows, err := q.db.Query(ctx, getTagWithLanguageCheckin, languageID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTagWithLanguageCheckinRow
+	for rows.Next() {
+		var i GetTagWithLanguageCheckinRow
+		if err := rows.Scan(&i.TagID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getTags = `-- name: GetTags :many
-SELECT id FROM tag
+SELECT id, default_show FROM tag
 ORDER BY id
 `
 
-func (q *Queries) GetTags(ctx context.Context) ([]int32, error) {
+func (q *Queries) GetTags(ctx context.Context) ([]Tag, error) {
 	rows, err := q.db.Query(ctx, getTags)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []int32
+	var items []Tag
 	for rows.Next() {
-		var id int32
-		if err := rows.Scan(&id); err != nil {
+		var i Tag
+		if err := rows.Scan(&i.ID, &i.DefaultShow); err != nil {
 			return nil, err
 		}
-		items = append(items, id)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -449,6 +484,21 @@ type SetUserLanguageParams struct {
 
 func (q *Queries) SetUserLanguage(ctx context.Context, arg SetUserLanguageParams) error {
 	_, err := q.db.Exec(ctx, setUserLanguage, arg.AppuserID, arg.LanguageID)
+	return err
+}
+
+const updateTagDefaultShown = `-- name: UpdateTagDefaultShown :exec
+UPDATE tag SET default_show = $1
+WHERE id = $2
+`
+
+type UpdateTagDefaultShownParams struct {
+	DefaultShow bool
+	ID          int32
+}
+
+func (q *Queries) UpdateTagDefaultShown(ctx context.Context, arg UpdateTagDefaultShownParams) error {
+	_, err := q.db.Exec(ctx, updateTagDefaultShown, arg.DefaultShow, arg.ID)
 	return err
 }
 

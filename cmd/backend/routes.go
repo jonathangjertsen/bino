@@ -368,12 +368,12 @@ func (server *Server) getEventHandler(w http.ResponseWriter, r *http.Request, co
 
 func (server *Server) postTagHandler(w http.ResponseWriter, r *http.Request, commonData *views.CommonData) {
 	type reqT struct {
-		Latin     string
-		Languages map[int32]string
+		DefaultShow bool
+		Languages   map[int32]string
 	}
 	jsonHandler(server, w, r, func(q *sql.Queries, req reqT) error {
 		ctx := r.Context()
-		id, err := q.AddTag(ctx)
+		id, err := q.AddTag(ctx, req.DefaultShow)
 		if err != nil {
 			return err
 		}
@@ -392,12 +392,16 @@ func (server *Server) postTagHandler(w http.ResponseWriter, r *http.Request, com
 
 func (server *Server) putTagHandler(w http.ResponseWriter, r *http.Request, commonData *views.CommonData) {
 	type reqT struct {
-		ID        int32
-		Latin     string
-		Languages map[int32]string
+		ID          int32
+		DefaultShow bool
+		Languages   map[int32]string
 	}
 	jsonHandler(server, w, r, func(q *sql.Queries, req reqT) error {
 		ctx := r.Context()
+		err := q.UpdateTagDefaultShown(ctx, sql.UpdateTagDefaultShownParams{ID: req.ID, DefaultShow: req.DefaultShow})
+		if err != nil {
+			return err
+		}
 		for langID, name := range req.Languages {
 			if err := q.UpsertTagLanguage(ctx, sql.UpsertTagLanguageParams{
 				TagID:      req.ID,
@@ -430,15 +434,16 @@ func (server *Server) getTagHandler(w http.ResponseWriter, r *http.Request, comm
 	iLangRows := 0
 	for _, row := range rows {
 		status := views.TagLangs{
-			ID:    row,
-			Names: map[int32]string{},
+			ID:          row.ID,
+			DefaultShow: row.DefaultShow,
+			Names:       map[int32]string{},
 		}
 		for {
 			if iLangRows >= len(langRows) {
 				break
 			}
 			langRow := langRows[iLangRows]
-			if langRow.TagID == row {
+			if langRow.TagID == row.ID {
 				status.Names[langRow.LanguageID] = langRow.Name
 				iLangRows++
 			} else {
