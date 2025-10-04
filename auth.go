@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/jonathangjertsen/bino/ln"
 	"golang.org/x/oauth2"
 )
 
@@ -67,7 +68,7 @@ func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (Comm
 		AppuserID:       user.ID,
 		DisplayName:     user.DisplayName,
 		Email:           user.Email,
-		LanguageID:      user.LanguageID,
+		Language:        ln.GetLanguage(user.LanguageID),
 		PreferredHomeID: preferredHome,
 		Homes:           homes,
 		LoggingConsent:  loggingConsent,

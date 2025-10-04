@@ -1,13 +1,9 @@
 package main
 
-import (
-    "github.com/jonathangjertsen/bino/ln"
-)
-
 templ SpeciesPage(data *CommonData, species []SpeciesLangs) {
     @CRUDPage{
-        Header: ln.AdminManageSpecies,
-        LangIndependent: []ln.L{ln.GenericLatin},
+        Header: data.User.Language.AdminManageSpecies,
+        LangIndependent: []string{data.User.Language.GenericLatin},
     }.Component(data) {
         for _, species := range species {
             @UpdateRow(data, species.ID, species) {
@@ -15,7 +11,7 @@ templ SpeciesPage(data *CommonData, species []SpeciesLangs) {
             }
         }
         @CreateRow(data) {
-            <td><input class="form-control" value="" data-field="latin" placeholder={data.Ln(ln.GenericLatin)}/></td>
+            <td><input class="form-control" value="" data-field="latin" placeholder={data.User.Language.GenericLatin}/></td>
         }
     }
     <script src="/static/speciesadmin.js"></script>

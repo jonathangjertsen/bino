@@ -2,19 +2,17 @@ package main
 
 import (
     "fmt"
-
-    "github.com/jonathangjertsen/bino/ln"
 )
 
 templ (page CRUDPage) Component(data *CommonData) {
     @Layout(data) {
-        <h1>{data.Ln(page.Header)}</h1>
+        <h1>{page.Header}</h1>
         @Card() {
             <table class="table">
             <thead>
                 <tr>
                     for _, key := range page.LangIndependent {
-                        <th>{data.Ln(key)}</th>
+                        <th>{key}</th>
                     }
                     for _, lang := range data.Languages {
                         <th>{lang.SelfName}</th>
@@ -46,7 +44,7 @@ templ UpdateRow(data *CommonData,  id int32, obj interface{Name(id int32) (strin
         }
         <td>
             <button class="btn btn-outline-primary update-submit" data-id={fmt.Sprintf("%d", id)}>
-                {data.Ln(ln.GenericUpdate)}
+                {data.User.Language.GenericUpdate}
             </button>
         </td>
     </tr>
@@ -63,7 +61,7 @@ templ CreateRow(data *CommonData) {
         }
         <td>
             <button class="btn btn-outline-success" id="new-submit">
-                {data.Ln(ln.GenericAdd)}
+                {data.User.Language.GenericAdd}
             </button>
         </td>
     </tr>

@@ -1,17 +1,13 @@
 package main
 
-import (
-    "github.com/jonathangjertsen/bino/ln"
-)
-
 templ AdminRootPage(data *CommonData) {
 	@Layout(data) {
-        <h1>{data.Ln(ln.AdminRoot)}</h1>
+        <h1>{data.User.Language.AdminRoot}</h1>
         <div class="card b-card">
             <ul>
-                <li>@NavbarPageLink(data.Ln(ln.AdminManageSpecies), "/species")</li>
-                <li>@NavbarPageLink(data.Ln(ln.AdminManageTags), "/tag")</li>
-                <li>@NavbarPageLink(data.Ln(ln.AdminManageHomes), "/homes")</li>
+                <li>@NavbarPageLink(data.User.Language.AdminManageSpecies, "/species")</li>
+                <li>@NavbarPageLink(data.User.Language.AdminManageTags, "/tag")</li>
+                <li>@NavbarPageLink(data.User.Language.AdminManageHomes, "/homes")</li>
             </ul>
         </div>
     }

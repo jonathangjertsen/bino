@@ -1,10 +1,8 @@
 package main
 
-import "github.com/jonathangjertsen/bino/ln"
-
 type CRUDPage struct {
-	Header          ln.L
-	LangIndependent []ln.L
+	Header          string
+	LangIndependent []string
 }
 
 type Names map[int32]string

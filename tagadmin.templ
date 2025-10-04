@@ -1,13 +1,9 @@
 package main
 
-import (
-    "github.com/jonathangjertsen/bino/ln"
-)
-
 templ TagPage(data *CommonData, tags []TagLangs) {
     @CRUDPage{
-        Header: ln.AdminManageTags,
-        LangIndependent: []ln.L{ln.AdminDefaultIncludeTag},
+        Header: data.User.Language.AdminManageTags,
+        LangIndependent: []string{data.User.Language.AdminDefaultIncludeTag},
     }.Component(data) {
         for _, tag := range tags {
             @UpdateRow(data, tag.ID, tag) {

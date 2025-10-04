@@ -2,12 +2,13 @@ package main
 
 import (
     "fmt"
+	"github.com/jonathangjertsen/bino/ln"
 )
 
 templ Privacy(data *CommonData, config PrivacyConfig) {
 	@Layout(data) {
         @Card() {
-            if data.User.LanguageID == 1 {
+            if data.User.Language.ID == ln.NO.ID {
                 <h1>Personvern</h1>
                 <h2>1. Personopplysninger som lagres</h2>
                 <p>Bino lagrer informasjon om deg utelukkende for å la deg ha en konto og for å organisere informasjon om pasienter:</p>

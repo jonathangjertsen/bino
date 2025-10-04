@@ -10,6 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"fmt"
+	"github.com/jonathangjertsen/bino/ln"
 )
 
 func Privacy(data *CommonData, config PrivacyConfig) templ.Component {
@@ -57,7 +58,7 @@ func Privacy(data *CommonData, config PrivacyConfig) templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				if data.User.LanguageID == 1 {
+				if data.User.Language.ID == ln.NO.ID {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<h1>Personvern</h1><h2>1. Personopplysninger som lagres</h2><p>Bino lagrer informasjon om deg utelukkende for å la deg ha en konto og for å organisere informasjon om pasienter:</p><ol><li>Eventuell informasjon du har oppgitt om deg selv, for eksempel navn og profilbilde.</li><li>Innstillinger for siden som må huskes mellom nettlesersesjoner, for eksempel foretrukket språk.</li><li>Email-addressen din og en ID assosiert med Google-kontoen din. Dette brukes for å la deg logge inn. Det vises ikke til noen.</li><li>Innhold du har laget på siden, for eksempel tekst og bilder av pasienter, samt pasienthistorikk.</li></ol><p>Bino leverer ikke opplysninger til noen tredjeparter (utenom Google for innlogging, og da kun informasjonen i punkt 1).</p><h2>2. Logging av aktivitet</h2><p>Bino gjør ingen tracking eller fingerprinting, uansett hvilke personvernsinnstillinger du har satt.</p><p>For å hjelpe med å løse tekniske problemer kan du velge å la oss logge aktiviteten din på siden, f.eks når du klikker på lenker eller sender inn skjema. Ikke slå på denne innstillingen med mindre administrator har bedt deg gjøre det for å løse et spesifikt problem. Tillatelsen blir automatisk fjernet etter ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -65,7 +66,7 @@ func Privacy(data *CommonData, config PrivacyConfig) templ.Component {
 					var templ_7745c5c3_Var4 string
 					templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", config.RevokeConsentPolicy))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `privacy.templ`, Line: 30, Col: 108}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `privacy.templ`, Line: 31, Col: 108}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 					if templ_7745c5c3_Err != nil {
@@ -78,7 +79,7 @@ func Privacy(data *CommonData, config PrivacyConfig) templ.Component {
 					var templ_7745c5c3_Var5 string
 					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", config.LogDeletionPolicy))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `privacy.templ`, Line: 31, Col: 100}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `privacy.templ`, Line: 32, Col: 100}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 					if templ_7745c5c3_Err != nil {
@@ -106,7 +107,7 @@ func Privacy(data *CommonData, config PrivacyConfig) templ.Component {
 					var templ_7745c5c3_Var6 string
 					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", config.LogDeletionPolicy))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `privacy.templ`, Line: 67, Col: 107}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `privacy.templ`, Line: 68, Col: 107}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 					if templ_7745c5c3_Err != nil {
@@ -119,7 +120,7 @@ func Privacy(data *CommonData, config PrivacyConfig) templ.Component {
 					var templ_7745c5c3_Var7 string
 					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", config.RevokeConsentPolicy))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `privacy.templ`, Line: 69, Col: 108}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `privacy.templ`, Line: 70, Col: 108}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 					if templ_7745c5c3_Err != nil {

@@ -23,13 +23,13 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	commonData := MustLoadCommonData(ctx)
 
-	species, err := server.Queries.GetSpeciesWithLanguage(ctx, commonData.User.LanguageID)
+	species, err := server.Queries.GetSpeciesWithLanguage(ctx, commonData.User.Language.ID)
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return
 	}
 
-	tags, err := server.Queries.GetTagWithLanguageCheckin(ctx, commonData.User.LanguageID)
+	tags, err := server.Queries.GetTagWithLanguageCheckin(ctx, commonData.User.Language.ID)
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return

@@ -1,14 +1,10 @@
 package main
 
-import (
-    "github.com/jonathangjertsen/bino/ln"
-)
-
 templ ErrorPage(data *CommonData, err error) {
 	@Layout(data) {
         <div class="card b-card">
-            <h1>{data.Ln(ln.ErrorPageHead)}</h1>
-            <p>{data.Ln(ln.ErrorPageInstructions)}</p>
+            <h1>{data.User.Language.ErrorPageHead}</h1>
+            <p>{data.User.Language.ErrorPageInstructions}</p>
             <pre>{err.Error()}</pre>
         </div>
     }

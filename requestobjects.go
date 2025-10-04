@@ -39,22 +39,14 @@ type CommonData struct {
 	Languages []LanguageView
 }
 
-func (cd *CommonData) Ln(key ln.L) string {
-	return cd.User.Ln(key)
-}
-
 type UserData struct {
 	AppuserID       int32
 	DisplayName     string
 	PreferredHomeID int32
 	Homes           []int32
 	Email           string
-	LanguageID      int32
+	Language        *ln.Language
 	LoggingConsent  bool
-}
-
-func (ud *UserData) Ln(key ln.L) string {
-	return ln.Ln(ud.LanguageID, key)
 }
 
 type LanguageView struct {

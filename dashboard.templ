@@ -1,18 +1,16 @@
 package main
 
-import "github.com/jonathangjertsen/bino/ln"
-
 templ DashboardPage(data *CommonData, dashboardData DashboardData) {
 	@Layout(data) {
         <div class="dashboard">
             @Card() {
                 <form action="/" method="POST">
                     <div class="form-group">
-                        <label>{data.Ln(ln.CheckinPatientName)}</label>
+                        <label>{data.User.Language.CheckinPatientName}</label>
                         <input class="form-control" name="name">
                     </div>
                     <div class="form-group">
-                        <label>{data.Ln(ln.GenericSpecies)}</label>
+                        <label>{data.User.Language.GenericSpecies}</label>
                         <select class="form-control" name="species">
                             for _, sp := range dashboardData.Species {
                                 <option value={sp.SpeciesID}>{sp.Name}</option>
@@ -20,7 +18,7 @@ templ DashboardPage(data *CommonData, dashboardData DashboardData) {
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>{data.Ln(ln.GenericTags)}</label>
+                        <label>{data.User.Language.GenericTags}</label>
                         <br/>
                         for _, tag := range dashboardData.Tags {
                             <div class="form-check-inline checkbox" data-hidden={!tag.DefaultShow}>
@@ -33,7 +31,7 @@ templ DashboardPage(data *CommonData, dashboardData DashboardData) {
                     </div>
 
                     <div class="form-group">
-                        <label for="patient-home">{data.Ln(ln.HomesHomeName)}</label>
+                        <label for="patient-home">{data.User.Language.HomesHomeName}</label>
                         <select class="form-control" name="home">
                             for _, home := range dashboardData.Homes {
                                 <option value={home.ID} selected?={home.ID == data.User.PreferredHomeID}>{home.Name}</option>
@@ -45,17 +43,17 @@ templ DashboardPage(data *CommonData, dashboardData DashboardData) {
                         <div class="form-check-inline">
                             <input type="checkbox" name="admitted" id="admitted" checked>
                             <label for="admitted">
-                                {data.Ln(ln.CheckinIHaveThePatient)}
+                                {data.User.Language.CheckinIHaveThePatient}
                             </label>
                         </div>
                     </div>
                     
                     <div class="form-group">
-                        <button type="submit" disabled?={data.User.PreferredHomeID == 0} class="b-create-patient btn btn-primary">{data.Ln(ln.CheckinCheckInPatient)}</button>
+                        <button type="submit" disabled?={data.User.PreferredHomeID == 0} class="b-create-patient btn btn-primary">{data.User.Language.CheckinCheckInPatient}</button>
                     </div>
 
                     if data.User.PreferredHomeID == 0 {
-                        <p class="small m-0">{data.Ln(ln.HomesCannotAddPatientBecauseUserIsHomeless)}</p>
+                        <p class="small m-0">{data.User.Language.CheckinYouAreHomeless}</p>
                     }
                 </form>
             }
