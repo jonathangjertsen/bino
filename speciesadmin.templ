@@ -1,0 +1,28 @@
+package main
+
+import (
+    "github.com/jonathangjertsen/bino/ln"
+)
+
+type SpeciesLangs struct {
+    ID int32
+    LatinName string
+    Names
+}
+
+templ SpeciesPage(data *CommonData, species []SpeciesLangs) {
+    @CRUDPage{
+        Header: ln.ManageSpecies,
+        LangIndependent: []ln.L{ln.Latin},
+    }.Component(data) {
+        for _, species := range species {
+            @UpdateRow(data, species.ID, species) {
+                <td><input class="form-control" data-field="latin" value={species.LatinName}/></td>
+            }
+        }
+        @CreateRow(data) {
+            <td><input class="form-control" value="" data-field="latin" placeholder={data.Ln(ln.Latin)}/></td>
+        }
+    }
+    <script src="/static/speciesadmin.js"></script>
+}

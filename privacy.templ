@@ -1,0 +1,84 @@
+package main
+
+import (
+    "fmt"
+)
+
+type PrivacyConfig struct {
+    LogDeletionPolicy int
+    RevokeConsentPolicy int
+}
+
+templ Privacy(data *CommonData, config PrivacyConfig) {
+	@Layout(data) {
+        @Card() {
+            if data.User.LanguageID == 1 {
+                <h1>Personvern</h1>
+                <h2>1. Personopplysninger som lagres</h2>
+                <p>Bino lagrer informasjon om deg utelukkende for å la deg ha en konto og for å organisere informasjon om pasienter:</p>
+                <ol>
+                    <li>Eventuell informasjon du har oppgitt om deg selv, for eksempel navn og profilbilde.</li>
+                    <li>Innstillinger for siden som må huskes mellom nettlesersesjoner, for eksempel foretrukket språk.</li>
+                    <li>Email-addressen din og en ID assosiert med Google-kontoen din. Dette brukes for å la deg logge inn. Det vises ikke til noen.</li>
+                    <li>Innhold du har laget på siden, for eksempel tekst og bilder av pasienter, samt pasienthistorikk.</li>
+                </ol>
+                <p>
+                    Bino leverer ikke opplysninger til noen tredjeparter (utenom Google for innlogging, og da kun informasjonen i punkt 1).
+                </p>
+
+                <h2>2. Logging av aktivitet</h2>
+                <p>Bino gjør ingen tracking eller fingerprinting, uansett hvilke personvernsinnstillinger du har satt.</p>
+                <p>
+                    For å hjelpe med å løse tekniske problemer kan du velge å la oss logge aktiviteten din på siden,
+                    f.eks når du klikker på lenker eller sender inn skjema.
+                    Ikke slå på denne innstillingen med mindre administrator har bedt deg gjøre det for å løse et spesifikt problem.
+                    Tillatelsen blir automatisk fjernet etter {fmt.Sprintf("%d", config.RevokeConsentPolicy)} dager,
+                    og loggene slettes automatisk etter {fmt.Sprintf("%d", config.LogDeletionPolicy)} dager.
+                </p>
+                <form>
+                    <label for="logging-consent">Tillat logging</label>
+                    <input id="logging-consent" label="logging-consent" type="checkbox" checked?={data.User.LoggingConsent}>
+                    <input type="submit" value="Oppdater">
+                </form>
+
+                <h2>3. Sletting</h2>
+                <p>
+                    Når du forlater organisasjonen, kan du kreve at administrator innen rimelig tid sletter opplysninger om deg i henhold til
+                    <a 
+                        href="https://www.datatilsynet.no/rettigheter-og-plikter/den-registrertes-rettigheter/rett-til-sletting/"
+                    >Personvernforordningen (GDPR) §17</a>.
+                    Bino har en slette-knapp som lar administrator slette så mye informasjon som mulig uten å forstyrre organisasjonens drift.
+                    Pasienter vil fortsatt være knyttet til en anonym ID, men visningsnavnet blir erstattet med "Slettet bruker".
+                </p>
+                <p>
+                    Det er administrators plikt å sørge for at data generert av Bino (for eksempel loggene nevnt i seksjon) slettes.
+                </p>
+            } else {
+                <h1>Privacy</h1>
+                <p>Bino stores information about you for the sole purpose of having an account and organizing information about patients:</p>
+                <ul>
+                    <li>Your email address and Google account ID. This is used to let you log in. It is not shown to anyone.</li>
+                    <li>Any information you have uploaded about yourself, such as your display name and profile picture.</li>
+                    <li>Your site preferences (e.g., language setting), so that it is remembered between browser sessions.</li>
+                    <li>Any content you have uploaded to the site (e.g., patients).</li>
+                </ul>
+                <p>
+                    Google is used as a login provider. Other than that, there is no communication with third-parties whatsoever.
+                </p>
+                <h2>Logging av aktivitet</h2>
+                <p>Bino does not do any tracking or fingerprinting, regardless of your privacy settings.</p>
+                <p>
+                    To help resolving technical issues, you may opt in to letting us log your activity on the site (such as clicking links or submitting forms).
+                    These logs are deleted automatically after {fmt.Sprintf("%d", config.LogDeletionPolicy)} days.
+                    Do not enable this unless you have been asked by an administrator to help solve a specific issue you are having with the site.
+                    You will be automatically opted out after {fmt.Sprintf("%d", config.RevokeConsentPolicy)} days.
+                </p>
+                <form>
+                    <label for="logging-consent">Opt in to logging</label>
+                    <input id="logging-consent" label="logging-consent" type="checkbox">
+                    <input type="submit" value="Update">
+                </form>
+            }
+        }
+    }
+}

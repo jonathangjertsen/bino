@@ -4,7 +4,7 @@ backend: $(shell find . -name "*.go") go.mod
 	sqlc generate
 	go tool templ generate
 	go generate ./...
-	go build -o backend github.com/jonathangjertsen/bino/cmd/backend
+	go build -o backend github.com/jonathangjertsen/bino
 	./backend
 
 init_db:
