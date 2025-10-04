@@ -7,6 +7,8 @@ import (
 	"github.com/jonathangjertsen/bino/sql"
 )
 
+var BuildKey string
+
 func main() {
 	ctx := context.Background()
 
@@ -18,7 +20,11 @@ func main() {
 
 	queries := sql.New(conn)
 
-	err = startServer(ctx, conn, queries)
+	if BuildKey == "" {
+		panic("missing build key")
+	}
+
+	err = startServer(ctx, conn, queries, BuildKey)
 	if err != nil {
 		panic(err)
 	}

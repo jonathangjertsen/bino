@@ -23,6 +23,7 @@ type Server struct {
 	Cookies       *sessions.CookieStore
 	OAuthConfig   *oauth2.Config
 	TokenVerifier *oidc.IDTokenVerifier
+	BuildKey      string
 }
 
 func (s *Server) Transaction(ctx context.Context, f func(ctx context.Context, q *sql.Queries) error) error {
@@ -53,7 +54,7 @@ func getStatusCode(err error) int {
 	return http.StatusInternalServerError
 }
 
-func startServer(ctx context.Context, conn *pgxpool.Pool, queries *sql.Queries) error {
+func startServer(ctx context.Context, conn *pgxpool.Pool, queries *sql.Queries, buildKey string) error {
 	sessionKey, err := os.ReadFile("secret/session_key")
 	if err != nil {
 		return err
@@ -89,6 +90,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *sql.Queries) 
 		TokenVerifier: provider.Verifier(&oidc.Config{
 			ClientID: c.Web.ClientID,
 		}),
+		BuildKey: buildKey,
 	}
 
 	mux := http.NewServeMux()
@@ -126,7 +128,11 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *sql.Queries) 
 	mux.HandleFunc("POST /homes", server.requireLogin(server.postHomeHandler))
 
 	// Available to all
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	staticDir := fmt.Sprintf("/static/%s/", buildKey)
+	mux.Handle(
+		staticDir,
+		http.StripPrefix(staticDir, http.FileServer(http.Dir("static"))),
+	)
 
 	mux.HandleFunc("/privacy", server.requireLogin(server.privacyHandler))
 

@@ -52,11 +52,19 @@ func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (Comm
 		return CommonData{}, err
 	}
 
+	homes, err := server.Queries.GetHomesForUser(ctx, user.ID)
+	preferredHome := int32(0)
+	if len(homes) > 0 {
+		preferredHome = homes[0]
+	}
+
 	userData := UserData{
-		AppuserID:   user.ID,
-		DisplayName: user.DisplayName,
-		Email:       user.Email,
-		LanguageID:  user.LanguageID,
+		AppuserID:       user.ID,
+		DisplayName:     user.DisplayName,
+		Email:           user.Email,
+		LanguageID:      user.LanguageID,
+		PreferredHomeID: preferredHome,
+		Homes:           homes,
 	}
 
 	languages, err := server.Queries.GetLanguages(ctx)
@@ -72,6 +80,7 @@ func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (Comm
 	commonData := CommonData{
 		User:      userData,
 		Languages: viewLanguages,
+		BuildKey:  server.BuildKey,
 	}
 
 	return commonData, err

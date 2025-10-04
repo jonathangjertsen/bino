@@ -38,6 +38,7 @@ package ln
 // None,
 // ArchiveHome,
 // Privacy,
+// SourceCode,
 //
 // )
 type L int
@@ -77,6 +78,7 @@ var NO = []string{
 	None:                                  "Ingen",
 	ArchiveHome:                           "Arkiver rehabhjem",
 	Privacy:                               "Personvern",
+	SourceCode:                            "Kildekode",
 }
 
 var EN = []string{
@@ -114,6 +116,7 @@ var EN = []string{
 	None:                                  "None",
 	ArchiveHome:                           "Archive rehab home",
 	Privacy:                               "Privacy",
+	SourceCode:                            "Source code",
 }
 
 var LANG = [][]string{

@@ -6,6 +6,7 @@ type UserData struct {
 	AppuserID       int32
 	DisplayName     string
 	PreferredHomeID int32
+	Homes           []int32
 	Email           string
 	LanguageID      int32
 	LoggingConsent  bool
@@ -22,6 +23,7 @@ type Language struct {
 }
 
 type CommonData struct {
+	BuildKey  string
 	User      UserData
 	Languages []Language
 }

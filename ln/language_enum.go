@@ -82,11 +82,13 @@ const (
 	ArchiveHome
 	// Privacy is a L of type Privacy.
 	Privacy
+	// SourceCode is a L of type SourceCode.
+	SourceCode
 )
 
 var ErrInvalidL = errors.New("not a valid L")
 
-const _LName = "LogOutPatientNameSpeciesTagsCheckInPatientManageSpeciesLatinUpdateAddManageHomesDashboardManageTagsCalendarManageStatusesManageEventsAdminRootViewHomesErrorPageHeadErrorPageInstructionsDefaultIncludeTagUnassignedUsersDisplayNameEmailAddressAddToHomeCreateHomeHomeNameCreateHomeNoteEmptyHomeAddUserToHomeCannotAddPatientBecauseUserIsHomelessRemoveFromCurrentMoveNoneArchiveHomePrivacy"
+const _LName = "LogOutPatientNameSpeciesTagsCheckInPatientManageSpeciesLatinUpdateAddManageHomesDashboardManageTagsCalendarManageStatusesManageEventsAdminRootViewHomesErrorPageHeadErrorPageInstructionsDefaultIncludeTagUnassignedUsersDisplayNameEmailAddressAddToHomeCreateHomeHomeNameCreateHomeNoteEmptyHomeAddUserToHomeCannotAddPatientBecauseUserIsHomelessRemoveFromCurrentMoveNoneArchiveHomePrivacySourceCode"
 
 var _LMap = map[L]string{
 	LogOut:                                _LName[0:6],
@@ -124,6 +126,7 @@ var _LMap = map[L]string{
 	None:                                  _LName[361:365],
 	ArchiveHome:                           _LName[365:376],
 	Privacy:                               _LName[376:383],
+	SourceCode:                            _LName[383:393],
 }
 
 // String implements the Stringer interface.
@@ -177,6 +180,7 @@ var _LValue = map[string]L{
 	_LName[361:365]: None,
 	_LName[365:376]: ArchiveHome,
 	_LName[376:383]: Privacy,
+	_LName[383:393]: SourceCode,
 }
 
 // ParseL attempts to convert a string to a L.

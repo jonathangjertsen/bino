@@ -6,9 +6,9 @@ import (
 
 templ HomesPage(data *CommonData, homes []Home, homeless []User) {
     @Layout(data) {
+        <h1>{data.Ln(ln.ViewHomes)}</h1>
         @Card() {
             // List of homes
-            <h1>{data.Ln(ln.ViewHomes)}</h1>
             for _, home := range homes {
                 @Card() {
                     <h2>{home.Name}</h2>
@@ -60,10 +60,10 @@ templ HomesPage(data *CommonData, homes []Home, homeless []User) {
                     </form>
                 }
             }
+        }
 
-            <hr/>
-
-            // Create home-form
+        // Create home-form
+        @Card() {
             <h2>{data.Ln(ln.CreateHome)}</h2>
             <p class="small">{data.Ln(ln.CreateHomeNote)}</p>
             <form class="form-inline" action="/homes" method="POST">
@@ -72,11 +72,11 @@ templ HomesPage(data *CommonData, homes []Home, homeless []User) {
                 <button type="submit" class="btn btn-primary mb-2">{data.Ln(ln.Add)}</button>
                 <input type="hidden" name="form-id" value="create-home">
             </form>
+        }
 
-            // Unassigned users
-            if len(homeless) > 0 {
-                <hr/>
-
+        // Unassigned users
+        if len(homeless) > 0 {
+            @Card() {
                 <h2>{data.Ln(ln.UnassignedUsers)}</h2>
                 for _, user := range homeless {
                     @user.Component(data) {

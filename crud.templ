@@ -8,8 +8,8 @@ import (
 
 templ (page CRUDPage) Component(data *CommonData) {
     @Layout(data) {
+        <h1>{data.Ln(page.Header)}</h1>
         @Card() {
-            <h1>{data.Ln(page.Header)}</h1>
             <table class="table">
             <thead>
                 <tr>

@@ -224,6 +224,31 @@ func (q *Queries) GetHomes(ctx context.Context) ([]Home, error) {
 	return items, nil
 }
 
+const getHomesForUser = `-- name: GetHomesForUser :many
+SELECT home_id FROM home_appuser
+WHERE appuser_id = $1
+`
+
+func (q *Queries) GetHomesForUser(ctx context.Context, appuserID int32) ([]int32, error) {
+	rows, err := q.db.Query(ctx, getHomesForUser, appuserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int32
+	for rows.Next() {
+		var home_id int32
+		if err := rows.Scan(&home_id); err != nil {
+			return nil, err
+		}
+		items = append(items, home_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getLanguages = `-- name: GetLanguages :many
 SELECT id, short_name, self_name FROM language
 ORDER BY id ASC

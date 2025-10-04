@@ -169,3 +169,8 @@ DELETE FROM home_appuser
 WHERE home_id = $1
   AND appuser_id = $2
 ;
+
+-- name: GetHomesForUser :many
+SELECT home_id FROM home_appuser
+WHERE appuser_id = $1
+;

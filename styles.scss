@@ -1,7 +1,13 @@
-[data-bs-theme="custom"] {
-    --bs-primary: #ff5722;
-    --bs-btn-disabled-bg: #ff5722;
-}
+
+@use "node_modules/bootstrap/scss/bootstrap" with (
+    $enable-shadows: true,
+    $enable-rounded: false,
+);
+
+$body: #8894a2;
+$light: mix($body, white, 33);
+$dark: #2b2f3a;
+$text: white;
 
 html, body {
     height: 100%;
@@ -11,10 +17,18 @@ html, body {
 body {
     display: flex;
     flex-direction: column;
+    background-color: $body;
+    color: $text;
 }
 
 .main {
     flex: 1;
+}
+
+.brand {
+    color: $text;
+    text-decoration: none;
+    font-size: large;
 }
 
 .display-name {
@@ -26,6 +40,10 @@ body {
     transition: none !important;
 }
 
+.navbar-toggler {
+    background-color: $light;
+}
+
 .navbar-collapse {
     display: flex;
     justify-content: right;
@@ -33,7 +51,6 @@ body {
 
 .b-navbar-item {
     margin: 0.5em;
-    font-weight: bold;
     text-decoration: none;
 }
 
@@ -50,35 +67,29 @@ body {
     margin: auto;
 }
 
-.b-color-lightgray {
-    color: rgb(200, 200, 200) !important;
-}
-
-.b-color-darkgray {
-    color: rgb(80, 80, 80) !important;
-}
-
-.b-color-purple {
-    color: rgb(102, 51, 153) !important;
-}
-
-.b-color-green {
-    color: #198754 !important;
-}
-
 .b-new-patient {
     width: 100%;
     margin: 1em;
 }
 
-.b-navbar {
+nav {
+    background-color: $dark;
     padding: 0.5em !important;
-    background-color: #dddddd !important;
+    margin-bottom: 1em;
+    a {
+        color: $text;
+    }
+}
+
+h1 {
+    margin-bottom: 0.5rem;
+    margin-left: 0.5rem;
 }
 
 .b-card {
-    padding: 0.5em !important;
-    margin: 0.5em !important;
+    padding: 1em !important;
+    margin-bottom: 0.5em !important;
+    background-color: $light;
 }
 
 .b-create-patient {
@@ -95,12 +106,12 @@ body {
     width: 100%;
     height: 60px;
     line-height: 60px;
-    background-color: #dddddd !important;
+    background-color: $dark;
+    a {
+        color: $text;
+    }
 }
 
-.push-footer {
-    margin-bottom: 60px;
-}
 
 .form-inline {
     text-align: right;
