@@ -11,7 +11,7 @@ type EventLangs struct {
 	Names
 }
 
-func (server *Server) postEventHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
+func (server *Server) postEventHandler(w http.ResponseWriter, r *http.Request) {
 	type reqT struct {
 		Latin     string
 		Languages map[int32]string
@@ -35,7 +35,7 @@ func (server *Server) postEventHandler(w http.ResponseWriter, r *http.Request, c
 	})
 }
 
-func (server *Server) putEventHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
+func (server *Server) putEventHandler(w http.ResponseWriter, r *http.Request) {
 	type reqT struct {
 		ID        int32
 		Latin     string
@@ -56,8 +56,9 @@ func (server *Server) putEventHandler(w http.ResponseWriter, r *http.Request, co
 	})
 }
 
-func (server *Server) getEventHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
+func (server *Server) getEventHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
 
 	rows, err := server.Queries.GetEvents(ctx)
 	if err != nil {

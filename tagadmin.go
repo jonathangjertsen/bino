@@ -12,7 +12,7 @@ type TagLangs struct {
 	Names
 }
 
-func (server *Server) postTagHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
+func (server *Server) postTagHandler(w http.ResponseWriter, r *http.Request) {
 	type reqT struct {
 		DefaultShow bool
 		Languages   map[int32]string
@@ -36,7 +36,7 @@ func (server *Server) postTagHandler(w http.ResponseWriter, r *http.Request, com
 	})
 }
 
-func (server *Server) putTagHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
+func (server *Server) putTagHandler(w http.ResponseWriter, r *http.Request) {
 	type reqT struct {
 		ID          int32
 		DefaultShow bool
@@ -61,8 +61,9 @@ func (server *Server) putTagHandler(w http.ResponseWriter, r *http.Request, comm
 	})
 }
 
-func (server *Server) getTagHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
+func (server *Server) getTagHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
 
 	rows, err := server.Queries.GetTags(ctx)
 	if err != nil {

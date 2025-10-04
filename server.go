@@ -24,6 +24,22 @@ type Server struct {
 	OAuthConfig   *oauth2.Config
 	TokenVerifier *oidc.IDTokenVerifier
 	BuildKey      string
+	Config        Config
+}
+
+type AuthConfig struct {
+	SessionKeyLocation       string
+	OAuthCredentialsLocation string
+	OIDCURL                  string
+	OIDCScopes               []string
+}
+
+type HTTPConfig struct {
+	URL                      string
+	ReadTimeoutSeconds       time.Duration
+	ReadHeaderTimeoutSeconds time.Duration
+	WriteTimeoutSeconds      time.Duration
+	IdleTimeoutSeconds       time.Duration
 }
 
 func (s *Server) Transaction(ctx context.Context, f func(ctx context.Context, q *sql.Queries) error) error {
@@ -54,19 +70,18 @@ func getStatusCode(err error) int {
 	return http.StatusInternalServerError
 }
 
-func startServer(ctx context.Context, conn *pgxpool.Pool, queries *sql.Queries, buildKey string) error {
-	sessionKey, err := os.ReadFile("secret/session_key")
+func startServer(ctx context.Context, conn *pgxpool.Pool, queries *sql.Queries, config Config, buildKey string) error {
+	sessionKey, err := os.ReadFile(config.Auth.SessionKeyLocation)
 	if err != nil {
 		return err
 	}
 
-	c, err := loadCreds("secret/oauth.json")
+	c, err := loadCreds(config.Auth.OAuthCredentialsLocation)
 	if err != nil {
 		return err
 	}
 
-	issuer := "https://accounts.google.com"
-	provider, err := oidc.NewProvider(ctx, issuer)
+	provider, err := oidc.NewProvider(ctx, config.Auth.OIDCURL)
 	if err != nil {
 		return err
 	}
@@ -85,68 +100,76 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *sql.Queries, 
 			ClientSecret: c.Web.ClientSecret,
 			RedirectURL:  c.Web.RedirectURIs[0],
 			Endpoint:     google.Endpoint,
-			Scopes:       []string{oidc.ScopeOpenID, "email", "profile"},
+			Scopes:       config.Auth.OIDCScopes,
 		},
 		TokenVerifier: provider.Verifier(&oidc.Config{
 			ClientID: c.Web.ClientID,
 		}),
 		BuildKey: buildKey,
+		Config:   config,
 	}
 
 	mux := http.NewServeMux()
 
+	loggedInChain := []func(http.Handler) http.Handler{server.requireLogin, withLogging}
+
 	// Home page
-	mux.HandleFunc("/{$}", server.requireLogin(server.dashboardHandler))
+	mux.Handle("GET /{$}", chainf(server.dashboardHandler, loggedInChain...))
 
 	// Auth
-	mux.HandleFunc("/login", server.loginHandler)
-	mux.HandleFunc("/logout", server.logoutHandler)
-	mux.HandleFunc("/oauth2/callback", server.callbackHandler)
+	mux.Handle("GET /login", chainf(server.loginHandler))
+	mux.Handle("POST /login", chainf(server.loginHandler))
+	mux.Handle("GET /logout", chainf(server.logoutHandler))
+	mux.Handle("POST /logout", chainf(server.logoutHandler))
+	mux.Handle("GET /oauth2/callback", chainf(server.callbackHandler))
+	mux.Handle("POST /oauth2/callback", chainf(server.callbackHandler))
 
 	// User ajax
-	mux.HandleFunc("POST /language", server.requireLogin(server.postLanguageHandler))
+	mux.Handle("POST /language", chainf(server.postLanguageHandler, loggedInChain...))
 
 	// Pages
-	mux.HandleFunc("GET /species", server.requireLogin(server.getSpeciesHandler))
-	mux.HandleFunc("GET /status", server.requireLogin(server.getStatusHandler))
-	mux.HandleFunc("GET /event", server.requireLogin(server.getEventHandler))
-	mux.HandleFunc("GET /tag", server.requireLogin(server.getTagHandler))
-	mux.HandleFunc("GET /admin", server.requireLogin(server.adminRootHandler))
-	mux.HandleFunc("GET /homes", server.requireLogin(server.getHomesHandler))
+	mux.Handle("GET /species", chainf(server.getSpeciesHandler, loggedInChain...))
+	mux.Handle("GET /status", chainf(server.getStatusHandler, loggedInChain...))
+	mux.Handle("GET /event", chainf(server.getEventHandler, loggedInChain...))
+	mux.Handle("GET /tag", chainf(server.getTagHandler, loggedInChain...))
+	mux.Handle("GET /admin", chainf(server.adminRootHandler, loggedInChain...))
+	mux.Handle("GET /homes", chainf(server.getHomesHandler, loggedInChain...))
 
 	// Admin AJAX
-	mux.HandleFunc("POST /species", server.requireLogin(server.postSpeciesHandler))
-	mux.HandleFunc("PUT /species", server.requireLogin(server.putSpeciesHandler))
-	mux.HandleFunc("POST /status", server.requireLogin(server.postStatusHandler))
-	mux.HandleFunc("PUT /status", server.requireLogin(server.putStatusHandler))
-	mux.HandleFunc("POST /event", server.requireLogin(server.postEventHandler))
-	mux.HandleFunc("PUT /event", server.requireLogin(server.putEventHandler))
-	mux.HandleFunc("POST /tag", server.requireLogin(server.postTagHandler))
-	mux.HandleFunc("PUT /tag", server.requireLogin(server.putTagHandler))
+	mux.Handle("POST /species", chainf(server.postSpeciesHandler, loggedInChain...))
+	mux.Handle("PUT /species", chainf(server.putSpeciesHandler, loggedInChain...))
+	mux.Handle("POST /status", chainf(server.postStatusHandler, loggedInChain...))
+	mux.Handle("PUT /status", chainf(server.putStatusHandler, loggedInChain...))
+	mux.Handle("POST /event", chainf(server.postEventHandler, loggedInChain...))
+	mux.Handle("PUT /event", chainf(server.putEventHandler, loggedInChain...))
+	mux.Handle("POST /tag", chainf(server.postTagHandler, loggedInChain...))
+	mux.Handle("PUT /tag", chainf(server.putTagHandler, loggedInChain...))
 
-	// Admin forms
-	mux.HandleFunc("POST /homes", server.requireLogin(server.postHomeHandler))
+	// Forms
+	mux.Handle("POST /", chainf(server.postDashboardHandler, loggedInChain...))
+	mux.Handle("POST /homes", chainf(server.postHomeHandler, loggedInChain...))
 
 	// Available to all
 	staticDir := fmt.Sprintf("/static/%s/", buildKey)
 	mux.Handle(
-		staticDir,
+		"GET "+staticDir,
 		http.StripPrefix(staticDir, http.FileServer(http.Dir("static"))),
 	)
 
-	mux.HandleFunc("/privacy", server.requireLogin(server.privacyHandler))
+	mux.Handle("GET /privacy", chainf(server.privacyHandler, loggedInChain...))
+	mux.Handle("POST /privacy", chainf(server.postPrivacyHandler, loggedInChain...))
 
-	mux.HandleFunc("/", server.requireLogin(server.fourOhFourHandler))
+	mux.Handle("GET /", chainf(server.fourOhFourHandler, loggedInChain...))
 
 	go func() {
-		handler := chain(mux, withRecover, withLogging)
+		handler := chain(mux, withRecover)
 		srv := &http.Server{
-			Addr:              ":8080",
+			Addr:              config.HTTP.URL,
 			Handler:           handler,
-			ReadTimeout:       10 * time.Second,
-			ReadHeaderTimeout: 5 * time.Second,
-			WriteTimeout:      15 * time.Second,
-			IdleTimeout:       60 * time.Second,
+			ReadTimeout:       config.HTTP.ReadTimeoutSeconds * time.Second,
+			ReadHeaderTimeout: config.HTTP.ReadHeaderTimeoutSeconds * time.Second,
+			WriteTimeout:      config.HTTP.WriteTimeoutSeconds * time.Second,
+			IdleTimeout:       config.HTTP.IdleTimeoutSeconds * time.Second,
 		}
 		srv.ListenAndServe()
 	}()

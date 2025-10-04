@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"time"
 )
@@ -10,7 +9,8 @@ func withLogging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		next.ServeHTTP(w, r)
-		log.Printf(
+		LogR(
+			r,
 			"%s %s %s",
 			r.Method,
 			r.URL.Path,
@@ -18,13 +18,12 @@ func withLogging(next http.Handler) http.Handler {
 		)
 		r.ParseForm()
 		for k, v := range r.Form {
-			if len(v) > 0 {
-				log.Printf(
-					"Form value: %s=%+v",
-					k,
-					v,
-				)
-			}
+			LogR(
+				r,
+				"Form value: %s=%+v",
+				k,
+				v,
+			)
 		}
 	})
 }
@@ -45,4 +44,8 @@ func chain(h http.Handler, m ...func(http.Handler) http.Handler) http.Handler {
 		h = m[i](h)
 	}
 	return h
+}
+
+func chainf(h http.HandlerFunc, m ...func(http.Handler) http.Handler) http.Handler {
+	return chain(h, m...)
 }

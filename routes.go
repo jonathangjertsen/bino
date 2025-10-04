@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -13,13 +12,16 @@ import (
 	"github.com/jonathangjertsen/bino/sql"
 )
 
-func (server *Server) adminRootHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
+func (server *Server) adminRootHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
+
 	_ = AdminRootPage(commonData).Render(ctx, w)
 }
 
-func (server *Server) postLanguageHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
+func (server *Server) postLanguageHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
 
 	lang, err := getSelectedLanguage(r.FormValue("language"), commonData)
 	if err == nil {
@@ -61,15 +63,13 @@ func ajaxError(w http.ResponseWriter, r *http.Request, err error, statusCode int
 }
 
 func logError(r *http.Request, err error) {
-	log.Printf("%s %s ERROR: %v", r.Method, r.URL.Path, err)
+	LogR(r, "%s %s ERROR: %v", r.Method, r.URL.Path, err)
 }
 
-func (server *Server) fourOhFourHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
+func (server *Server) fourOhFourHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
 	server.renderError(w, r, commonData, fmt.Errorf("not found: %s", r.RequestURI))
-}
-
-func (server *Server) privacyHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
-	_ = Privacy(commonData, PrivacyConfig{LogDeletionPolicy: 3, RevokeConsentPolicy: 3}).Render(r.Context(), w) // TODO
 }
 
 func jsonHandler[T any](

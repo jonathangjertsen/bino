@@ -1,13 +1,21 @@
+$primary: rgb(108, 74, 161);
+$accent: rgb(0, 140, 95);
+$body: rgb(210, 212, 225);
+$light: rgb(238, 239, 245);
+$dark: rgb(60, 60, 80);
+$text: rgb(245, 245, 250);
+$warning: rgb(235, 140, 75);
 
 @use "node_modules/bootstrap/scss/bootstrap" with (
     $enable-shadows: true,
     $enable-rounded: false,
+    $primary: $primary,
+    $warning: $warning
 );
 
-$body: #8894a2;
-$light: mix($body, white, 33);
-$dark: #2b2f3a;
-$text: white;
+a {
+    color: $accent;
+}
 
 html, body {
     height: 100%;
@@ -23,6 +31,12 @@ body {
 
 .main {
     flex: 1;
+}
+
+.brand-badge {
+    background-color: $accent;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
 }
 
 .brand {
@@ -72,6 +86,21 @@ body {
     margin: 1em;
 }
 
+.checkbox {
+    padding: 0.1rem 0.5rem;
+    border: 0.2rem solid $accent;
+    background-color: mix($light, $accent, 50);
+    margin: 0.5rem;
+}
+
+.checkbox:hover {
+    background-color: $accent;
+}
+
+.checkbox[data-hidden="true"] {
+    display: none;
+}
+
 nav {
     background-color: $dark;
     padding: 0.5em !important;
@@ -84,6 +113,7 @@ nav {
 h1 {
     margin-bottom: 0.5rem;
     margin-left: 0.5rem;
+    color: $dark;
 }
 
 .b-card {
@@ -111,7 +141,6 @@ h1 {
         color: $text;
     }
 }
-
 
 .form-inline {
     text-align: right;

@@ -11,7 +11,7 @@ type StatusLangs struct {
 	Names
 }
 
-func (server *Server) postStatusHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
+func (server *Server) postStatusHandler(w http.ResponseWriter, r *http.Request) {
 	type reqT struct {
 		Latin     string
 		Languages map[int32]string
@@ -35,7 +35,7 @@ func (server *Server) postStatusHandler(w http.ResponseWriter, r *http.Request, 
 	})
 }
 
-func (server *Server) putStatusHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
+func (server *Server) putStatusHandler(w http.ResponseWriter, r *http.Request) {
 	type reqT struct {
 		ID        int32
 		Latin     string
@@ -56,8 +56,9 @@ func (server *Server) putStatusHandler(w http.ResponseWriter, r *http.Request, c
 	})
 }
 
-func (server *Server) getStatusHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
+func (server *Server) getStatusHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
 
 	rows, err := server.Queries.GetStatuses(ctx)
 	if err != nil {

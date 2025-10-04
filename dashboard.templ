@@ -2,17 +2,17 @@ package main
 
 import "github.com/jonathangjertsen/bino/ln"
 
-templ DashboardPage(data *CommonData, species []Species, tags []Tag) {
+templ DashboardPage(data *CommonData, species []Species, tags []Tag, homes []Home) {
 	@Layout(data) {
         @Card() {
-            <form>
+            <form action="/" method="POST">
                 <div class="form-group">
-                    <label for="patient-input-name">{data.Ln(ln.PatientName)}</label>
-                    <input class="form-control" id="patient-input-name">
+                    <label>{data.Ln(ln.PatientName)}</label>
+                    <input class="form-control" name="name">
                 </div>
                 <div class="form-group">
-                    <label for="patient-input-species">{data.Ln(ln.Species)}</label>
-                    <select class="form-control" id="patient-input-species">
+                    <label>{data.Ln(ln.Species)}</label>
+                    <select class="form-control" name="species">
                         for _, sp := range species {
                             <option value={sp.ID}>{sp.Name}</option>
                         }
@@ -22,8 +22,16 @@ templ DashboardPage(data *CommonData, species []Species, tags []Tag) {
                     <label>{data.Ln(ln.Tags)}</label>
                     <br/>
                     for _, tag := range tags {
-                        @Checkbox(tag.HTMLID(), tag.Name)
+                        @Checkbox(tag.ID, tag.Name, !tag.DefaultShow)
                     }
+                </div>
+                <div class="form-group">
+                    <label for="patient-home">{data.Ln(ln.HomeName)}</label>
+                    <select class="form-control" name="home">
+                        for _, home := range homes {
+                            <option value={home.ID} selected?={home.ID == data.User.PreferredHomeID}>{home.Name}</option>
+                        }
+                    </select>
                 </div>
                 <button type="submit" disabled?={data.User.PreferredHomeID == 0} class="b-create-patient btn btn-primary">{data.Ln(ln.CheckInPatient)}</button>
                 if data.User.PreferredHomeID == 0 {
@@ -34,10 +42,10 @@ templ DashboardPage(data *CommonData, species []Species, tags []Tag) {
     }
 }
 
-templ Checkbox(id, name string) {
-    <div class="form-check form-check-inline">
-        <input class="form-check-input" type="checkbox" id={id}>
-        <label class="form-check-label" for={id}>
+templ Checkbox(id int32, name string, hidden bool) {
+    <div class="form-check-inline checkbox" data-hidden={hidden}>
+        <input type="checkbox" name="tag" value={id}>
+        <label>
             {name}
         </label>
     </div>

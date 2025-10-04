@@ -21,8 +21,9 @@ type User struct {
 	Email       string
 }
 
-func (server *Server) getHomesHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
+func (server *Server) getHomesHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
 
 	homesDB, err := server.Queries.GetHomes(ctx)
 	if err != nil {
@@ -74,7 +75,10 @@ func (server *Server) getHomesHandler(w http.ResponseWriter, r *http.Request, co
 	_ = HomesPage(commonData, homes, homeless).Render(ctx, w)
 }
 
-func (server *Server) postHomeHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
+func (server *Server) postHomeHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
+
 	formID, err := server.getFormValue(r, "form-id")
 	if err != nil {
 		server.renderError(w, r, commonData, err)
@@ -117,23 +121,12 @@ func (server *Server) postHomeAddUser(w http.ResponseWriter, r *http.Request, co
 	currentHomeID, err := strconv.ParseInt(currentStr, 10, 32)
 	removeFromCurrent := err == nil && optionalFields["remove-from-current"] == "on"
 
-	fields, err := server.getFormValues(r, "home-id", "user-id")
+	fields, err := server.getFormIDs(r, "home-id", "user-id")
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return
 	}
-
-	userID, err := strconv.ParseInt(fields["user-id"], 10, 32)
-	if err != nil {
-		server.renderError(w, r, commonData, fmt.Errorf("invalid user ID '%s'", fields["user-id"]))
-		return
-	}
-
-	homeID, err := strconv.ParseInt(fields["home-id"], 10, 32)
-	if err != nil {
-		server.renderError(w, r, commonData, fmt.Errorf("invalid home ID '%s'", fields["home-id"]))
-		return
-	}
+	userID, homeID := fields["user-id"], fields["home-id"]
 
 	if server.Transaction(ctx, func(ctx context.Context, q *sql.Queries) error {
 		if homeID > 0 {
@@ -161,6 +154,20 @@ func (server *Server) postHomeAddUser(w http.ResponseWriter, r *http.Request, co
 	http.Redirect(w, r, "/homes", http.StatusFound)
 }
 
+func (server *Server) getFormIDs(r *http.Request, fields ...string) (map[string]int32, error) {
+	strings, err := server.getFormValues(r, fields...)
+	if err != nil {
+		return nil, err
+	}
+	return MapMap(strings, func(str string) (int32, error) {
+		v, err := strconv.ParseInt(str, 10, 32)
+		if err != nil {
+			return 0, err
+		}
+		return int32(v), nil
+	})
+}
+
 func (server *Server) getFormValues(r *http.Request, fields ...string) (map[string]string, error) {
 	out := make(map[string]string)
 	var err error
@@ -182,4 +189,9 @@ func (server *Server) getFormValue(r *http.Request, field string) (string, error
 		return "", fmt.Errorf("expect 1 form value for '%s', got %d", field, len(values))
 	}
 	return values[0], nil
+}
+
+func (server *Server) getCheckboxValue(r *http.Request, field string) bool {
+	v, err := server.getFormValue(r, field)
+	return err == nil && v == "on"
 }

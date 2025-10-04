@@ -30,9 +30,9 @@ templ Privacy(data *CommonData, config PrivacyConfig) {
                     Tillatelsen blir automatisk fjernet etter {fmt.Sprintf("%d", config.RevokeConsentPolicy)} dager,
                     og loggene slettes automatisk etter {fmt.Sprintf("%d", config.LogDeletionPolicy)} dager.
                 </p>
-                <form>
+                <form action="/privacy" method="POST">
                     <label for="logging-consent">Tillat logging</label>
-                    <input id="logging-consent" label="logging-consent" type="checkbox" checked?={data.User.LoggingConsent}>
+                    <input id="logging-consent" name="logging-consent" type="checkbox" checked?={data.User.LoggingConsent}>
                     <input type="submit" value="Oppdater">
                 </form>
 

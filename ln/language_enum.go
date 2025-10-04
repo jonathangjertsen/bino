@@ -76,6 +76,8 @@ const (
 	RemoveFromCurrent
 	// Move is a L of type Move.
 	Move
+	// MoveTo is a L of type MoveTo.
+	MoveTo
 	// None is a L of type None.
 	None
 	// ArchiveHome is a L of type ArchiveHome.
@@ -88,7 +90,7 @@ const (
 
 var ErrInvalidL = errors.New("not a valid L")
 
-const _LName = "LogOutPatientNameSpeciesTagsCheckInPatientManageSpeciesLatinUpdateAddManageHomesDashboardManageTagsCalendarManageStatusesManageEventsAdminRootViewHomesErrorPageHeadErrorPageInstructionsDefaultIncludeTagUnassignedUsersDisplayNameEmailAddressAddToHomeCreateHomeHomeNameCreateHomeNoteEmptyHomeAddUserToHomeCannotAddPatientBecauseUserIsHomelessRemoveFromCurrentMoveNoneArchiveHomePrivacySourceCode"
+const _LName = "LogOutPatientNameSpeciesTagsCheckInPatientManageSpeciesLatinUpdateAddManageHomesDashboardManageTagsCalendarManageStatusesManageEventsAdminRootViewHomesErrorPageHeadErrorPageInstructionsDefaultIncludeTagUnassignedUsersDisplayNameEmailAddressAddToHomeCreateHomeHomeNameCreateHomeNoteEmptyHomeAddUserToHomeCannotAddPatientBecauseUserIsHomelessRemoveFromCurrentMoveMoveToNoneArchiveHomePrivacySourceCode"
 
 var _LMap = map[L]string{
 	LogOut:                                _LName[0:6],
@@ -123,10 +125,11 @@ var _LMap = map[L]string{
 	CannotAddPatientBecauseUserIsHomeless: _LName[303:340],
 	RemoveFromCurrent:                     _LName[340:357],
 	Move:                                  _LName[357:361],
-	None:                                  _LName[361:365],
-	ArchiveHome:                           _LName[365:376],
-	Privacy:                               _LName[376:383],
-	SourceCode:                            _LName[383:393],
+	MoveTo:                                _LName[361:367],
+	None:                                  _LName[367:371],
+	ArchiveHome:                           _LName[371:382],
+	Privacy:                               _LName[382:389],
+	SourceCode:                            _LName[389:399],
 }
 
 // String implements the Stringer interface.
@@ -177,10 +180,11 @@ var _LValue = map[string]L{
 	_LName[303:340]: CannotAddPatientBecauseUserIsHomeless,
 	_LName[340:357]: RemoveFromCurrent,
 	_LName[357:361]: Move,
-	_LName[361:365]: None,
-	_LName[365:376]: ArchiveHome,
-	_LName[376:383]: Privacy,
-	_LName[383:393]: SourceCode,
+	_LName[361:367]: MoveTo,
+	_LName[367:371]: None,
+	_LName[371:382]: ArchiveHome,
+	_LName[382:389]: Privacy,
+	_LName[389:399]: SourceCode,
 }
 
 // ParseL attempts to convert a string to a L.

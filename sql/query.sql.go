@@ -23,6 +23,47 @@ func (q *Queries) AddEvent(ctx context.Context) (int32, error) {
 	return id, err
 }
 
+const addPatient = `-- name: AddPatient :one
+INSERT INTO patient (species_id, name, curr_status_id, curr_home_id)
+VALUES ($1, $2, $3, $4)
+RETURNING id
+`
+
+type AddPatientParams struct {
+	SpeciesID    int32
+	Name         string
+	CurrStatusID int32
+	CurrHomeID   pgtype.Int4
+}
+
+func (q *Queries) AddPatient(ctx context.Context, arg AddPatientParams) (int32, error) {
+	row := q.db.QueryRow(ctx, addPatient,
+		arg.SpeciesID,
+		arg.Name,
+		arg.CurrStatusID,
+		arg.CurrHomeID,
+	)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
+const addPatientTags = `-- name: AddPatientTags :exec
+INSERT INTO patient_tag (patient_id, tag_id)
+VALUES ($1, unnest($2::INT[]))
+ON CONFLICT (patient_id, tag_id) DO NOTHING
+`
+
+type AddPatientTagsParams struct {
+	PatientID int32
+	Tags      []int32
+}
+
+func (q *Queries) AddPatientTags(ctx context.Context, arg AddPatientTagsParams) error {
+	_, err := q.db.Exec(ctx, addPatientTags, arg.PatientID, arg.Tags)
+	return err
+}
+
 const addSpecies = `-- name: AddSpecies :one
 INSERT INTO species (scientific_name)
 VALUES ($1)
@@ -468,17 +509,17 @@ func (q *Queries) GetTagWithLanguage(ctx context.Context, languageID int32) ([]G
 }
 
 const getTagWithLanguageCheckin = `-- name: GetTagWithLanguageCheckin :many
-SELECT tag_id, name FROM tag_language
+SELECT tag_id, name, default_show FROM tag_language
 INNER JOIN tag AS t
     ON t.id = tag_language.tag_id
 WHERE language_id = $1
-    AND t.default_show
-ORDER BY (tag_id)
+ORDER BY (default_show, tag_id) DESC
 `
 
 type GetTagWithLanguageCheckinRow struct {
-	TagID int32
-	Name  string
+	TagID       int32
+	Name        string
+	DefaultShow bool
 }
 
 func (q *Queries) GetTagWithLanguageCheckin(ctx context.Context, languageID int32) ([]GetTagWithLanguageCheckinRow, error) {
@@ -490,7 +531,7 @@ func (q *Queries) GetTagWithLanguageCheckin(ctx context.Context, languageID int3
 	var items []GetTagWithLanguageCheckinRow
 	for rows.Next() {
 		var i GetTagWithLanguageCheckinRow
-		if err := rows.Scan(&i.TagID, &i.Name); err != nil {
+		if err := rows.Scan(&i.TagID, &i.Name, &i.DefaultShow); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -594,6 +635,31 @@ type RemoveUserFromHomeParams struct {
 
 func (q *Queries) RemoveUserFromHome(ctx context.Context, arg RemoveUserFromHomeParams) error {
 	_, err := q.db.Exec(ctx, removeUserFromHome, arg.HomeID, arg.AppuserID)
+	return err
+}
+
+const revokeLoggingConsent = `-- name: RevokeLoggingConsent :exec
+UPDATE appuser SET logging_consent = NULL
+WHERE id = $1
+`
+
+func (q *Queries) RevokeLoggingConsent(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, revokeLoggingConsent, id)
+	return err
+}
+
+const setLoggingConsent = `-- name: SetLoggingConsent :exec
+UPDATE appuser SET logging_consent = NOW() + $2::INT * INTERVAL '1 day'
+WHERE id = $1
+`
+
+type SetLoggingConsentParams struct {
+	ID     int32
+	Period int32
+}
+
+func (q *Queries) SetLoggingConsent(ctx context.Context, arg SetLoggingConsentParams) error {
+	_, err := q.db.Exec(ctx, setLoggingConsent, arg.ID, arg.Period)
 	return err
 }
 

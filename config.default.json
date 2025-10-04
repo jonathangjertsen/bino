@@ -1,0 +1,23 @@
+{
+    "HTTP": {
+        "URL": ":8080",
+        "ReadTimeoutSeconds": 10,
+        "ReadHeaderTimeoutSeconds": 10,
+        "WriteTimeoutSeconds": 15,
+        "IdleTimeoutSeconds": 60
+    },
+    "Auth": {
+        "SessionKeyLocation": "secret/session_key",
+        "OAuthCredentialsLocation": "secret/oauth.json",
+        "OIDCURL": "https://accounts.google.com",
+        "OIDCScopes": [
+            "openid",
+            "email",
+            "profile"
+        ]
+    },
+    "Privacy": {
+        "LogDeletionPolicy": 3,
+        "RevokeConsentPolicy": 3
+    }
+}

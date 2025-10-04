@@ -133,12 +133,11 @@ ORDER BY (tag_id)
 ;
 
 -- name: GetTagWithLanguageCheckin :many
-SELECT tag_id, name FROM tag_language
+SELECT tag_id, name, default_show FROM tag_language
 INNER JOIN tag AS t
     ON t.id = tag_language.tag_id
 WHERE language_id = $1
-    AND t.default_show
-ORDER BY (tag_id)
+ORDER BY (default_show, tag_id) DESC
 ;
 
 -- name: GetHomes :many
@@ -173,4 +172,26 @@ WHERE home_id = $1
 -- name: GetHomesForUser :many
 SELECT home_id FROM home_appuser
 WHERE appuser_id = $1
+;
+
+-- name: SetLoggingConsent :exec
+UPDATE appuser SET logging_consent = NOW() + sqlc.arg(period)::INT * INTERVAL '1 day'
+WHERE id = $1
+;
+
+-- name: RevokeLoggingConsent :exec
+UPDATE appuser SET logging_consent = NULL
+WHERE id = $1
+;
+
+-- name: AddPatient :one
+INSERT INTO patient (species_id, name, curr_status_id, curr_home_id)
+VALUES ($1, $2, $3, $4)
+RETURNING id
+;
+
+-- name: AddPatientTags :exec
+INSERT INTO patient_tag (patient_id, tag_id)
+VALUES ($1, unnest(@tags::INT[]))
+ON CONFLICT (patient_id, tag_id) DO NOTHING
 ;

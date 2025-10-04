@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/jonathangjertsen/bino/sql"
 	"golang.org/x/oauth2"
@@ -31,15 +32,18 @@ func loadCreds(path string) (googleCreds, error) {
 	return c, err
 }
 
-func (server *Server) requireLogin(f func(w http.ResponseWriter, r *http.Request, commonData *CommonData)) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (server *Server) requireLogin(f http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		commonData, err := server.authenticate(w, r)
 		if err != nil {
 			return
 		}
 
-		f(w, r, &commonData)
-	}
+		ctx := WithCommonData(r.Context(), &commonData)
+		r = r.WithContext(ctx)
+
+		f.ServeHTTP(w, r)
+	})
 }
 
 func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (CommonData, error) {
@@ -58,6 +62,8 @@ func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (Comm
 		preferredHome = homes[0]
 	}
 
+	loggingConsent := user.LoggingConsent.Valid && user.LoggingConsent.Time.After(time.Now())
+
 	userData := UserData{
 		AppuserID:       user.ID,
 		DisplayName:     user.DisplayName,
@@ -65,6 +71,7 @@ func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (Comm
 		LanguageID:      user.LanguageID,
 		PreferredHomeID: preferredHome,
 		Homes:           homes,
+		LoggingConsent:  loggingConsent,
 	}
 
 	languages, err := server.Queries.GetLanguages(ctx)

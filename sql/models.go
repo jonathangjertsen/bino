@@ -64,6 +64,7 @@ type Patient struct {
 	SpeciesID    int32
 	CurrStatusID int32
 	CurrHomeID   pgtype.Int4
+	Name         string
 }
 
 // Each row represents an event that has occurred to a specific patient

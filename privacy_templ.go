@@ -84,7 +84,7 @@ func Privacy(data *CommonData, config PrivacyConfig) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " dager.</p><form><label for=\"logging-consent\">Tillat logging</label> <input id=\"logging-consent\" label=\"logging-consent\" type=\"checkbox\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " dager.</p><form action=\"/privacy\" method=\"POST\"><label for=\"logging-consent\">Tillat logging</label> <input id=\"logging-consent\" name=\"logging-consent\" type=\"checkbox\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
