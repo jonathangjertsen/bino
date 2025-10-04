@@ -6,6 +6,12 @@ import (
 	"github.com/jonathangjertsen/bino/sql"
 )
 
+type SpeciesLangs struct {
+	ID        int32
+	LatinName string
+	Names
+}
+
 func (server *Server) postSpeciesHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
 	type reqT struct {
 		Latin     string

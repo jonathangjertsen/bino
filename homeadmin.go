@@ -9,6 +9,18 @@ import (
 	"github.com/jonathangjertsen/bino/sql"
 )
 
+type Home struct {
+	ID    int32
+	Name  string
+	Users []User
+}
+
+type User struct {
+	ID          int32
+	DisplayName string
+	Email       string
+}
+
 func (server *Server) getHomesHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
 	ctx := r.Context()
 

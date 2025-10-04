@@ -4,12 +4,6 @@ import (
     "github.com/jonathangjertsen/bino/ln"
 )
 
-type SpeciesLangs struct {
-    ID int32
-    LatinName string
-    Names
-}
-
 templ SpeciesPage(data *CommonData, species []SpeciesLangs) {
     @CRUDPage{
         Header: ln.ManageSpecies,

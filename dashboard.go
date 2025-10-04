@@ -1,8 +1,23 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 )
+
+type Species struct {
+	ID   int32
+	Name string
+}
+
+type Tag struct {
+	ID   int32
+	Name string
+}
+
+func (l Tag) HTMLID() string {
+	return fmt.Sprintf("patient-label-%d", l.ID)
+}
 
 func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
 	ctx := r.Context()

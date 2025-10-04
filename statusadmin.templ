@@ -4,11 +4,6 @@ import (
     "github.com/jonathangjertsen/bino/ln"
 )
 
-type StatusLangs struct {
-    ID int32
-    Names
-}
-
 templ StatusPage(data *CommonData, statuses []StatusLangs) {
     @CRUDPage{
         Header: ln.ManageStatuses,

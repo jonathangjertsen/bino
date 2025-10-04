@@ -4,11 +4,6 @@ import (
     "fmt"
 )
 
-type PrivacyConfig struct {
-    LogDeletionPolicy int
-    RevokeConsentPolicy int
-}
-
 templ Privacy(data *CommonData, config PrivacyConfig) {
 	@Layout(data) {
         @Card() {

@@ -4,12 +4,6 @@ import (
     "github.com/jonathangjertsen/bino/ln"
 )
 
-type TagLangs struct {
-    ID int32
-    DefaultShow bool
-    Names
-}
-
 templ TagPage(data *CommonData, tags []TagLangs) {
     @CRUDPage{
         Header: ln.ManageTags,

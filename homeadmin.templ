@@ -4,18 +4,6 @@ import (
     "github.com/jonathangjertsen/bino/ln"
 )
 
-type Home struct {
-    ID int32
-    Name string
-    Users []User
-}
-
-type User struct {
-    ID int32
-    DisplayName string
-    Email string
-}
-
 templ HomesPage(data *CommonData, homes []Home, homeless []User) {
     @Layout(data) {
         @Card() {

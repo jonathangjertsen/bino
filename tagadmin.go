@@ -6,6 +6,12 @@ import (
 	"github.com/jonathangjertsen/bino/sql"
 )
 
+type TagLangs struct {
+	ID          int32
+	DefaultShow bool
+	Names
+}
+
 func (server *Server) postTagHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
 	type reqT struct {
 		DefaultShow bool

@@ -12,12 +12,6 @@ import (
 	"github.com/jonathangjertsen/bino/ln"
 )
 
-type TagLangs struct {
-	ID          int32
-	DefaultShow bool
-	Names
-}
-
 func TagPage(data *CommonData, tags []TagLangs) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context

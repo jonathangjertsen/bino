@@ -14,18 +14,6 @@ import (
 	"github.com/jonathangjertsen/bino/ln"
 )
 
-type CRUDPage struct {
-	Header          ln.L
-	LangIndependent []ln.L
-}
-
-type Names map[int32]string
-
-func (n Names) Name(i int32) (string, bool) {
-	name, found := n[i]
-	return name, found
-}
-
 func (page CRUDPage) Component(data *CommonData) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -78,7 +66,7 @@ func (page CRUDPage) Component(data *CommonData) templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(data.Ln(page.Header))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 24, Col: 37}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 12, Col: 37}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -96,7 +84,7 @@ func (page CRUDPage) Component(data *CommonData) templ.Component {
 					var templ_7745c5c3_Var5 string
 					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(data.Ln(key))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 29, Col: 41}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 17, Col: 41}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 					if templ_7745c5c3_Err != nil {
@@ -115,7 +103,7 @@ func (page CRUDPage) Component(data *CommonData) templ.Component {
 					var templ_7745c5c3_Var6 string
 					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(lang.SelfName)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 32, Col: 42}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 20, Col: 42}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 					if templ_7745c5c3_Err != nil {
@@ -200,7 +188,7 @@ func UpdateRow(data *CommonData, id int32, obj interface{ Name(id int32) (string
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", lang.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 52, Col: 103}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 40, Col: 103}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -213,7 +201,7 @@ func UpdateRow(data *CommonData, id int32, obj interface{ Name(id int32) (string
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 52, Col: 116}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 40, Col: 116}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -231,7 +219,7 @@ func UpdateRow(data *CommonData, id int32, obj interface{ Name(id int32) (string
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", lang.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 54, Col: 104}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 42, Col: 104}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -254,7 +242,7 @@ func UpdateRow(data *CommonData, id int32, obj interface{ Name(id int32) (string
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", id))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 60, Col: 96}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 48, Col: 96}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -267,7 +255,7 @@ func UpdateRow(data *CommonData, id int32, obj interface{ Name(id int32) (string
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(data.Ln(ln.Update))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 61, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 49, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -318,7 +306,7 @@ func CreateRow(data *CommonData) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", lang.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 72, Col: 108}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 60, Col: 108}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -331,7 +319,7 @@ func CreateRow(data *CommonData) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(lang.SelfName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 72, Col: 136}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 60, Col: 136}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -349,7 +337,7 @@ func CreateRow(data *CommonData) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(data.Ln(ln.Add))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 78, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 66, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {

@@ -6,6 +6,11 @@ import (
 	"github.com/jonathangjertsen/bino/sql"
 )
 
+type StatusLangs struct {
+	ID int32
+	Names
+}
+
 func (server *Server) postStatusHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
 	type reqT struct {
 		Latin     string

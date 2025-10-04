@@ -1,21 +1,6 @@
 package main
 
-import "fmt"
 import "github.com/jonathangjertsen/bino/ln"
-
-type Species struct {
-    ID int32
-    Name string
-}
-
-type Tag struct {
-    ID int32
-    Name string
-}
-
-func (l Tag) HTMLID() string {
-    return fmt.Sprintf("patient-label-%d", l.ID)
-}
 
 templ DashboardPage(data *CommonData, species []Species, tags []Tag) {
 	@Layout(data) {

@@ -6,6 +6,11 @@ import (
 	"github.com/jonathangjertsen/bino/sql"
 )
 
+type EventLangs struct {
+	ID int32
+	Names
+}
+
 func (server *Server) postEventHandler(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
 	type reqT struct {
 		Latin     string

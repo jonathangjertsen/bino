@@ -4,11 +4,6 @@ import (
     "github.com/jonathangjertsen/bino/ln"
 )
 
-type EventLangs struct {
-    ID int32
-    Names
-}
-
 templ EventPage(data *CommonData, events []EventLangs) {
     @CRUDPage{
         Header: ln.ManageEvents,
