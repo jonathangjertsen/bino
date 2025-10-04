@@ -11751,4 +11751,8 @@ h1 {
   margin-bottom: 0.5em;
 }
 
+label {
+  user-select: none;
+}
+
 /*# sourceMappingURL=gen.css.map */

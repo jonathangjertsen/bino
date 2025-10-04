@@ -4,49 +4,61 @@ import "github.com/jonathangjertsen/bino/ln"
 
 templ DashboardPage(data *CommonData, species []Species, tags []Tag, homes []Home) {
 	@Layout(data) {
-        @Card() {
-            <form action="/" method="POST">
-                <div class="form-group">
-                    <label>{data.Ln(ln.PatientName)}</label>
-                    <input class="form-control" name="name">
-                </div>
-                <div class="form-group">
-                    <label>{data.Ln(ln.Species)}</label>
-                    <select class="form-control" name="species">
-                        for _, sp := range species {
-                            <option value={sp.ID}>{sp.Name}</option>
+        <div class="dashboard">
+            @Card() {
+                <form action="/" method="POST">
+                    <div class="form-group">
+                        <label>{data.Ln(ln.PatientName)}</label>
+                        <input class="form-control" name="name">
+                    </div>
+                    <div class="form-group">
+                        <label>{data.Ln(ln.Species)}</label>
+                        <select class="form-control" name="species">
+                            for _, sp := range species {
+                                <option value={sp.ID}>{sp.Name}</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>{data.Ln(ln.Tags)}</label>
+                        <br/>
+                        for _, tag := range tags {
+                            <div class="form-check-inline checkbox" data-hidden={!tag.DefaultShow}>
+                                <input type="checkbox" name="tag" id={tag.HTMLID()} value={tag.ID}>
+                                <label for={tag.HTMLID()}>
+                                    {tag.Name}
+                                </label>
+                            </div>
                         }
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>{data.Ln(ln.Tags)}</label>
-                    <br/>
-                    for _, tag := range tags {
-                        @Checkbox(tag.ID, tag.Name, !tag.DefaultShow)
-                    }
-                </div>
-                <div class="form-group">
-                    <label for="patient-home">{data.Ln(ln.HomeName)}</label>
-                    <select class="form-control" name="home">
-                        for _, home := range homes {
-                            <option value={home.ID} selected?={home.ID == data.User.PreferredHomeID}>{home.Name}</option>
-                        }
-                    </select>
-                </div>
-                <button type="submit" disabled?={data.User.PreferredHomeID == 0} class="b-create-patient btn btn-primary">{data.Ln(ln.CheckInPatient)}</button>
-                if data.User.PreferredHomeID == 0 {
-                    <p class="small m-0">{data.Ln(ln.CannotAddPatientBecauseUserIsHomeless)}</p>
-                }
-            </form>
-        }
-    }
-}
+                    </div>
 
-templ Checkbox(id int32, name string, hidden bool) {
-    <div class="form-check-inline checkbox" data-hidden={hidden}>
-        <input type="checkbox" name="tag" value={id}>
-        <label>
-            {name}
-        </label>
-    </div>
+                    <div class="form-group">
+                        <label for="patient-home">{data.Ln(ln.HomeName)}</label>
+                        <select class="form-control" name="home">
+                            for _, home := range homes {
+                                <option value={home.ID} selected?={home.ID == data.User.PreferredHomeID}>{home.Name}</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-check-inline">
+                            <input type="checkbox" name="admitted" id="admitted" checked>
+                            <label for="admitted">
+                                {data.Ln(ln.IHaveThePatient)}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" disabled?={data.User.PreferredHomeID == 0} class="b-create-patient btn btn-primary">{data.Ln(ln.CheckInPatient)}</button>
+                    </div>
+
+                    if data.User.PreferredHomeID == 0 {
+                        <p class="small m-0">{data.Ln(ln.CannotAddPatientBecauseUserIsHomeless)}</p>
+                    }
+                </form>
+            }
+        </div>
+    }
 }

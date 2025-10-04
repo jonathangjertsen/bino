@@ -50,56 +50,6 @@ WHERE language_id = $1
 ORDER BY (species_id)
 ;
 
--- name: GetStatuses :many
-SELECT * FROM status
-ORDER BY id;
-
--- name: GetStatusesLanguage :many
-SELECT * FROM status_language
-ORDER BY (status_id, language_id);
-
--- name: AddStatus :one
-INSERT INTO status DEFAULT VALUES
-RETURNING id
-;
--- name: UpsertStatusLanguage :exec
-INSERT INTO status_language (status_id, language_id, name)
-VALUES ($1, $2, $3)
-ON CONFLICT (status_id, language_id) DO UPDATE
-    SET name = EXCLUDED.name
-;
-
--- name: GetStatusWithLanguage :many
-SELECT status_id, name FROM status_language
-WHERE language_id = $1
-ORDER BY (status_id)
-;
-
--- name: GetEvents :many
-SELECT * FROM event
-ORDER BY id;
-
--- name: GetEventsLanguage :many
-SELECT * FROM event_language
-ORDER BY (event_id, language_id);
-
--- name: AddEvent :one
-INSERT INTO event DEFAULT VALUES
-RETURNING id
-;
--- name: UpsertEventLanguage :exec
-INSERT INTO event_language (event_id, language_id, name)
-VALUES ($1, $2, $3)
-ON CONFLICT (event_id, language_id) DO UPDATE
-    SET name = EXCLUDED.name
-;
-
--- name: GetEventWithLanguage :many
-SELECT event_id, name FROM event_language
-WHERE language_id = $1
-ORDER BY (event_id)
-;
-
 -- name: GetTags :many
 SELECT * FROM tag
 ORDER BY id;
@@ -185,7 +135,7 @@ WHERE id = $1
 ;
 
 -- name: AddPatient :one
-INSERT INTO patient (species_id, name, curr_status_id, curr_home_id)
+INSERT INTO patient (species_id, name, curr_home_id, status)
 VALUES ($1, $2, $3, $4)
 RETURNING id
 ;
@@ -194,4 +144,10 @@ RETURNING id
 INSERT INTO patient_tag (patient_id, tag_id)
 VALUES ($1, unnest(@tags::INT[]))
 ON CONFLICT (patient_id, tag_id) DO NOTHING
+;
+
+-- name: AddPatientEvent :one
+INSERT INTO patient_event (patient_id, home_id, event_id, note, time)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id
 ;

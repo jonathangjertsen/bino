@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jonathangjertsen/bino/sql"
@@ -47,6 +48,7 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 		server.renderError(w, r, commonData, err)
 		return
 	}
+
 	tags := make([]Tag, 0, len(tagRows))
 	for _, row := range tagRows {
 		tags = append(tags, Tag{ID: row.TagID, Name: row.Name, DefaultShow: row.DefaultShow})
@@ -59,13 +61,23 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	homes := make([]Home, 0, len(homeRows))
 	for _, row := range homeRows {
-		homes = append(homes, Home{
-			ID:    row.ID,
-			Name:  row.Name,
-			Users: nil,
-		})
+		if row.ID == commonData.User.PreferredHomeID {
+			homes = append(homes, Home{
+				ID:    row.ID,
+				Name:  row.Name,
+				Users: nil,
+			})
+		}
 	}
-
+	for _, row := range homeRows {
+		if row.ID != commonData.User.PreferredHomeID {
+			homes = append(homes, Home{
+				ID:    row.ID,
+				Name:  row.Name,
+				Users: nil,
+			})
+		}
+	}
 	_ = DashboardPage(commonData, species, tags, homes).Render(r.Context(), w)
 }
 
@@ -91,12 +103,18 @@ func (server *Server) postDashboardHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	admitted := server.getCheckboxValue(r, "admitted")
+	status := StatusPendingAdmission
+	if admitted {
+		status = StatusAdmitted
+	}
+
 	if err := server.Transaction(ctx, func(ctx context.Context, q *sql.Queries) error {
 		patientID, err := q.AddPatient(ctx, sql.AddPatientParams{
-			SpeciesID:    fields["species"],
-			CurrStatusID: 0,
-			CurrHomeID:   pgtype.Int4{Int32: fields["home"], Valid: true},
-			Name:         name,
+			SpeciesID:  fields["species"],
+			CurrHomeID: pgtype.Int4{Int32: fields["home"], Valid: true},
+			Name:       name,
+			Status:     int32(status),
 		})
 		if err != nil {
 			return err
@@ -108,6 +126,28 @@ func (server *Server) postDashboardHandler(w http.ResponseWriter, r *http.Reques
 				Tags:      tags,
 			}); err != nil {
 				return fmt.Errorf("creating tags: %w", err)
+			}
+		}
+
+		if _, err := q.AddPatientEvent(ctx, sql.AddPatientEventParams{
+			PatientID: patientID,
+			EventID:   int32(EventRegistered),
+			HomeID:    fields["home"],
+			Note:      "",
+			Time:      pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		}); err != nil {
+			return fmt.Errorf("registering patient: %w", err)
+		}
+
+		if admitted {
+			if _, err := q.AddPatientEvent(ctx, sql.AddPatientEventParams{
+				PatientID: patientID,
+				EventID:   int32(EventAdmitted),
+				HomeID:    fields["home"],
+				Note:      "",
+				Time:      pgtype.Timestamptz{Time: time.Now(), Valid: true},
+			}); err != nil {
+				return fmt.Errorf("marking patient as admitted: %w", err)
 			}
 		}
 

@@ -11,37 +11,52 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const addEvent = `-- name: AddEvent :one
-INSERT INTO event DEFAULT VALUES
-RETURNING id
-`
-
-func (q *Queries) AddEvent(ctx context.Context) (int32, error) {
-	row := q.db.QueryRow(ctx, addEvent)
-	var id int32
-	err := row.Scan(&id)
-	return id, err
-}
-
 const addPatient = `-- name: AddPatient :one
-INSERT INTO patient (species_id, name, curr_status_id, curr_home_id)
+INSERT INTO patient (species_id, name, curr_home_id, status)
 VALUES ($1, $2, $3, $4)
 RETURNING id
 `
 
 type AddPatientParams struct {
-	SpeciesID    int32
-	Name         string
-	CurrStatusID int32
-	CurrHomeID   pgtype.Int4
+	SpeciesID  int32
+	Name       string
+	CurrHomeID pgtype.Int4
+	Status     int32
 }
 
 func (q *Queries) AddPatient(ctx context.Context, arg AddPatientParams) (int32, error) {
 	row := q.db.QueryRow(ctx, addPatient,
 		arg.SpeciesID,
 		arg.Name,
-		arg.CurrStatusID,
 		arg.CurrHomeID,
+		arg.Status,
+	)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
+const addPatientEvent = `-- name: AddPatientEvent :one
+INSERT INTO patient_event (patient_id, home_id, event_id, note, time)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id
+`
+
+type AddPatientEventParams struct {
+	PatientID int32
+	HomeID    int32
+	EventID   int32
+	Note      string
+	Time      pgtype.Timestamptz
+}
+
+func (q *Queries) AddPatientEvent(ctx context.Context, arg AddPatientEventParams) (int32, error) {
+	row := q.db.QueryRow(ctx, addPatientEvent,
+		arg.PatientID,
+		arg.HomeID,
+		arg.EventID,
+		arg.Note,
+		arg.Time,
 	)
 	var id int32
 	err := row.Scan(&id)
@@ -72,18 +87,6 @@ RETURNING id
 
 func (q *Queries) AddSpecies(ctx context.Context, scientificName string) (int32, error) {
 	row := q.db.QueryRow(ctx, addSpecies, scientificName)
-	var id int32
-	err := row.Scan(&id)
-	return id, err
-}
-
-const addStatus = `-- name: AddStatus :one
-INSERT INTO status DEFAULT VALUES
-RETURNING id
-`
-
-func (q *Queries) AddStatus(ctx context.Context) (int32, error) {
-	row := q.db.QueryRow(ctx, addStatus)
 	var id int32
 	err := row.Scan(&id)
 	return id, err
@@ -149,87 +152,6 @@ func (q *Queries) GetAppusers(ctx context.Context) ([]GetAppusersRow, error) {
 			&i.LoggingConsent,
 			&i.HomeID,
 		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getEventWithLanguage = `-- name: GetEventWithLanguage :many
-SELECT event_id, name FROM event_language
-WHERE language_id = $1
-ORDER BY (event_id)
-`
-
-type GetEventWithLanguageRow struct {
-	EventID int32
-	Name    string
-}
-
-func (q *Queries) GetEventWithLanguage(ctx context.Context, languageID int32) ([]GetEventWithLanguageRow, error) {
-	rows, err := q.db.Query(ctx, getEventWithLanguage, languageID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetEventWithLanguageRow
-	for rows.Next() {
-		var i GetEventWithLanguageRow
-		if err := rows.Scan(&i.EventID, &i.Name); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getEvents = `-- name: GetEvents :many
-SELECT id FROM event
-ORDER BY id
-`
-
-func (q *Queries) GetEvents(ctx context.Context) ([]int32, error) {
-	rows, err := q.db.Query(ctx, getEvents)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []int32
-	for rows.Next() {
-		var id int32
-		if err := rows.Scan(&id); err != nil {
-			return nil, err
-		}
-		items = append(items, id)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getEventsLanguage = `-- name: GetEventsLanguage :many
-SELECT event_id, language_id, name FROM event_language
-ORDER BY (event_id, language_id)
-`
-
-func (q *Queries) GetEventsLanguage(ctx context.Context) ([]EventLanguage, error) {
-	rows, err := q.db.Query(ctx, getEventsLanguage)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []EventLanguage
-	for rows.Next() {
-		var i EventLanguage
-		if err := rows.Scan(&i.EventID, &i.LanguageID, &i.Name); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -386,87 +308,6 @@ func (q *Queries) GetSpeciesWithLanguage(ctx context.Context, languageID int32) 
 	for rows.Next() {
 		var i GetSpeciesWithLanguageRow
 		if err := rows.Scan(&i.SpeciesID, &i.Name); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getStatusWithLanguage = `-- name: GetStatusWithLanguage :many
-SELECT status_id, name FROM status_language
-WHERE language_id = $1
-ORDER BY (status_id)
-`
-
-type GetStatusWithLanguageRow struct {
-	StatusID int32
-	Name     string
-}
-
-func (q *Queries) GetStatusWithLanguage(ctx context.Context, languageID int32) ([]GetStatusWithLanguageRow, error) {
-	rows, err := q.db.Query(ctx, getStatusWithLanguage, languageID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetStatusWithLanguageRow
-	for rows.Next() {
-		var i GetStatusWithLanguageRow
-		if err := rows.Scan(&i.StatusID, &i.Name); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getStatuses = `-- name: GetStatuses :many
-SELECT id FROM status
-ORDER BY id
-`
-
-func (q *Queries) GetStatuses(ctx context.Context) ([]int32, error) {
-	rows, err := q.db.Query(ctx, getStatuses)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []int32
-	for rows.Next() {
-		var id int32
-		if err := rows.Scan(&id); err != nil {
-			return nil, err
-		}
-		items = append(items, id)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getStatusesLanguage = `-- name: GetStatusesLanguage :many
-SELECT status_id, language_id, name FROM status_language
-ORDER BY (status_id, language_id)
-`
-
-func (q *Queries) GetStatusesLanguage(ctx context.Context) ([]StatusLanguage, error) {
-	rows, err := q.db.Query(ctx, getStatusesLanguage)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []StatusLanguage
-	for rows.Next() {
-		var i StatusLanguage
-		if err := rows.Scan(&i.StatusID, &i.LanguageID, &i.Name); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -695,24 +536,6 @@ func (q *Queries) UpdateTagDefaultShown(ctx context.Context, arg UpdateTagDefaul
 	return err
 }
 
-const upsertEventLanguage = `-- name: UpsertEventLanguage :exec
-INSERT INTO event_language (event_id, language_id, name)
-VALUES ($1, $2, $3)
-ON CONFLICT (event_id, language_id) DO UPDATE
-    SET name = EXCLUDED.name
-`
-
-type UpsertEventLanguageParams struct {
-	EventID    int32
-	LanguageID int32
-	Name       string
-}
-
-func (q *Queries) UpsertEventLanguage(ctx context.Context, arg UpsertEventLanguageParams) error {
-	_, err := q.db.Exec(ctx, upsertEventLanguage, arg.EventID, arg.LanguageID, arg.Name)
-	return err
-}
-
 const upsertHome = `-- name: UpsertHome :exec
 INSERT INTO home (name)
 VALUES ($1)
@@ -740,24 +563,6 @@ type UpsertSpeciesLanguageParams struct {
 
 func (q *Queries) UpsertSpeciesLanguage(ctx context.Context, arg UpsertSpeciesLanguageParams) error {
 	_, err := q.db.Exec(ctx, upsertSpeciesLanguage, arg.SpeciesID, arg.LanguageID, arg.Name)
-	return err
-}
-
-const upsertStatusLanguage = `-- name: UpsertStatusLanguage :exec
-INSERT INTO status_language (status_id, language_id, name)
-VALUES ($1, $2, $3)
-ON CONFLICT (status_id, language_id) DO UPDATE
-    SET name = EXCLUDED.name
-`
-
-type UpsertStatusLanguageParams struct {
-	StatusID   int32
-	LanguageID int32
-	Name       string
-}
-
-func (q *Queries) UpsertStatusLanguage(ctx context.Context, arg UpsertStatusLanguageParams) error {
-	_, err := q.db.Exec(ctx, upsertStatusLanguage, arg.StatusID, arg.LanguageID, arg.Name)
 	return err
 }
 

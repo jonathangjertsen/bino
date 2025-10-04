@@ -24,19 +24,6 @@ type AppuserLanguage struct {
 	LanguageID int32
 }
 
-// Each row represents an event that may occur to a patient
-type Event struct {
-	ID int32
-}
-
-// Internationalization for event
-type EventLanguage struct {
-	EventID    int32
-	LanguageID int32
-	// The name of the event in the given language
-	Name string
-}
-
 // Each row is a rehab home
 type Home struct {
 	ID   int32
@@ -60,20 +47,21 @@ type Language struct {
 
 // Each row represents a patient
 type Patient struct {
-	ID           int32
-	SpeciesID    int32
-	CurrStatusID int32
-	CurrHomeID   pgtype.Int4
-	Name         string
+	ID         int32
+	SpeciesID  int32
+	CurrHomeID pgtype.Int4
+	Name       string
+	Status     int32
 }
 
 // Each row represents an event that has occurred to a specific patient
 type PatientEvent struct {
 	ID        int32
-	EventID   int32
 	PatientID int32
 	HomeID    int32
 	Note      string
+	EventID   int32
+	Time      pgtype.Timestamptz
 }
 
 // Each row represents a tag on a patient
@@ -94,19 +82,6 @@ type SpeciesLanguage struct {
 	SpeciesID  int32
 	LanguageID int32
 	// The name of the species in the given language
-	Name string
-}
-
-// Each row represents a possible status for a patient
-type Status struct {
-	ID int32
-}
-
-// Internationalization for status
-type StatusLanguage struct {
-	StatusID   int32
-	LanguageID int32
-	// The name of the status in the given language
 	Name string
 }
 

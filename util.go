@@ -25,3 +25,11 @@ func IDSlice(in []string) ([]int32, error) {
 	}
 	return out, nil
 }
+
+func MapSlice[TIn any, TOut any](in []TIn, f func(TIn) TOut) []TOut {
+	out := make([]TOut, len(in))
+	for i, v := range in {
+		out[i] = f(v)
+	}
+	return out
+}

@@ -129,8 +129,6 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *sql.Queries, 
 
 	// Pages
 	mux.Handle("GET /species", chainf(server.getSpeciesHandler, loggedInChain...))
-	mux.Handle("GET /status", chainf(server.getStatusHandler, loggedInChain...))
-	mux.Handle("GET /event", chainf(server.getEventHandler, loggedInChain...))
 	mux.Handle("GET /tag", chainf(server.getTagHandler, loggedInChain...))
 	mux.Handle("GET /admin", chainf(server.adminRootHandler, loggedInChain...))
 	mux.Handle("GET /homes", chainf(server.getHomesHandler, loggedInChain...))
@@ -138,10 +136,6 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *sql.Queries, 
 	// Admin AJAX
 	mux.Handle("POST /species", chainf(server.postSpeciesHandler, loggedInChain...))
 	mux.Handle("PUT /species", chainf(server.putSpeciesHandler, loggedInChain...))
-	mux.Handle("POST /status", chainf(server.postStatusHandler, loggedInChain...))
-	mux.Handle("PUT /status", chainf(server.putStatusHandler, loggedInChain...))
-	mux.Handle("POST /event", chainf(server.postEventHandler, loggedInChain...))
-	mux.Handle("PUT /event", chainf(server.putEventHandler, loggedInChain...))
 	mux.Handle("POST /tag", chainf(server.postTagHandler, loggedInChain...))
 	mux.Handle("PUT /tag", chainf(server.putTagHandler, loggedInChain...))
 

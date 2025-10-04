@@ -40,6 +40,7 @@ package ln
 // ArchiveHome,
 // Privacy,
 // SourceCode,
+// IHaveThePatient,
 //
 // )
 type L int
@@ -81,6 +82,7 @@ var NO = []string{
 	ArchiveHome:                           "Arkiver rehabhjem",
 	Privacy:                               "Personvern",
 	SourceCode:                            "Kildekode",
+	IHaveThePatient:                       "Patienten er her",
 }
 
 var EN = []string{
@@ -120,6 +122,7 @@ var EN = []string{
 	ArchiveHome:                           "Archive rehab home",
 	Privacy:                               "Privacy",
 	SourceCode:                            "Source code",
+	IHaveThePatient:                       "The patient is here",
 }
 
 var LANG = [][]string{
