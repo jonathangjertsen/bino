@@ -12,127 +12,127 @@ import (
 )
 
 const (
-	// LogOut is a L of type LogOut.
-	LogOut L = iota
-	// PatientName is a L of type PatientName.
-	PatientName
-	// Species is a L of type Species.
-	Species
-	// Tags is a L of type Tags.
-	Tags
-	// CheckInPatient is a L of type CheckInPatient.
-	CheckInPatient
-	// ManageSpecies is a L of type ManageSpecies.
-	ManageSpecies
-	// Latin is a L of type Latin.
-	Latin
-	// Update is a L of type Update.
-	Update
-	// Add is a L of type Add.
-	Add
-	// ManageHomes is a L of type ManageHomes.
-	ManageHomes
-	// Dashboard is a L of type Dashboard.
-	Dashboard
-	// ManageTags is a L of type ManageTags.
-	ManageTags
-	// Calendar is a L of type Calendar.
-	Calendar
-	// ManageStatuses is a L of type ManageStatuses.
-	ManageStatuses
-	// ManageEvents is a L of type ManageEvents.
-	ManageEvents
+	// AdminDefaultIncludeTag is a L of type AdminDefaultIncludeTag.
+	AdminDefaultIncludeTag L = iota
+	// AdminDisplayName is a L of type AdminDisplayName.
+	AdminDisplayName
+	// AdminEmailAddress is a L of type AdminEmailAddress.
+	AdminEmailAddress
+	// AdminManageEvents is a L of type AdminManageEvents.
+	AdminManageEvents
+	// AdminManageHomes is a L of type AdminManageHomes.
+	AdminManageHomes
+	// AdminManageSpecies is a L of type AdminManageSpecies.
+	AdminManageSpecies
+	// AdminManageStatuses is a L of type AdminManageStatuses.
+	AdminManageStatuses
+	// AdminManageTags is a L of type AdminManageTags.
+	AdminManageTags
 	// AdminRoot is a L of type AdminRoot.
 	AdminRoot
-	// ViewHomes is a L of type ViewHomes.
-	ViewHomes
+	// AdminUnassignedUsers is a L of type AdminUnassignedUsers.
+	AdminUnassignedUsers
+	// AuthLogOut is a L of type AuthLogOut.
+	AuthLogOut
+	// CheckinCheckInPatient is a L of type CheckinCheckInPatient.
+	CheckinCheckInPatient
+	// CheckinIHaveThePatient is a L of type CheckinIHaveThePatient.
+	CheckinIHaveThePatient
+	// CheckinPatientName is a L of type CheckinPatientName.
+	CheckinPatientName
 	// ErrorPageHead is a L of type ErrorPageHead.
 	ErrorPageHead
 	// ErrorPageInstructions is a L of type ErrorPageInstructions.
 	ErrorPageInstructions
-	// DefaultIncludeTag is a L of type DefaultIncludeTag.
-	DefaultIncludeTag
-	// UnassignedUsers is a L of type UnassignedUsers.
-	UnassignedUsers
-	// DisplayName is a L of type DisplayName.
-	DisplayName
-	// EmailAddress is a L of type EmailAddress.
-	EmailAddress
-	// AddToHome is a L of type AddToHome.
-	AddToHome
-	// CreateHome is a L of type CreateHome.
-	CreateHome
-	// HomeName is a L of type HomeName.
-	HomeName
-	// CreateHomeNote is a L of type CreateHomeNote.
-	CreateHomeNote
-	// EmptyHome is a L of type EmptyHome.
-	EmptyHome
-	// AddUserToHome is a L of type AddUserToHome.
-	AddUserToHome
-	// CannotAddPatientBecauseUserIsHomeless is a L of type CannotAddPatientBecauseUserIsHomeless.
-	CannotAddPatientBecauseUserIsHomeless
-	// RemoveFromCurrent is a L of type RemoveFromCurrent.
-	RemoveFromCurrent
-	// Move is a L of type Move.
-	Move
-	// MoveTo is a L of type MoveTo.
-	MoveTo
-	// None is a L of type None.
-	None
-	// ArchiveHome is a L of type ArchiveHome.
-	ArchiveHome
-	// Privacy is a L of type Privacy.
-	Privacy
-	// SourceCode is a L of type SourceCode.
-	SourceCode
-	// IHaveThePatient is a L of type IHaveThePatient.
-	IHaveThePatient
+	// FooterPrivacy is a L of type FooterPrivacy.
+	FooterPrivacy
+	// FooterSourceCode is a L of type FooterSourceCode.
+	FooterSourceCode
+	// GenericAdd is a L of type GenericAdd.
+	GenericAdd
+	// GenericLatin is a L of type GenericLatin.
+	GenericLatin
+	// GenericMove is a L of type GenericMove.
+	GenericMove
+	// GenericMoveTo is a L of type GenericMoveTo.
+	GenericMoveTo
+	// GenericNone is a L of type GenericNone.
+	GenericNone
+	// GenericSpecies is a L of type GenericSpecies.
+	GenericSpecies
+	// GenericTags is a L of type GenericTags.
+	GenericTags
+	// GenericUpdate is a L of type GenericUpdate.
+	GenericUpdate
+	// HomeArchiveHome is a L of type HomeArchiveHome.
+	HomeArchiveHome
+	// HomesAddToHome is a L of type HomesAddToHome.
+	HomesAddToHome
+	// HomesAddUserToHome is a L of type HomesAddUserToHome.
+	HomesAddUserToHome
+	// HomesCannotAddPatientBecauseUserIsHomeless is a L of type HomesCannotAddPatientBecauseUserIsHomeless.
+	HomesCannotAddPatientBecauseUserIsHomeless
+	// HomesCreateHome is a L of type HomesCreateHome.
+	HomesCreateHome
+	// HomesCreateHomeNote is a L of type HomesCreateHomeNote.
+	HomesCreateHomeNote
+	// HomesEmptyHome is a L of type HomesEmptyHome.
+	HomesEmptyHome
+	// HomesHomeName is a L of type HomesHomeName.
+	HomesHomeName
+	// HomesRemoveFromCurrent is a L of type HomesRemoveFromCurrent.
+	HomesRemoveFromCurrent
+	// HomesViewHomes is a L of type HomesViewHomes.
+	HomesViewHomes
+	// NavbarCalendar is a L of type NavbarCalendar.
+	NavbarCalendar
+	// NavbarDashboard is a L of type NavbarDashboard.
+	NavbarDashboard
 )
 
 var ErrInvalidL = errors.New("not a valid L")
 
-const _LName = "LogOutPatientNameSpeciesTagsCheckInPatientManageSpeciesLatinUpdateAddManageHomesDashboardManageTagsCalendarManageStatusesManageEventsAdminRootViewHomesErrorPageHeadErrorPageInstructionsDefaultIncludeTagUnassignedUsersDisplayNameEmailAddressAddToHomeCreateHomeHomeNameCreateHomeNoteEmptyHomeAddUserToHomeCannotAddPatientBecauseUserIsHomelessRemoveFromCurrentMoveMoveToNoneArchiveHomePrivacySourceCodeIHaveThePatient"
+const _LName = "AdminDefaultIncludeTagAdminDisplayNameAdminEmailAddressAdminManageEventsAdminManageHomesAdminManageSpeciesAdminManageStatusesAdminManageTagsAdminRootAdminUnassignedUsersAuthLogOutCheckinCheckInPatientCheckinIHaveThePatientCheckinPatientNameErrorPageHeadErrorPageInstructionsFooterPrivacyFooterSourceCodeGenericAddGenericLatinGenericMoveGenericMoveToGenericNoneGenericSpeciesGenericTagsGenericUpdateHomeArchiveHomeHomesAddToHomeHomesAddUserToHomeHomesCannotAddPatientBecauseUserIsHomelessHomesCreateHomeHomesCreateHomeNoteHomesEmptyHomeHomesHomeNameHomesRemoveFromCurrentHomesViewHomesNavbarCalendarNavbarDashboard"
 
 var _LMap = map[L]string{
-	LogOut:                                _LName[0:6],
-	PatientName:                           _LName[6:17],
-	Species:                               _LName[17:24],
-	Tags:                                  _LName[24:28],
-	CheckInPatient:                        _LName[28:42],
-	ManageSpecies:                         _LName[42:55],
-	Latin:                                 _LName[55:60],
-	Update:                                _LName[60:66],
-	Add:                                   _LName[66:69],
-	ManageHomes:                           _LName[69:80],
-	Dashboard:                             _LName[80:89],
-	ManageTags:                            _LName[89:99],
-	Calendar:                              _LName[99:107],
-	ManageStatuses:                        _LName[107:121],
-	ManageEvents:                          _LName[121:133],
-	AdminRoot:                             _LName[133:142],
-	ViewHomes:                             _LName[142:151],
-	ErrorPageHead:                         _LName[151:164],
-	ErrorPageInstructions:                 _LName[164:185],
-	DefaultIncludeTag:                     _LName[185:202],
-	UnassignedUsers:                       _LName[202:217],
-	DisplayName:                           _LName[217:228],
-	EmailAddress:                          _LName[228:240],
-	AddToHome:                             _LName[240:249],
-	CreateHome:                            _LName[249:259],
-	HomeName:                              _LName[259:267],
-	CreateHomeNote:                        _LName[267:281],
-	EmptyHome:                             _LName[281:290],
-	AddUserToHome:                         _LName[290:303],
-	CannotAddPatientBecauseUserIsHomeless: _LName[303:340],
-	RemoveFromCurrent:                     _LName[340:357],
-	Move:                                  _LName[357:361],
-	MoveTo:                                _LName[361:367],
-	None:                                  _LName[367:371],
-	ArchiveHome:                           _LName[371:382],
-	Privacy:                               _LName[382:389],
-	SourceCode:                            _LName[389:399],
-	IHaveThePatient:                       _LName[399:414],
+	AdminDefaultIncludeTag: _LName[0:22],
+	AdminDisplayName:       _LName[22:38],
+	AdminEmailAddress:      _LName[38:55],
+	AdminManageEvents:      _LName[55:72],
+	AdminManageHomes:       _LName[72:88],
+	AdminManageSpecies:     _LName[88:106],
+	AdminManageStatuses:    _LName[106:125],
+	AdminManageTags:        _LName[125:140],
+	AdminRoot:              _LName[140:149],
+	AdminUnassignedUsers:   _LName[149:169],
+	AuthLogOut:             _LName[169:179],
+	CheckinCheckInPatient:  _LName[179:200],
+	CheckinIHaveThePatient: _LName[200:222],
+	CheckinPatientName:     _LName[222:240],
+	ErrorPageHead:          _LName[240:253],
+	ErrorPageInstructions:  _LName[253:274],
+	FooterPrivacy:          _LName[274:287],
+	FooterSourceCode:       _LName[287:303],
+	GenericAdd:             _LName[303:313],
+	GenericLatin:           _LName[313:325],
+	GenericMove:            _LName[325:336],
+	GenericMoveTo:          _LName[336:349],
+	GenericNone:            _LName[349:360],
+	GenericSpecies:         _LName[360:374],
+	GenericTags:            _LName[374:385],
+	GenericUpdate:          _LName[385:398],
+	HomeArchiveHome:        _LName[398:413],
+	HomesAddToHome:         _LName[413:427],
+	HomesAddUserToHome:     _LName[427:445],
+	HomesCannotAddPatientBecauseUserIsHomeless: _LName[445:487],
+	HomesCreateHome:        _LName[487:502],
+	HomesCreateHomeNote:    _LName[502:521],
+	HomesEmptyHome:         _LName[521:535],
+	HomesHomeName:          _LName[535:548],
+	HomesRemoveFromCurrent: _LName[548:570],
+	HomesViewHomes:         _LName[570:584],
+	NavbarCalendar:         _LName[584:598],
+	NavbarDashboard:        _LName[598:613],
 }
 
 // String implements the Stringer interface.
@@ -151,44 +151,44 @@ func (x L) IsValid() bool {
 }
 
 var _LValue = map[string]L{
-	_LName[0:6]:     LogOut,
-	_LName[6:17]:    PatientName,
-	_LName[17:24]:   Species,
-	_LName[24:28]:   Tags,
-	_LName[28:42]:   CheckInPatient,
-	_LName[42:55]:   ManageSpecies,
-	_LName[55:60]:   Latin,
-	_LName[60:66]:   Update,
-	_LName[66:69]:   Add,
-	_LName[69:80]:   ManageHomes,
-	_LName[80:89]:   Dashboard,
-	_LName[89:99]:   ManageTags,
-	_LName[99:107]:  Calendar,
-	_LName[107:121]: ManageStatuses,
-	_LName[121:133]: ManageEvents,
-	_LName[133:142]: AdminRoot,
-	_LName[142:151]: ViewHomes,
-	_LName[151:164]: ErrorPageHead,
-	_LName[164:185]: ErrorPageInstructions,
-	_LName[185:202]: DefaultIncludeTag,
-	_LName[202:217]: UnassignedUsers,
-	_LName[217:228]: DisplayName,
-	_LName[228:240]: EmailAddress,
-	_LName[240:249]: AddToHome,
-	_LName[249:259]: CreateHome,
-	_LName[259:267]: HomeName,
-	_LName[267:281]: CreateHomeNote,
-	_LName[281:290]: EmptyHome,
-	_LName[290:303]: AddUserToHome,
-	_LName[303:340]: CannotAddPatientBecauseUserIsHomeless,
-	_LName[340:357]: RemoveFromCurrent,
-	_LName[357:361]: Move,
-	_LName[361:367]: MoveTo,
-	_LName[367:371]: None,
-	_LName[371:382]: ArchiveHome,
-	_LName[382:389]: Privacy,
-	_LName[389:399]: SourceCode,
-	_LName[399:414]: IHaveThePatient,
+	_LName[0:22]:    AdminDefaultIncludeTag,
+	_LName[22:38]:   AdminDisplayName,
+	_LName[38:55]:   AdminEmailAddress,
+	_LName[55:72]:   AdminManageEvents,
+	_LName[72:88]:   AdminManageHomes,
+	_LName[88:106]:  AdminManageSpecies,
+	_LName[106:125]: AdminManageStatuses,
+	_LName[125:140]: AdminManageTags,
+	_LName[140:149]: AdminRoot,
+	_LName[149:169]: AdminUnassignedUsers,
+	_LName[169:179]: AuthLogOut,
+	_LName[179:200]: CheckinCheckInPatient,
+	_LName[200:222]: CheckinIHaveThePatient,
+	_LName[222:240]: CheckinPatientName,
+	_LName[240:253]: ErrorPageHead,
+	_LName[253:274]: ErrorPageInstructions,
+	_LName[274:287]: FooterPrivacy,
+	_LName[287:303]: FooterSourceCode,
+	_LName[303:313]: GenericAdd,
+	_LName[313:325]: GenericLatin,
+	_LName[325:336]: GenericMove,
+	_LName[336:349]: GenericMoveTo,
+	_LName[349:360]: GenericNone,
+	_LName[360:374]: GenericSpecies,
+	_LName[374:385]: GenericTags,
+	_LName[385:398]: GenericUpdate,
+	_LName[398:413]: HomeArchiveHome,
+	_LName[413:427]: HomesAddToHome,
+	_LName[427:445]: HomesAddUserToHome,
+	_LName[445:487]: HomesCannotAddPatientBecauseUserIsHomeless,
+	_LName[487:502]: HomesCreateHome,
+	_LName[502:521]: HomesCreateHomeNote,
+	_LName[521:535]: HomesEmptyHome,
+	_LName[535:548]: HomesHomeName,
+	_LName[548:570]: HomesRemoveFromCurrent,
+	_LName[570:584]: HomesViewHomes,
+	_LName[584:598]: NavbarCalendar,
+	_LName[598:613]: NavbarDashboard,
 }
 
 // ParseL attempts to convert a string to a L.

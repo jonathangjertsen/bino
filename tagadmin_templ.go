@@ -108,8 +108,8 @@ func TagPage(data *CommonData, tags []TagLangs) templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = CRUDPage{
-			Header:          ln.ManageTags,
-			LangIndependent: []ln.L{ln.DefaultIncludeTag},
+			Header:          ln.AdminManageTags,
+			LangIndependent: []ln.L{ln.AdminDefaultIncludeTag},
 		}.Component(data).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

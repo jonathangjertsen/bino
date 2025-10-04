@@ -48,12 +48,12 @@ templ Navbar(data *CommonData) {
             </button>
 
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                @NavbarPageLink(data.Ln(ln.Dashboard), "/")
+                @NavbarPageLink(data.Ln(ln.NavbarDashboard), "/")
                 //@NavbarPageLink(data.Ln(ln.Calendar), "/calendar")
                 @NavbarPageLink(data.Ln(ln.AdminRoot), "/admin")
                 @LanguageSelect(data)
                 @SelfInfo(&data.User)
-                @Logout(&data.User)
+                @AuthLogOut(&data.User)
             </div>
         </div>
        
@@ -84,9 +84,9 @@ templ SelfInfo(data *UserData) {
     </div>
 }
 
-templ Logout(data *UserData) {
-    <form class="d-flex" role="logout" action="/logout">
-        <button class="btn btn-outline-warning" type="submit">{data.Ln(ln.LogOut)}</button>
+templ AuthLogOut(data *UserData) {
+    <form class="d-flex" role="AuthLogOut" action="/AuthLogOut">
+        <button class="btn btn-outline-warning" type="submit">{data.Ln(ln.AuthLogOut)}</button>
     </form>
 }
 
@@ -95,10 +95,10 @@ templ Footer(data *UserData) {
         <div class="container">
             <div class="footer-layout d-flex justify-content-between">
                 <div class="left">
-                    <a href="/privacy">{data.Ln(ln.Privacy)}</a>
+                    <a href="/privacy">{data.Ln(ln.FooterPrivacy)}</a>
                 </div>
                 <div class="right">
-                    <a href="https://github.com/jonathangjertsen/bino">{data.Ln(ln.SourceCode)}</a>
+                    <a href="https://github.com/jonathangjertsen/bino">{data.Ln(ln.FooterSourceCode)}</a>
                 </div>
             </div>
         </div>

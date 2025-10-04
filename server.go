@@ -118,8 +118,8 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 	// Auth
 	mux.Handle("GET /login", chainf(server.loginHandler))
 	mux.Handle("POST /login", chainf(server.loginHandler))
-	mux.Handle("GET /logout", chainf(server.logoutHandler))
-	mux.Handle("POST /logout", chainf(server.logoutHandler))
+	mux.Handle("GET /AuthLogOut", chainf(server.AuthLogOutHandler))
+	mux.Handle("POST /AuthLogOut", chainf(server.AuthLogOutHandler))
 	mux.Handle("GET /oauth2/callback", chainf(server.callbackHandler))
 	mux.Handle("POST /oauth2/callback", chainf(server.callbackHandler))
 

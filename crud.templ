@@ -46,7 +46,7 @@ templ UpdateRow(data *CommonData,  id int32, obj interface{Name(id int32) (strin
         }
         <td>
             <button class="btn btn-outline-primary update-submit" data-id={fmt.Sprintf("%d", id)}>
-                {data.Ln(ln.Update)}
+                {data.Ln(ln.GenericUpdate)}
             </button>
         </td>
     </tr>
@@ -63,7 +63,7 @@ templ CreateRow(data *CommonData) {
         }
         <td>
             <button class="btn btn-outline-success" id="new-submit">
-                {data.Ln(ln.Add)}
+                {data.Ln(ln.GenericAdd)}
             </button>
         </td>
     </tr>

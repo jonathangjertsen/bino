@@ -9,9 +9,9 @@ templ AdminRootPage(data *CommonData) {
         <h1>{data.Ln(ln.AdminRoot)}</h1>
         <div class="card b-card">
             <ul>
-                <li>@NavbarPageLink(data.Ln(ln.ManageSpecies), "/species")</li>
-                <li>@NavbarPageLink(data.Ln(ln.ManageTags), "/tag")</li>
-                <li>@NavbarPageLink(data.Ln(ln.ManageHomes), "/homes")</li>
+                <li>@NavbarPageLink(data.Ln(ln.AdminManageSpecies), "/species")</li>
+                <li>@NavbarPageLink(data.Ln(ln.AdminManageTags), "/tag")</li>
+                <li>@NavbarPageLink(data.Ln(ln.AdminManageHomes), "/homes")</li>
             </ul>
         </div>
     }

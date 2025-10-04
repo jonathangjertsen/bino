@@ -129,7 +129,7 @@ func (server *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, server.OAuthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline), http.StatusFound)
 }
 
-func (server *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
+func (server *Server) AuthLogOutHandler(w http.ResponseWriter, r *http.Request) {
 	sess, _ := server.Cookies.Get(r, "auth")
 	sess.Options.MaxAge = -1
 	_ = sess.Save(r, w)

@@ -6,8 +6,8 @@ import (
 
 templ TagPage(data *CommonData, tags []TagLangs) {
     @CRUDPage{
-        Header: ln.ManageTags,
-        LangIndependent: []ln.L{ln.DefaultIncludeTag},
+        Header: ln.AdminManageTags,
+        LangIndependent: []ln.L{ln.AdminDefaultIncludeTag},
     }.Component(data) {
         for _, tag := range tags {
             @UpdateRow(data, tag.ID, tag) {

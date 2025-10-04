@@ -8,11 +8,11 @@ templ DashboardPage(data *CommonData, dashboardData DashboardData) {
             @Card() {
                 <form action="/" method="POST">
                     <div class="form-group">
-                        <label>{data.Ln(ln.PatientName)}</label>
+                        <label>{data.Ln(ln.CheckinPatientName)}</label>
                         <input class="form-control" name="name">
                     </div>
                     <div class="form-group">
-                        <label>{data.Ln(ln.Species)}</label>
+                        <label>{data.Ln(ln.GenericSpecies)}</label>
                         <select class="form-control" name="species">
                             for _, sp := range dashboardData.Species {
                                 <option value={sp.SpeciesID}>{sp.Name}</option>
@@ -20,7 +20,7 @@ templ DashboardPage(data *CommonData, dashboardData DashboardData) {
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>{data.Ln(ln.Tags)}</label>
+                        <label>{data.Ln(ln.GenericTags)}</label>
                         <br/>
                         for _, tag := range dashboardData.Tags {
                             <div class="form-check-inline checkbox" data-hidden={!tag.DefaultShow}>
@@ -33,7 +33,7 @@ templ DashboardPage(data *CommonData, dashboardData DashboardData) {
                     </div>
 
                     <div class="form-group">
-                        <label for="patient-home">{data.Ln(ln.HomeName)}</label>
+                        <label for="patient-home">{data.Ln(ln.HomesHomeName)}</label>
                         <select class="form-control" name="home">
                             for _, home := range dashboardData.Homes {
                                 <option value={home.ID} selected?={home.ID == data.User.PreferredHomeID}>{home.Name}</option>
@@ -45,17 +45,17 @@ templ DashboardPage(data *CommonData, dashboardData DashboardData) {
                         <div class="form-check-inline">
                             <input type="checkbox" name="admitted" id="admitted" checked>
                             <label for="admitted">
-                                {data.Ln(ln.IHaveThePatient)}
+                                {data.Ln(ln.CheckinIHaveThePatient)}
                             </label>
                         </div>
                     </div>
                     
                     <div class="form-group">
-                        <button type="submit" disabled?={data.User.PreferredHomeID == 0} class="b-create-patient btn btn-primary">{data.Ln(ln.CheckInPatient)}</button>
+                        <button type="submit" disabled?={data.User.PreferredHomeID == 0} class="b-create-patient btn btn-primary">{data.Ln(ln.CheckinCheckInPatient)}</button>
                     </div>
 
                     if data.User.PreferredHomeID == 0 {
-                        <p class="small m-0">{data.Ln(ln.CannotAddPatientBecauseUserIsHomeless)}</p>
+                        <p class="small m-0">{data.Ln(ln.HomesCannotAddPatientBecauseUserIsHomeless)}</p>
                     }
                 </form>
             }

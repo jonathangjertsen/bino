@@ -62,7 +62,7 @@ func AdminRootPage(data *CommonData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = NavbarPageLink(data.Ln(ln.ManageSpecies), "/species").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = NavbarPageLink(data.Ln(ln.AdminManageSpecies), "/species").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -70,7 +70,7 @@ func AdminRootPage(data *CommonData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = NavbarPageLink(data.Ln(ln.ManageTags), "/tag").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = NavbarPageLink(data.Ln(ln.AdminManageTags), "/tag").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -78,7 +78,7 @@ func AdminRootPage(data *CommonData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = NavbarPageLink(data.Ln(ln.ManageHomes), "/homes").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = NavbarPageLink(data.Ln(ln.AdminManageHomes), "/homes").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -103,9 +103,9 @@ func SpeciesPage(data *CommonData, species []SpeciesLangs) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var6 string
-				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(data.Ln(ln.Latin))
+				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(data.Ln(ln.GenericLatin))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `speciesadmin.templ`, Line: 18, Col: 102}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `speciesadmin.templ`, Line: 18, Col: 109}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -124,8 +124,8 @@ func SpeciesPage(data *CommonData, species []SpeciesLangs) templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = CRUDPage{
-			Header:          ln.ManageSpecies,
-			LangIndependent: []ln.L{ln.Latin},
+			Header:          ln.AdminManageSpecies,
+			LangIndependent: []ln.L{ln.GenericLatin},
 		}.Component(data).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
