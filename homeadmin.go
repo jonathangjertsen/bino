@@ -9,13 +9,13 @@ import (
 	"github.com/jonathangjertsen/bino/sql"
 )
 
-type Home struct {
+type HomeView struct {
 	ID    int32
 	Name  string
-	Users []User
+	Users []UserView
 }
 
-type User struct {
+type UserView struct {
 	ID          int32
 	DisplayName string
 	Email       string
@@ -37,9 +37,9 @@ func (server *Server) getHomesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	homes := make([]Home, len(homesDB))
+	homes := make([]HomeView, len(homesDB))
 	for i, home := range homesDB {
-		homes[i] = Home{
+		homes[i] = HomeView{
 			ID:    home.ID,
 			Name:  home.Name,
 			Users: nil,
@@ -47,13 +47,13 @@ func (server *Server) getHomesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// todo(perf): make it not O(N^2)
-	homeless := []User{}
+	homeless := []UserView{}
 	for _, user := range usersDB {
 		found := false
 		if user.HomeID.Valid {
 			for i, home := range homesDB {
 				if home.ID == user.HomeID.Int32 {
-					homes[i].Users = append(homes[i].Users, User{
+					homes[i].Users = append(homes[i].Users, UserView{
 						ID:          user.ID,
 						DisplayName: user.DisplayName,
 						Email:       user.Email,
@@ -64,7 +64,7 @@ func (server *Server) getHomesHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if !found {
-			homeless = append(homeless, User{
+			homeless = append(homeless, UserView{
 				ID:          user.ID,
 				DisplayName: user.DisplayName,
 				Email:       user.Email,

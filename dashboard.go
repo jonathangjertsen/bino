@@ -10,18 +10,18 @@ import (
 	"github.com/jonathangjertsen/bino/sql"
 )
 
-type Species struct {
+type SpeciesView struct {
 	ID   int32
 	Name string
 }
 
-type Tag struct {
+type TagView struct {
 	ID          int32
 	Name        string
 	DefaultShow bool
 }
 
-func (l Tag) HTMLID() string {
+func (l TagView) HTMLID() string {
 	return fmt.Sprintf("patient-label-%d", l.ID)
 }
 
@@ -35,9 +35,9 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	species := make([]Species, 0, len(speciesRows))
+	species := make([]SpeciesView, 0, len(speciesRows))
 	for _, row := range speciesRows {
-		species = append(species, Species{
+		species = append(species, SpeciesView{
 			ID:   row.SpeciesID,
 			Name: row.Name,
 		})
@@ -49,9 +49,9 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tags := make([]Tag, 0, len(tagRows))
+	tags := make([]TagView, 0, len(tagRows))
 	for _, row := range tagRows {
-		tags = append(tags, Tag{ID: row.TagID, Name: row.Name, DefaultShow: row.DefaultShow})
+		tags = append(tags, TagView{ID: row.TagID, Name: row.Name, DefaultShow: row.DefaultShow})
 	}
 
 	homeRows, err := server.Queries.GetHomes(ctx)
@@ -59,10 +59,10 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 		server.renderError(w, r, commonData, err)
 		return
 	}
-	homes := make([]Home, 0, len(homeRows))
+	homes := make([]HomeView, 0, len(homeRows))
 	for _, row := range homeRows {
 		if row.ID == commonData.User.PreferredHomeID {
-			homes = append(homes, Home{
+			homes = append(homes, HomeView{
 				ID:    row.ID,
 				Name:  row.Name,
 				Users: nil,
@@ -71,7 +71,7 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, row := range homeRows {
 		if row.ID != commonData.User.PreferredHomeID {
-			homes = append(homes, Home{
+			homes = append(homes, HomeView{
 				ID:    row.ID,
 				Name:  row.Name,
 				Users: nil,

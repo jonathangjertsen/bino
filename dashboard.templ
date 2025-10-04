@@ -2,7 +2,7 @@ package main
 
 import "github.com/jonathangjertsen/bino/ln"
 
-templ DashboardPage(data *CommonData, species []Species, tags []Tag, homes []Home) {
+templ DashboardPage(data *CommonData, species []SpeciesView, tags []TagView, homes []HomeView) {
 	@Layout(data) {
         <div class="dashboard">
             @Card() {

@@ -12,7 +12,7 @@ import (
 	"github.com/jonathangjertsen/bino/ln"
 )
 
-func HomesPage(data *CommonData, homes []Home, homeless []User) templ.Component {
+func HomesPage(data *CommonData, homes []HomeView, homeless []UserView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -623,7 +623,7 @@ func HomesPage(data *CommonData, homes []Home, homeless []User) templ.Component 
 	})
 }
 
-func (u *User) Component(data *CommonData) templ.Component {
+func (u *UserView) Component(data *CommonData) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

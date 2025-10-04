@@ -4,7 +4,7 @@ import (
     "github.com/jonathangjertsen/bino/ln"
 )
 
-templ HomesPage(data *CommonData, homes []Home, homeless []User) {
+templ HomesPage(data *CommonData, homes []HomeView, homeless []UserView) {
     @Layout(data) {
         <h1>{data.Ln(ln.ViewHomes)}</h1>
         @Card() {
@@ -100,7 +100,7 @@ templ HomesPage(data *CommonData, homes []Home, homeless []User) {
     }
 }
 
-templ (u *User) Component(data *CommonData) {
+templ (u *UserView) Component(data *CommonData) {
     @Card() {
         <table class="table tbl">
             <thead>
