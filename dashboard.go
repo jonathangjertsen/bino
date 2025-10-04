@@ -9,75 +9,43 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type SpeciesView struct {
-	ID   int32
-	Name string
+type DashboardData struct {
+	Species []GetSpeciesWithLanguageRow
+	Tags    []GetTagWithLanguageCheckinRow
+	Homes   []Home
 }
 
-type TagView struct {
-	ID          int32
-	Name        string
-	DefaultShow bool
-}
-
-func (l TagView) HTMLID() string {
-	return fmt.Sprintf("patient-label-%d", l.ID)
+func (r GetTagWithLanguageCheckinRow) HTMLID() string {
+	return fmt.Sprintf("patient-label-%d", r.TagID)
 }
 
 func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	commonData := MustLoadCommonData(ctx)
 
-	speciesRows, err := server.Queries.GetSpeciesWithLanguage(ctx, commonData.User.LanguageID)
+	species, err := server.Queries.GetSpeciesWithLanguage(ctx, commonData.User.LanguageID)
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return
 	}
 
-	species := make([]SpeciesView, 0, len(speciesRows))
-	for _, row := range speciesRows {
-		species = append(species, SpeciesView{
-			ID:   row.SpeciesID,
-			Name: row.Name,
-		})
-	}
-
-	tagRows, err := server.Queries.GetTagWithLanguageCheckin(ctx, commonData.User.LanguageID)
+	tags, err := server.Queries.GetTagWithLanguageCheckin(ctx, commonData.User.LanguageID)
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return
 	}
 
-	tags := make([]TagView, 0, len(tagRows))
-	for _, row := range tagRows {
-		tags = append(tags, TagView{ID: row.TagID, Name: row.Name, DefaultShow: row.DefaultShow})
-	}
-
-	homeRows, err := server.Queries.GetHomes(ctx)
+	homes, err := server.Queries.GetHomes(ctx)
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return
 	}
-	homes := make([]HomeView, 0, len(homeRows))
-	for _, row := range homeRows {
-		if row.ID == commonData.User.PreferredHomeID {
-			homes = append(homes, HomeView{
-				ID:    row.ID,
-				Name:  row.Name,
-				Users: nil,
-			})
-		}
-	}
-	for _, row := range homeRows {
-		if row.ID != commonData.User.PreferredHomeID {
-			homes = append(homes, HomeView{
-				ID:    row.ID,
-				Name:  row.Name,
-				Users: nil,
-			})
-		}
-	}
-	_ = DashboardPage(commonData, species, tags, homes).Render(r.Context(), w)
+
+	_ = DashboardPage(commonData, DashboardData{
+		Species: species,
+		Tags:    tags,
+		Homes:   homes,
+	}).Render(r.Context(), w)
 }
 
 func (server *Server) postDashboardHandler(w http.ResponseWriter, r *http.Request) {

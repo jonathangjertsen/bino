@@ -2,7 +2,7 @@ package main
 
 import "github.com/jonathangjertsen/bino/ln"
 
-templ DashboardPage(data *CommonData, species []SpeciesView, tags []TagView, homes []HomeView) {
+templ DashboardPage(data *CommonData, dashboardData DashboardData) {
 	@Layout(data) {
         <div class="dashboard">
             @Card() {
@@ -14,17 +14,17 @@ templ DashboardPage(data *CommonData, species []SpeciesView, tags []TagView, hom
                     <div class="form-group">
                         <label>{data.Ln(ln.Species)}</label>
                         <select class="form-control" name="species">
-                            for _, sp := range species {
-                                <option value={sp.ID}>{sp.Name}</option>
+                            for _, sp := range dashboardData.Species {
+                                <option value={sp.SpeciesID}>{sp.Name}</option>
                             }
                         </select>
                     </div>
                     <div class="form-group">
                         <label>{data.Ln(ln.Tags)}</label>
                         <br/>
-                        for _, tag := range tags {
+                        for _, tag := range dashboardData.Tags {
                             <div class="form-check-inline checkbox" data-hidden={!tag.DefaultShow}>
-                                <input type="checkbox" name="tag" id={tag.HTMLID()} value={tag.ID}>
+                                <input type="checkbox" name="tag" id={tag.HTMLID()} value={tag.TagID}>
                                 <label for={tag.HTMLID()}>
                                     {tag.Name}
                                 </label>
@@ -35,7 +35,7 @@ templ DashboardPage(data *CommonData, species []SpeciesView, tags []TagView, hom
                     <div class="form-group">
                         <label for="patient-home">{data.Ln(ln.HomeName)}</label>
                         <select class="form-control" name="home">
-                            for _, home := range homes {
+                            for _, home := range dashboardData.Homes {
                                 <option value={home.ID} selected?={home.ID == data.User.PreferredHomeID}>{home.Name}</option>
                             }
                         </select>
