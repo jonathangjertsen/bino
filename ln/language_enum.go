@@ -52,33 +52,78 @@ const (
 	ErrorPageInstructions
 	// DefaultIncludeTag is a L of type DefaultIncludeTag.
 	DefaultIncludeTag
+	// UnassignedUsers is a L of type UnassignedUsers.
+	UnassignedUsers
+	// DisplayName is a L of type DisplayName.
+	DisplayName
+	// EmailAddress is a L of type EmailAddress.
+	EmailAddress
+	// AddToHome is a L of type AddToHome.
+	AddToHome
+	// CreateHome is a L of type CreateHome.
+	CreateHome
+	// HomeName is a L of type HomeName.
+	HomeName
+	// CreateHomeNote is a L of type CreateHomeNote.
+	CreateHomeNote
+	// EmptyHome is a L of type EmptyHome.
+	EmptyHome
+	// AddUserToHome is a L of type AddUserToHome.
+	AddUserToHome
+	// CannotAddPatientBecauseUserIsHomeless is a L of type CannotAddPatientBecauseUserIsHomeless.
+	CannotAddPatientBecauseUserIsHomeless
+	// RemoveFromCurrent is a L of type RemoveFromCurrent.
+	RemoveFromCurrent
+	// Move is a L of type Move.
+	Move
+	// None is a L of type None.
+	None
+	// ArchiveHome is a L of type ArchiveHome.
+	ArchiveHome
+	// Privacy is a L of type Privacy.
+	Privacy
 )
 
 var ErrInvalidL = errors.New("not a valid L")
 
-const _LName = "LogOutPatientNameSpeciesTagsCheckInPatientManageSpeciesLatinUpdateAddManageHomesDashboardManageTagsCalendarManageStatusesManageEventsAdminRootViewHomesErrorPageHeadErrorPageInstructionsDefaultIncludeTag"
+const _LName = "LogOutPatientNameSpeciesTagsCheckInPatientManageSpeciesLatinUpdateAddManageHomesDashboardManageTagsCalendarManageStatusesManageEventsAdminRootViewHomesErrorPageHeadErrorPageInstructionsDefaultIncludeTagUnassignedUsersDisplayNameEmailAddressAddToHomeCreateHomeHomeNameCreateHomeNoteEmptyHomeAddUserToHomeCannotAddPatientBecauseUserIsHomelessRemoveFromCurrentMoveNoneArchiveHomePrivacy"
 
 var _LMap = map[L]string{
-	LogOut:                _LName[0:6],
-	PatientName:           _LName[6:17],
-	Species:               _LName[17:24],
-	Tags:                  _LName[24:28],
-	CheckInPatient:        _LName[28:42],
-	ManageSpecies:         _LName[42:55],
-	Latin:                 _LName[55:60],
-	Update:                _LName[60:66],
-	Add:                   _LName[66:69],
-	ManageHomes:           _LName[69:80],
-	Dashboard:             _LName[80:89],
-	ManageTags:            _LName[89:99],
-	Calendar:              _LName[99:107],
-	ManageStatuses:        _LName[107:121],
-	ManageEvents:          _LName[121:133],
-	AdminRoot:             _LName[133:142],
-	ViewHomes:             _LName[142:151],
-	ErrorPageHead:         _LName[151:164],
-	ErrorPageInstructions: _LName[164:185],
-	DefaultIncludeTag:     _LName[185:202],
+	LogOut:                                _LName[0:6],
+	PatientName:                           _LName[6:17],
+	Species:                               _LName[17:24],
+	Tags:                                  _LName[24:28],
+	CheckInPatient:                        _LName[28:42],
+	ManageSpecies:                         _LName[42:55],
+	Latin:                                 _LName[55:60],
+	Update:                                _LName[60:66],
+	Add:                                   _LName[66:69],
+	ManageHomes:                           _LName[69:80],
+	Dashboard:                             _LName[80:89],
+	ManageTags:                            _LName[89:99],
+	Calendar:                              _LName[99:107],
+	ManageStatuses:                        _LName[107:121],
+	ManageEvents:                          _LName[121:133],
+	AdminRoot:                             _LName[133:142],
+	ViewHomes:                             _LName[142:151],
+	ErrorPageHead:                         _LName[151:164],
+	ErrorPageInstructions:                 _LName[164:185],
+	DefaultIncludeTag:                     _LName[185:202],
+	UnassignedUsers:                       _LName[202:217],
+	DisplayName:                           _LName[217:228],
+	EmailAddress:                          _LName[228:240],
+	AddToHome:                             _LName[240:249],
+	CreateHome:                            _LName[249:259],
+	HomeName:                              _LName[259:267],
+	CreateHomeNote:                        _LName[267:281],
+	EmptyHome:                             _LName[281:290],
+	AddUserToHome:                         _LName[290:303],
+	CannotAddPatientBecauseUserIsHomeless: _LName[303:340],
+	RemoveFromCurrent:                     _LName[340:357],
+	Move:                                  _LName[357:361],
+	None:                                  _LName[361:365],
+	ArchiveHome:                           _LName[365:376],
+	Privacy:                               _LName[376:383],
 }
 
 // String implements the Stringer interface.
@@ -117,6 +162,21 @@ var _LValue = map[string]L{
 	_LName[151:164]: ErrorPageHead,
 	_LName[164:185]: ErrorPageInstructions,
 	_LName[185:202]: DefaultIncludeTag,
+	_LName[202:217]: UnassignedUsers,
+	_LName[217:228]: DisplayName,
+	_LName[228:240]: EmailAddress,
+	_LName[240:249]: AddToHome,
+	_LName[249:259]: CreateHome,
+	_LName[259:267]: HomeName,
+	_LName[267:281]: CreateHomeNote,
+	_LName[281:290]: EmptyHome,
+	_LName[290:303]: AddUserToHome,
+	_LName[303:340]: CannotAddPatientBecauseUserIsHomeless,
+	_LName[340:357]: RemoveFromCurrent,
+	_LName[357:361]: Move,
+	_LName[361:365]: None,
+	_LName[365:376]: ArchiveHome,
+	_LName[376:383]: Privacy,
 }
 
 // ParseL attempts to convert a string to a L.

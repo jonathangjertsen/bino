@@ -140,3 +140,32 @@ WHERE language_id = $1
     AND t.default_show
 ORDER BY (tag_id)
 ;
+
+-- name: GetHomes :many
+SELECT * FROM home
+ORDER BY name
+;
+
+-- name: GetAppusers :many
+SELECT au.*, ha.home_id FROM appuser AS au
+LEFT JOIN home_appuser AS ha
+    ON ha.appuser_id = au.id
+;
+
+-- name: UpsertHome :exec
+INSERT INTO home (name)
+VALUES ($1)
+ON CONFLICT (id) DO UPDATE
+    SET name = EXCLUDED.name
+;
+
+-- name: AddUserToHome :exec
+INSERT INTO home_appuser (home_id, appuser_id)
+VALUES ($1, $2)
+;
+
+-- name: RemoveUserFromHome :exec
+DELETE FROM home_appuser
+WHERE home_id = $1
+  AND appuser_id = $2
+;

@@ -1,0 +1,132 @@
+package views
+
+import (
+    "github.com/jonathangjertsen/bino/ln"
+)
+
+type Home struct {
+    ID int32
+    Name string
+    Users []User
+}
+
+type User struct {
+    ID int32
+    DisplayName string
+    Email string
+}
+
+templ HomesPage(data *CommonData, homes []Home, homeless []User) {
+    @Layout(data) {
+        @Card() {
+            // List of homes
+            <h1>{data.Ln(ln.ViewHomes)}</h1>
+            for _, home := range homes {
+                @Card() {
+                    <h2>{home.Name}</h2>
+                    for _, user := range home.Users {
+                        @user.Component(data) {
+                            // Move user to different home
+                            <form class="form-inline" action="/homes" method="POST">
+                                <label>{data.Ln(ln.Move)}</label>
+                                <select class="form-control-color r-2 select-user" name="home-id">
+                                    for _, newHome := range homes {
+                                        if home.ID != newHome.ID {
+                                            <option value={newHome.ID}>{newHome.Name}</option>
+                                        }
+                                    }
+                                    <option value="0">{data.Ln(ln.None)}</option>
+                                </select>
+                                <label for="remove-from-current">{data.Ln(ln.RemoveFromCurrent)}</label>
+                                <input type="checkbox" name="remove-from-current" checked>
+                                <input type="hidden" name="form-id" value="add-user">
+                                <input type="hidden" name="user-id" value={user.ID}>
+                                <input type="hidden" name="curr-home-id" value={home.ID}>
+                                <button type="submit" class="btn btn-primary mb-2">{data.Ln(ln.Move)}</button>
+                            </form>
+                        }
+                    }
+                    if len(home.Users) == 0 {
+                        <p class="small">{data.Ln(ln.EmptyHome)}</p>
+                    }
+
+                    // Add user to this home
+                    if len(homeless) > 0 {
+                        <form class="form-inline" action="/homes" method="POST">
+                            <label>{data.Ln(ln.AddToHome)}</label>
+                            <select class="form-control-color r-2 select-user" name="user-id">
+                                for _, user := range homeless {
+                                    <option value={user.ID}>{user.DisplayName}</option>
+                                }
+                            </select>
+                            <input type="hidden" name="form-id" value="add-user">
+                            <input type="hidden" name="home-id" value={home.ID}>
+                            <button type="submit" class="btn btn-primary mb-2">{data.Ln(ln.Add)}</button>
+                        </form>
+                    }
+
+                    // Archive rehab home
+                    <form class="form-inline" action="/homes" method="POST">
+                        <input type="hidden" name="form-id" value="archive-home">
+                        <button type="submit" class="btn btn-warning mb-2" name="home" value={home.ID}>{data.Ln(ln.ArchiveHome)}</button>
+                    </form>
+                }
+            }
+
+            <hr/>
+
+            // Create home-form
+            <h2>{data.Ln(ln.CreateHome)}</h2>
+            <p class="small">{data.Ln(ln.CreateHomeNote)}</p>
+            <form class="form-inline" action="/homes" method="POST">
+                <label for="name">{data.Ln(ln.HomeName)}</label>
+                <input type="text" id="created-home" name="name">
+                <button type="submit" class="btn btn-primary mb-2">{data.Ln(ln.Add)}</button>
+                <input type="hidden" name="form-id" value="create-home">
+            </form>
+
+            // Unassigned users
+            if len(homeless) > 0 {
+                <hr/>
+
+                <h2>{data.Ln(ln.UnassignedUsers)}</h2>
+                for _, user := range homeless {
+                    @user.Component(data) {
+                        <form class="form-inline" action="/homes" method="POST">
+                            <label>{data.Ln(ln.AddToHome)}</label>
+                            <select class="form-control-color r-2 select-user" name="home-id">
+                                for _, home := range homes {
+                                    <option value={home.ID}>{home.Name}</option>
+                                }
+                            </select>
+                            <input type="hidden" name="form-id" value="add-user">
+                            <input type="hidden" name="user-id" value={user.ID}>
+                            <button type="submit" class="btn btn-primary mb-2">{data.Ln(ln.Add)}</button>
+                        </form>
+                    }
+                }
+            }
+        }
+    }
+}
+
+templ (u *User) Component(data *CommonData) {
+    @Card() {
+        <table class="table tbl">
+            <thead>
+                <tr>
+                    <th colspan="100%" class="text-center">
+                        {u.DisplayName}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>{data.Ln(ln.EmailAddress)}</th>
+                    <td>{u.Email}</td>
+                </tr>
+            </tbody>
+        </table>
+        { children... }
+    }
+}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,7 +10,6 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jonathangjertsen/bino/sql"
 	"github.com/jonathangjertsen/bino/views"
 )
@@ -69,6 +69,10 @@ func (server *Server) fourOhFourHandler(w http.ResponseWriter, r *http.Request, 
 	server.renderError(w, r, commonData, fmt.Errorf("not found: %s", r.RequestURI))
 }
 
+func (server *Server) privacyHandler(w http.ResponseWriter, r *http.Request, commonData *views.CommonData) {
+	_ = views.Privacy(commonData, views.PrivacyConfig{LogDeletionPolicy: 3, RevokeConsentPolicy: 3}).Render(r.Context(), w) // TODO
+}
+
 func jsonHandler[T any](
 	server *Server,
 	w http.ResponseWriter,
@@ -87,20 +91,9 @@ func jsonHandler[T any](
 		ajaxError(w, r, err, http.StatusBadRequest)
 		return
 	}
-	tx, err := server.Conn.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
-		ajaxError(w, r, err, http.StatusInternalServerError)
-		return
-	}
-	defer func() {
-		_ = tx.Rollback(ctx)
-	}()
-	q := server.Queries.WithTx(tx)
-	if err := f(q, recv); err != nil {
-		ajaxError(w, r, err, http.StatusInternalServerError)
-		return
-	}
-	if err := tx.Commit(ctx); err != nil {
+	if err := server.Transaction(ctx, func(ctx context.Context, q *sql.Queries) error {
+		return f(q, recv)
+	}); err != nil {
 		ajaxError(w, r, err, http.StatusInternalServerError)
 		return
 	}

@@ -7,6 +7,8 @@ package sql
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const addEvent = `-- name: AddEvent :one
@@ -57,6 +59,63 @@ func (q *Queries) AddTag(ctx context.Context, defaultShow bool) (int32, error) {
 	var id int32
 	err := row.Scan(&id)
 	return id, err
+}
+
+const addUserToHome = `-- name: AddUserToHome :exec
+INSERT INTO home_appuser (home_id, appuser_id)
+VALUES ($1, $2)
+`
+
+type AddUserToHomeParams struct {
+	HomeID    int32
+	AppuserID int32
+}
+
+func (q *Queries) AddUserToHome(ctx context.Context, arg AddUserToHomeParams) error {
+	_, err := q.db.Exec(ctx, addUserToHome, arg.HomeID, arg.AppuserID)
+	return err
+}
+
+const getAppusers = `-- name: GetAppusers :many
+SELECT au.id, au.display_name, au.google_sub, au.email, au.logging_consent, ha.home_id FROM appuser AS au
+LEFT JOIN home_appuser AS ha
+    ON ha.appuser_id = au.id
+`
+
+type GetAppusersRow struct {
+	ID             int32
+	DisplayName    string
+	GoogleSub      string
+	Email          string
+	LoggingConsent pgtype.Timestamptz
+	HomeID         pgtype.Int4
+}
+
+func (q *Queries) GetAppusers(ctx context.Context) ([]GetAppusersRow, error) {
+	rows, err := q.db.Query(ctx, getAppusers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAppusersRow
+	for rows.Next() {
+		var i GetAppusersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.DisplayName,
+			&i.GoogleSub,
+			&i.Email,
+			&i.LoggingConsent,
+			&i.HomeID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getEventWithLanguage = `-- name: GetEventWithLanguage :many
@@ -130,6 +189,31 @@ func (q *Queries) GetEventsLanguage(ctx context.Context) ([]EventLanguage, error
 	for rows.Next() {
 		var i EventLanguage
 		if err := rows.Scan(&i.EventID, &i.LanguageID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getHomes = `-- name: GetHomes :many
+SELECT id, name FROM home
+ORDER BY name
+`
+
+func (q *Queries) GetHomes(ctx context.Context) ([]Home, error) {
+	rows, err := q.db.Query(ctx, getHomes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Home
+	for rows.Next() {
+		var i Home
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -443,18 +527,19 @@ func (q *Queries) GetTagsLanguage(ctx context.Context) ([]TagLanguage, error) {
 }
 
 const getUser = `-- name: GetUser :one
-SELECT au.id, au.display_name, au.google_sub, au.email, COALESCE(al.language_id, 1) FROM appuser AS au
+SELECT au.id, au.display_name, au.google_sub, au.email, au.logging_consent, COALESCE(al.language_id, 1) FROM appuser AS au
 LEFT JOIN appuser_language AS al
 ON au.id = al.appuser_id
 WHERE id = $1
 `
 
 type GetUserRow struct {
-	ID          int32
-	DisplayName string
-	GoogleSub   string
-	Email       string
-	LanguageID  int32
+	ID             int32
+	DisplayName    string
+	GoogleSub      string
+	Email          string
+	LoggingConsent pgtype.Timestamptz
+	LanguageID     int32
 }
 
 func (q *Queries) GetUser(ctx context.Context, id int32) (GetUserRow, error) {
@@ -465,9 +550,26 @@ func (q *Queries) GetUser(ctx context.Context, id int32) (GetUserRow, error) {
 		&i.DisplayName,
 		&i.GoogleSub,
 		&i.Email,
+		&i.LoggingConsent,
 		&i.LanguageID,
 	)
 	return i, err
+}
+
+const removeUserFromHome = `-- name: RemoveUserFromHome :exec
+DELETE FROM home_appuser
+WHERE home_id = $1
+  AND appuser_id = $2
+`
+
+type RemoveUserFromHomeParams struct {
+	HomeID    int32
+	AppuserID int32
+}
+
+func (q *Queries) RemoveUserFromHome(ctx context.Context, arg RemoveUserFromHomeParams) error {
+	_, err := q.db.Exec(ctx, removeUserFromHome, arg.HomeID, arg.AppuserID)
+	return err
 }
 
 const setUserLanguage = `-- name: SetUserLanguage :exec
@@ -517,6 +619,18 @@ type UpsertEventLanguageParams struct {
 
 func (q *Queries) UpsertEventLanguage(ctx context.Context, arg UpsertEventLanguageParams) error {
 	_, err := q.db.Exec(ctx, upsertEventLanguage, arg.EventID, arg.LanguageID, arg.Name)
+	return err
+}
+
+const upsertHome = `-- name: UpsertHome :exec
+INSERT INTO home (name)
+VALUES ($1)
+ON CONFLICT (id) DO UPDATE
+    SET name = EXCLUDED.name
+`
+
+func (q *Queries) UpsertHome(ctx context.Context, name string) error {
+	_, err := q.db.Exec(ctx, upsertHome, name)
 	return err
 }
 

@@ -1,3 +1,22 @@
+[data-bs-theme="custom"] {
+    --bs-primary: #ff5722;
+    --bs-btn-disabled-bg: #ff5722;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+.main {
+    flex: 1;
+}
+
 .display-name {
     font-weight: bold
 }
@@ -65,4 +84,26 @@
 .b-create-patient {
     width: 100% !important;
     margin-top: 0.5em !important;
+}
+
+.select-user {
+    min-width: 25%;
+}
+
+.footer {
+    bottom: 0;
+    width: 100%;
+    height: 60px;
+    line-height: 60px;
+    background-color: #dddddd !important;
+}
+
+.push-footer {
+    margin-bottom: 60px;
+}
+
+.form-inline {
+    text-align: right;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
 }

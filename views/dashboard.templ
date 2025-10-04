@@ -19,7 +19,7 @@ func (l Tag) HTMLID() string {
 
 templ DashboardPage(data *CommonData, species []Species, tags []Tag) {
 	@Layout(data) {
-        <div class="card b-card">
+        @Card() {
             <form>
                 <div class="form-group">
                     <label for="patient-input-name">{data.Ln(ln.PatientName)}</label>
@@ -40,9 +40,12 @@ templ DashboardPage(data *CommonData, species []Species, tags []Tag) {
                         @Checkbox(tag.HTMLID(), tag.Name)
                     }
                 </div>
-                <button type="submit" class="b-create-patient btn btn-primary">{data.Ln(ln.CheckInPatient)}</button>
+                <button type="submit" disabled?={data.User.PreferredHomeID == 0} class="b-create-patient btn btn-primary">{data.Ln(ln.CheckInPatient)}</button>
+                if data.User.PreferredHomeID == 0 {
+                    <p class="small m-0">{data.Ln(ln.CannotAddPatientBecauseUserIsHomeless)}</p>
+                }
             </form>
-        </div>
+        }
     }
 }
 

@@ -20,7 +20,7 @@ func (n Names) Name(i int32) (string, bool) {
 
 templ (page CRUDPage) Component(data *CommonData) {
     @Layout(data) {
-        <div class="card b-card">
+        @Card() {
             <h1>{data.Ln(page.Header)}</h1>
             <table class="table">
             <thead>
@@ -38,7 +38,7 @@ templ (page CRUDPage) Component(data *CommonData) {
                 { children... }
             </tbody>
             </table>
-        </div>
+        }
         <script src="/static/crud.js"></script>
     }
 }

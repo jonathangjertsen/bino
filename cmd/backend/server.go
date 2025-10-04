@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/coreos/go-oidc"
 	"github.com/gorilla/sessions"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jonathangjertsen/bino/sql"
 	"golang.org/x/oauth2"
@@ -21,6 +23,21 @@ type Server struct {
 	Cookies       *sessions.CookieStore
 	OAuthConfig   *oauth2.Config
 	TokenVerifier *oidc.IDTokenVerifier
+}
+
+func (s *Server) Transaction(ctx context.Context, f func(ctx context.Context, q *sql.Queries) error) error {
+	tx, err := s.Conn.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return fmt.Errorf("starting database transaction: %w", err)
+	}
+	q := s.Queries.WithTx(tx)
+	err = f(ctx, q)
+	if err == nil {
+		err = tx.Commit(ctx)
+	} else {
+		tx.Rollback(ctx)
+	}
+	return err
 }
 
 var ErrUnauthorized = errors.New("unauthorized")
@@ -93,6 +110,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *sql.Queries) 
 	mux.HandleFunc("GET /event", server.requireLogin(server.getEventHandler))
 	mux.HandleFunc("GET /tag", server.requireLogin(server.getTagHandler))
 	mux.HandleFunc("GET /admin", server.requireLogin(server.adminRootHandler))
+	mux.HandleFunc("GET /homes", server.requireLogin(server.getHomesHandler))
 
 	// Admin AJAX
 	mux.HandleFunc("POST /species", server.requireLogin(server.postSpeciesHandler))
@@ -104,8 +122,13 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *sql.Queries) 
 	mux.HandleFunc("POST /tag", server.requireLogin(server.postTagHandler))
 	mux.HandleFunc("PUT /tag", server.requireLogin(server.putTagHandler))
 
+	// Admin forms
+	mux.HandleFunc("POST /homes", server.requireLogin(server.postHomeHandler))
+
 	// Available to all
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
+	mux.HandleFunc("/privacy", server.requireLogin(server.privacyHandler))
 
 	mux.HandleFunc("/", server.requireLogin(server.fourOhFourHandler))
 

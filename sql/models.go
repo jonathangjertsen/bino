@@ -12,9 +12,10 @@ import (
 type Appuser struct {
 	ID int32
 	// The user's display name
-	DisplayName string
-	GoogleSub   string
-	Email       string
+	DisplayName    string
+	GoogleSub      string
+	Email          string
+	LoggingConsent pgtype.Timestamptz
 }
 
 // Language preference for each user
