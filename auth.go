@@ -9,7 +9,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/jonathangjertsen/bino/sql"
 	"golang.org/x/oauth2"
 )
 
@@ -79,9 +78,9 @@ func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (Comm
 		return CommonData{}, fmt.Errorf("couldn't read languages: %w", err)
 	}
 
-	viewLanguages := make([]Language, 0, len(languages))
+	viewLanguages := make([]LanguageView, 0, len(languages))
 	for _, lang := range languages {
-		viewLanguages = append(viewLanguages, Language{ID: lang.ID, Emoji: lang.ShortName, SelfName: lang.SelfName})
+		viewLanguages = append(viewLanguages, LanguageView{ID: lang.ID, Emoji: lang.ShortName, SelfName: lang.SelfName})
 	}
 
 	commonData := CommonData{
@@ -93,22 +92,22 @@ func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (Comm
 	return commonData, err
 }
 
-func (server *Server) getUser(r *http.Request) (sql.GetUserRow, error) {
+func (server *Server) getUser(r *http.Request) (GetUserRow, error) {
 	ctx := r.Context()
 
 	sess, _ := server.Cookies.Get(r, "auth")
 	uidIF, ok := sess.Values["user_id"]
 	if !ok {
-		return sql.GetUserRow{}, ErrUnauthorized
+		return GetUserRow{}, ErrUnauthorized
 	}
 	uid, ok := uidIF.(int32)
 	if !ok {
-		return sql.GetUserRow{}, fmt.Errorf("%w: uid is %T", ErrInternalServerError, uid)
+		return GetUserRow{}, fmt.Errorf("%w: uid is %T", ErrInternalServerError, uid)
 	}
 
 	user, err := server.Queries.GetUser(ctx, uid)
 	if err != nil {
-		return sql.GetUserRow{}, fmt.Errorf("%w: database error", ErrInternalServerError)
+		return GetUserRow{}, fmt.Errorf("%w: database error", ErrInternalServerError)
 	}
 
 	return user, nil
@@ -171,7 +170,7 @@ func (server *Server) callbackHandler(
 		http.Error(w, "claims failed", http.StatusUnauthorized)
 		return
 	}
-	userID, err := server.Queries.UpsertUser(ctx, sql.UpsertUserParams{
+	userID, err := server.Queries.UpsertUser(ctx, UpsertUserParams{
 		GoogleSub:   claims.Sub,
 		Email:       claims.Email,
 		DisplayName: claims.Name,

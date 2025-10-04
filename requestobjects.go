@@ -36,7 +36,7 @@ func MustLoadCommonData(ctx context.Context) *CommonData {
 type CommonData struct {
 	BuildKey  string
 	User      UserData
-	Languages []Language
+	Languages []LanguageView
 }
 
 func (cd *CommonData) Ln(key ln.L) string {
@@ -57,7 +57,7 @@ func (ud *UserData) Ln(key ln.L) string {
 	return ln.Ln(ud.LanguageID, key)
 }
 
-type Language struct {
+type LanguageView struct {
 	ID       int32
 	Emoji    string
 	SelfName string

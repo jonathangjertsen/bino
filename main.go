@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-
-	"github.com/jonathangjertsen/bino/sql"
 )
 
 func main() {
@@ -25,7 +23,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	queries := sql.New(conn)
+	queries := New(conn)
 
 	err = startServer(ctx, conn, queries, config, BuildKey)
 	if err != nil {

@@ -3,8 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-
-	"github.com/jonathangjertsen/bino/sql"
 )
 
 type PrivacyConfig struct {
@@ -26,7 +24,7 @@ func (server *Server) postPrivacyHandler(w http.ResponseWriter, r *http.Request)
 
 	var err error
 	if consent {
-		err = server.Queries.SetLoggingConsent(ctx, sql.SetLoggingConsentParams{
+		err = server.Queries.SetLoggingConsent(ctx, SetLoggingConsentParams{
 			ID:     commonData.User.AppuserID,
 			Period: server.Config.Privacy.RevokeConsentPolicy,
 		})

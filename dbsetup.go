@@ -7,7 +7,6 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
-	"github.com/jonathangjertsen/bino/sql"
 	migrate "github.com/rubenv/sql-migrate"
 	"golang.org/x/term"
 )
@@ -34,7 +33,7 @@ func dbSetup(ctx context.Context) (*pgxpool.Pool, error) {
 	}
 
 	migrations := migrate.EmbedFileSystemMigrationSource{
-		FileSystem: sql.DBMigrations,
+		FileSystem: DBMigrations,
 		Root:       "migrations",
 	}
 
@@ -43,7 +42,7 @@ func dbSetup(ctx context.Context) (*pgxpool.Pool, error) {
 
 	n, err := migrate.ExecContext(ctx, sqlDB, "postgres", migrations, migrate.Up)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("migrating: %w", err)
 	}
 	fmt.Printf("Did %d migrations\n", n)
 

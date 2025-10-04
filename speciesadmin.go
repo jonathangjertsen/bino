@@ -2,8 +2,6 @@ package main
 
 import (
 	"net/http"
-
-	"github.com/jonathangjertsen/bino/sql"
 )
 
 type SpeciesLangs struct {
@@ -17,14 +15,14 @@ func (server *Server) postSpeciesHandler(w http.ResponseWriter, r *http.Request)
 		Latin     string
 		Languages map[int32]string
 	}
-	jsonHandler(server, w, r, func(q *sql.Queries, req reqT) error {
+	jsonHandler(server, w, r, func(q *Queries, req reqT) error {
 		ctx := r.Context()
 		id, err := q.AddSpecies(ctx, req.Latin)
 		if err != nil {
 			return err
 		}
 		for langID, name := range req.Languages {
-			if err := q.UpsertSpeciesLanguage(ctx, sql.UpsertSpeciesLanguageParams{
+			if err := q.UpsertSpeciesLanguage(ctx, UpsertSpeciesLanguageParams{
 				SpeciesID:  id,
 				LanguageID: langID,
 				Name:       name,
@@ -42,10 +40,10 @@ func (server *Server) putSpeciesHandler(w http.ResponseWriter, r *http.Request) 
 		Latin     string
 		Languages map[int32]string
 	}
-	jsonHandler(server, w, r, func(q *sql.Queries, req reqT) error {
+	jsonHandler(server, w, r, func(q *Queries, req reqT) error {
 		ctx := r.Context()
 		for langID, name := range req.Languages {
-			if err := q.UpsertSpeciesLanguage(ctx, sql.UpsertSpeciesLanguageParams{
+			if err := q.UpsertSpeciesLanguage(ctx, UpsertSpeciesLanguageParams{
 				SpeciesID:  req.ID,
 				LanguageID: langID,
 				Name:       name,

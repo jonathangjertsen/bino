@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/jonathangjertsen/bino/sql"
 )
 
 type SpeciesView struct {
@@ -109,8 +108,8 @@ func (server *Server) postDashboardHandler(w http.ResponseWriter, r *http.Reques
 		status = StatusAdmitted
 	}
 
-	if err := server.Transaction(ctx, func(ctx context.Context, q *sql.Queries) error {
-		patientID, err := q.AddPatient(ctx, sql.AddPatientParams{
+	if err := server.Transaction(ctx, func(ctx context.Context, q *Queries) error {
+		patientID, err := q.AddPatient(ctx, AddPatientParams{
 			SpeciesID:  fields["species"],
 			CurrHomeID: pgtype.Int4{Int32: fields["home"], Valid: true},
 			Name:       name,
@@ -121,7 +120,7 @@ func (server *Server) postDashboardHandler(w http.ResponseWriter, r *http.Reques
 		}
 
 		if len(tags) > 0 {
-			if err := q.AddPatientTags(ctx, sql.AddPatientTagsParams{
+			if err := q.AddPatientTags(ctx, AddPatientTagsParams{
 				PatientID: patientID,
 				Tags:      tags,
 			}); err != nil {
@@ -129,7 +128,7 @@ func (server *Server) postDashboardHandler(w http.ResponseWriter, r *http.Reques
 			}
 		}
 
-		if _, err := q.AddPatientEvent(ctx, sql.AddPatientEventParams{
+		if _, err := q.AddPatientEvent(ctx, AddPatientEventParams{
 			PatientID: patientID,
 			EventID:   int32(EventRegistered),
 			HomeID:    fields["home"],
@@ -140,7 +139,7 @@ func (server *Server) postDashboardHandler(w http.ResponseWriter, r *http.Reques
 		}
 
 		if admitted {
-			if _, err := q.AddPatientEvent(ctx, sql.AddPatientEventParams{
+			if _, err := q.AddPatientEvent(ctx, AddPatientEventParams{
 				PatientID: patientID,
 				EventID:   int32(EventAdmitted),
 				HomeID:    fields["home"],

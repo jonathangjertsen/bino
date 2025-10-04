@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-
-	"github.com/jonathangjertsen/bino/sql"
 )
 
 func (server *Server) adminRootHandler(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +23,7 @@ func (server *Server) postLanguageHandler(w http.ResponseWriter, r *http.Request
 
 	lang, err := getSelectedLanguage(r.FormValue("language"), commonData)
 	if err == nil {
-		err = server.Queries.SetUserLanguage(ctx, sql.SetUserLanguageParams{
+		err = server.Queries.SetUserLanguage(ctx, SetUserLanguageParams{
 			AppuserID:  commonData.User.AppuserID,
 			LanguageID: lang,
 		})
@@ -76,7 +74,7 @@ func jsonHandler[T any](
 	server *Server,
 	w http.ResponseWriter,
 	r *http.Request,
-	f func(q *sql.Queries, req T) error,
+	f func(q *Queries, req T) error,
 ) {
 	ctx := r.Context()
 
@@ -90,7 +88,7 @@ func jsonHandler[T any](
 		ajaxError(w, r, err, http.StatusBadRequest)
 		return
 	}
-	if err := server.Transaction(ctx, func(ctx context.Context, q *sql.Queries) error {
+	if err := server.Transaction(ctx, func(ctx context.Context, q *Queries) error {
 		return f(q, recv)
 	}); err != nil {
 		ajaxError(w, r, err, http.StatusInternalServerError)

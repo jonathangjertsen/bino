@@ -12,14 +12,13 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/jonathangjertsen/bino/sql"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
 
 type Server struct {
 	Conn          *pgxpool.Pool
-	Queries       *sql.Queries
+	Queries       *Queries
 	Cookies       *sessions.CookieStore
 	OAuthConfig   *oauth2.Config
 	TokenVerifier *oidc.IDTokenVerifier
@@ -42,7 +41,7 @@ type HTTPConfig struct {
 	IdleTimeoutSeconds       time.Duration
 }
 
-func (s *Server) Transaction(ctx context.Context, f func(ctx context.Context, q *sql.Queries) error) error {
+func (s *Server) Transaction(ctx context.Context, f func(ctx context.Context, q *Queries) error) error {
 	tx, err := s.Conn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return fmt.Errorf("starting database transaction: %w", err)
@@ -70,7 +69,7 @@ func getStatusCode(err error) int {
 	return http.StatusInternalServerError
 }
 
-func startServer(ctx context.Context, conn *pgxpool.Pool, queries *sql.Queries, config Config, buildKey string) error {
+func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, config Config, buildKey string) error {
 	sessionKey, err := os.ReadFile(config.Auth.SessionKeyLocation)
 	if err != nil {
 		return err

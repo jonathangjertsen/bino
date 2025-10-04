@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-
-	"github.com/jonathangjertsen/bino/sql"
 )
 
 type HomeView struct {
@@ -128,9 +126,9 @@ func (server *Server) postHomeAddUser(w http.ResponseWriter, r *http.Request, co
 	}
 	userID, homeID := fields["user-id"], fields["home-id"]
 
-	if server.Transaction(ctx, func(ctx context.Context, q *sql.Queries) error {
+	if server.Transaction(ctx, func(ctx context.Context, q *Queries) error {
 		if homeID > 0 {
-			if err := server.Queries.AddUserToHome(ctx, sql.AddUserToHomeParams{
+			if err := server.Queries.AddUserToHome(ctx, AddUserToHomeParams{
 				HomeID:    int32(homeID),
 				AppuserID: int32(userID),
 			}); err != nil {
@@ -138,7 +136,7 @@ func (server *Server) postHomeAddUser(w http.ResponseWriter, r *http.Request, co
 			}
 		}
 		if removeFromCurrent {
-			if err := server.Queries.RemoveUserFromHome(ctx, sql.RemoveUserFromHomeParams{
+			if err := server.Queries.RemoveUserFromHome(ctx, RemoveUserFromHomeParams{
 				HomeID:    int32(currentHomeID),
 				AppuserID: int32(userID),
 			}); err != nil {

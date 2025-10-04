@@ -2,8 +2,6 @@ package main
 
 import (
 	"net/http"
-
-	"github.com/jonathangjertsen/bino/sql"
 )
 
 type TagLangs struct {
@@ -17,14 +15,14 @@ func (server *Server) postTagHandler(w http.ResponseWriter, r *http.Request) {
 		DefaultShow bool
 		Languages   map[int32]string
 	}
-	jsonHandler(server, w, r, func(q *sql.Queries, req reqT) error {
+	jsonHandler(server, w, r, func(q *Queries, req reqT) error {
 		ctx := r.Context()
 		id, err := q.AddTag(ctx, req.DefaultShow)
 		if err != nil {
 			return err
 		}
 		for langID, name := range req.Languages {
-			if err := q.UpsertTagLanguage(ctx, sql.UpsertTagLanguageParams{
+			if err := q.UpsertTagLanguage(ctx, UpsertTagLanguageParams{
 				TagID:      id,
 				LanguageID: langID,
 				Name:       name,
@@ -42,14 +40,14 @@ func (server *Server) putTagHandler(w http.ResponseWriter, r *http.Request) {
 		DefaultShow bool
 		Languages   map[int32]string
 	}
-	jsonHandler(server, w, r, func(q *sql.Queries, req reqT) error {
+	jsonHandler(server, w, r, func(q *Queries, req reqT) error {
 		ctx := r.Context()
-		err := q.UpdateTagDefaultShown(ctx, sql.UpdateTagDefaultShownParams{ID: req.ID, DefaultShow: req.DefaultShow})
+		err := q.UpdateTagDefaultShown(ctx, UpdateTagDefaultShownParams{ID: req.ID, DefaultShow: req.DefaultShow})
 		if err != nil {
 			return err
 		}
 		for langID, name := range req.Languages {
-			if err := q.UpsertTagLanguage(ctx, sql.UpsertTagLanguageParams{
+			if err := q.UpsertTagLanguage(ctx, UpsertTagLanguageParams{
 				TagID:      req.ID,
 				LanguageID: langID,
 				Name:       name,
