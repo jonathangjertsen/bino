@@ -4,11 +4,12 @@ ORDER BY id ASC
 ;
 
 -- name: UpsertUser :one
-INSERT INTO appuser (display_name, google_sub, email)
-VALUES ($1, $2, $3)
+INSERT INTO appuser (display_name, google_sub, email, avatar_url)
+VALUES ($1, $2, $3, $4)
 ON CONFLICT (google_sub) DO UPDATE
     SET display_name = EXCLUDED.display_name,
-        email        = EXCLUDED.email
+        email        = EXCLUDED.email,
+        avatar_url   = EXCLUDED.avatar_url
 RETURNING id;
 
 -- name: GetUser :one

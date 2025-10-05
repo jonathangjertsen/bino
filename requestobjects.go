@@ -51,6 +51,8 @@ type UserData struct {
 	Email           string
 	Language        *ln.Language
 	LoggingConsent  bool
+	AvatarURL       string
+	HasAvatarURL    bool
 }
 
 type LanguageView struct {

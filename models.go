@@ -16,6 +16,7 @@ type Appuser struct {
 	GoogleSub      string
 	Email          string
 	LoggingConsent pgtype.Timestamptz
+	AvatarUrl      pgtype.Text
 }
 
 // Language preference for each user

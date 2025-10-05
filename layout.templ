@@ -79,12 +79,18 @@ templ LanguageSelect(data *CommonData) {
 }
 
 templ SelfInfo(data *UserData) {
-    <div class="logged-in-as">
-        <div class="user-info">
-            <div class="display-name">{data.DisplayName}</div>
-            <div class="email">{data.Email}</div>
+    if data.HasAvatarURL {
+        <div class="b-navbar-item">
+            <img src={data.AvatarURL} class="nav-profile-picture">
         </div>
-    </div>
+    } else {
+        <div class="b-navbar-item logged-in-as">
+            <div class="user-info">
+                <div class="display-name">{data.DisplayName}</div>
+                <div class="email">{data.Email}</div>
+            </div>
+        </div>
+    }
 }
 
 templ AuthLogOut(data *UserData) {

@@ -68,15 +68,30 @@ templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
 templ DashboardHomes(data *CommonData, dashboardData *DashboardData) {
     <div class="dashboard">
         for _, home := range dashboardData.Homes {
-            @DashboardHomeCard(data, dashboardData, home)
+            @DashboardHomeCard(data, dashboardData, &home)
         }
     </div>
 }
 
-templ DashboardHomeCard(data *CommonData, dashboardData *DashboardData, home HomeView) {
+templ DashboardHomeCard(data *CommonData, dashboardData *DashboardData, home *HomeView) {
     <div class="dashboard-home card"> 
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between">
             <a href={home.URL()}>{home.Home.Name}</a>
+            <div>
+                for _, u := range home.Users {
+                    <a href={u.URL()}>
+                        if u.HasAvatarURL {
+                            <img src={u.AvatarURL} class="dashboard-head-profile">
+                        } else {
+                            <div class="dashboard-head-profile">
+                                if len(u.Name) > 0 {
+                                    {u.Name[:1]}
+                                }
+                            </div>
+                        }
+                    </a>
+                }
+            </div>
         </div>
         <div class="card-content">
             if len(home.Patients) > 0 {

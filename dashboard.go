@@ -18,6 +18,7 @@ type DashboardData struct {
 type HomeView struct {
 	Home     Home
 	Patients []PatientView
+	Users    []DashboardUserView
 }
 
 func (hv HomeView) URL() string {
@@ -40,6 +41,17 @@ type TagView struct {
 	Name string
 }
 
+type DashboardUserView struct {
+	ID           int32
+	Name         string
+	AvatarURL    string
+	HasAvatarURL bool
+}
+
+func (u DashboardUserView) URL() string {
+	return fmt.Sprintf("/user/%d", u.ID)
+}
+
 func (r GetTagWithLanguageCheckinRow) HTMLID() string {
 	return fmt.Sprintf("patient-label-%d", r.TagID)
 }
@@ -55,6 +67,12 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tags, err := server.Queries.GetTagWithLanguageCheckin(ctx, commonData.User.Language.ID)
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	users, err := server.Queries.GetAppusers(ctx) // TODO(perf) use a more specific query
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return
@@ -96,6 +114,16 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 							Name: t.Name,
 						}
 					}),
+				}
+			}),
+			Users: MapSlice(FilterSlice(users, func(u GetAppusersRow) bool {
+				return u.HomeID.Valid && u.HomeID.Int32 == h.ID
+			}), func(u GetAppusersRow) DashboardUserView {
+				return DashboardUserView{
+					ID:           u.ID,
+					Name:         u.DisplayName,
+					AvatarURL:    u.AvatarUrl.String,
+					HasAvatarURL: u.AvatarUrl.Valid,
 				}
 			}),
 		}

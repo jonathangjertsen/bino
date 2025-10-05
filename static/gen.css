@@ -11623,6 +11623,12 @@ a {
   cursor: pointer;
 }
 
+.dashboard-patient-card {
+  user-select: default !important;
+  touch-action: default !important;
+  cursor: pointer;
+}
+
 html, body {
   height: 100%;
   margin: 0;
@@ -11638,6 +11644,23 @@ body {
   flex-direction: column;
   background-color: rgb(210, 212, 225);
   color: rgb(245, 245, 250);
+}
+
+.nav-profile-picture {
+  height: 2.5em;
+  border-radius: 50%;
+}
+
+.dashboard-head-profile {
+  height: 1.5em;
+  width: 1.5em;
+  background: rgb(0, 140, 95);
+  color: rgb(238, 239, 245);
+  margin-left: 0.25em;
+  border-radius: 50%;
+  display: inline-flex;
+  justify-content: center;
+  align-content: center;
 }
 
 @media (min-width: 1000px) {
@@ -11658,6 +11681,15 @@ body {
 @media (min-width: 1000px) {
   .dashboard {
     display: flex;
+    user-select: none;
+    touch-action: none;
+    cursor: grab;
+  }
+  .dashboard :active {
+    cursor: grabbing;
+  }
+  .dashboard {
+    overflow: hidden;
   }
 }
 @media (max-width: 1000px) {
@@ -11666,16 +11698,7 @@ body {
   }
 }
 .dashboard {
-  overflow: hidden;
-  user-select: none;
-  touch-action: none;
-  cursor: grab;
-}
-.dashboard :active {
-  cursor: grabbing;
-}
-.dashboard {
-  border: 1px solid rgb(60, 60, 80);
+  border: 1px solid rgb(126.75, 127.125, 141.875);
   margin-bottom: 1rem;
 }
 
@@ -11863,6 +11886,7 @@ h1 {
   margin-right: 1rem !important;
   flex: 1;
   align-self: flex-start;
+  border: 1px solid rgb(126.75, 127.125, 141.875);
 }
 
 .dashboard-home {

@@ -6,6 +6,7 @@ $dark: rgb(60, 60, 80);
 $text: rgb(245, 245, 250);
 $warning: rgb(235, 140, 75);
 $midgray: mix($dark, $light, 25);
+$slightdark: mix($dark, $midgray, 50);
 
 $mobilethreshold: 1000px;
 
@@ -18,6 +19,12 @@ $mobilethreshold: 1000px;
 
 a {
     color: $accent;
+    user-select: default !important;
+    touch-action: default !important;
+    cursor: pointer;
+}
+
+.dashboard-patient-card {
     user-select: default !important;
     touch-action: default !important;
     cursor: pointer;
@@ -40,6 +47,23 @@ body {
     color: $text;
 }
 
+.nav-profile-picture {
+    height: 2.5em;
+    border-radius: 50%;
+}
+
+.dashboard-head-profile {
+    height: 1.5em;
+    width: 1.5em;
+    background: $accent;
+    color: $light;
+    margin-left: 0.25em;
+    border-radius: 50%;
+    display: inline-flex;
+    justify-content: center;
+    align-content: center;
+}
+
 .navbar-collapse.show {
     @media (min-width: $mobilethreshold) {
         display: flex;
@@ -56,18 +80,18 @@ body {
 .dashboard {
     @media (min-width: $mobilethreshold) {
         display: flex;
+        user-select: none;
+        touch-action: none;
+        cursor: grab;
+        :active {
+            cursor: grabbing;
+        }
+        overflow: hidden;
     }
     @media (max-width: $mobilethreshold) {
         display: block;
     }
-    overflow: hidden;
-    user-select: none;
-    touch-action: none;
-    cursor: grab;
-    :active {
-        cursor: grabbing;
-    }
-    border: 1px solid $dark;
+    border: 1px solid $slightdark;
     margin-bottom: 1rem;
 }
 
@@ -239,6 +263,7 @@ h1 {
     margin-right: 1rem !important;
     flex: 1;  
     align-self: flex-start;  
+    border: 1px solid $slightdark;
 }
 
 .dashboard-home {

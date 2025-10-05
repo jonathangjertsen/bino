@@ -161,7 +161,7 @@ func (q *Queries) GetActivePatients(ctx context.Context, languageID int32) ([]Ge
 }
 
 const getAppusers = `-- name: GetAppusers :many
-SELECT au.id, au.display_name, au.google_sub, au.email, au.logging_consent, ha.home_id FROM appuser AS au
+SELECT au.id, au.display_name, au.google_sub, au.email, au.logging_consent, au.avatar_url, ha.home_id FROM appuser AS au
 LEFT JOIN home_appuser AS ha
     ON ha.appuser_id = au.id
 `
@@ -172,6 +172,7 @@ type GetAppusersRow struct {
 	GoogleSub      string
 	Email          string
 	LoggingConsent pgtype.Timestamptz
+	AvatarUrl      pgtype.Text
 	HomeID         pgtype.Int4
 }
 
@@ -190,6 +191,7 @@ func (q *Queries) GetAppusers(ctx context.Context) ([]GetAppusersRow, error) {
 			&i.GoogleSub,
 			&i.Email,
 			&i.LoggingConsent,
+			&i.AvatarUrl,
 			&i.HomeID,
 		); err != nil {
 			return nil, err
@@ -510,7 +512,7 @@ func (q *Queries) GetTagsLanguage(ctx context.Context) ([]TagLanguage, error) {
 }
 
 const getUser = `-- name: GetUser :one
-SELECT au.id, au.display_name, au.google_sub, au.email, au.logging_consent, COALESCE(al.language_id, 1) FROM appuser AS au
+SELECT au.id, au.display_name, au.google_sub, au.email, au.logging_consent, au.avatar_url, COALESCE(al.language_id, 1) FROM appuser AS au
 LEFT JOIN appuser_language AS al
 ON au.id = al.appuser_id
 WHERE id = $1
@@ -522,6 +524,7 @@ type GetUserRow struct {
 	GoogleSub      string
 	Email          string
 	LoggingConsent pgtype.Timestamptz
+	AvatarUrl      pgtype.Text
 	LanguageID     int32
 }
 
@@ -534,6 +537,7 @@ func (q *Queries) GetUser(ctx context.Context, id int32) (GetUserRow, error) {
 		&i.GoogleSub,
 		&i.Email,
 		&i.LoggingConsent,
+		&i.AvatarUrl,
 		&i.LanguageID,
 	)
 	return i, err
@@ -661,11 +665,12 @@ func (q *Queries) UpsertTagLanguage(ctx context.Context, arg UpsertTagLanguagePa
 }
 
 const upsertUser = `-- name: UpsertUser :one
-INSERT INTO appuser (display_name, google_sub, email)
-VALUES ($1, $2, $3)
+INSERT INTO appuser (display_name, google_sub, email, avatar_url)
+VALUES ($1, $2, $3, $4)
 ON CONFLICT (google_sub) DO UPDATE
     SET display_name = EXCLUDED.display_name,
-        email        = EXCLUDED.email
+        email        = EXCLUDED.email,
+        avatar_url   = EXCLUDED.avatar_url
 RETURNING id
 `
 
@@ -673,10 +678,16 @@ type UpsertUserParams struct {
 	DisplayName string
 	GoogleSub   string
 	Email       string
+	AvatarUrl   pgtype.Text
 }
 
 func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (int32, error) {
-	row := q.db.QueryRow(ctx, upsertUser, arg.DisplayName, arg.GoogleSub, arg.Email)
+	row := q.db.QueryRow(ctx, upsertUser,
+		arg.DisplayName,
+		arg.GoogleSub,
+		arg.Email,
+		arg.AvatarUrl,
+	)
 	var id int32
 	err := row.Scan(&id)
 	return id, err

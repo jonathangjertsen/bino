@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jonathangjertsen/bino/ln"
 	"golang.org/x/oauth2"
 )
@@ -68,6 +69,8 @@ func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (Comm
 		AppuserID:       user.ID,
 		DisplayName:     user.DisplayName,
 		Email:           user.Email,
+		AvatarURL:       user.AvatarUrl.String,
+		HasAvatarURL:    user.AvatarUrl.Valid,
 		Language:        ln.GetLanguage(user.LanguageID),
 		PreferredHomeID: preferredHome,
 		Homes:           homes,
@@ -163,9 +166,10 @@ func (server *Server) callbackHandler(
 		http.Error(w, "verify failed", http.StatusUnauthorized)
 	}
 	var claims struct {
-		Sub   string `json:"sub"`
-		Email string `json:"email"`
-		Name  string `json:"name"`
+		Sub     string `json:"sub"`
+		Email   string `json:"email"`
+		Name    string `json:"name"`
+		Picture string `json:"picture"`
 	}
 	if err := idToken.Claims(&claims); err != nil {
 		http.Error(w, "claims failed", http.StatusUnauthorized)
@@ -175,6 +179,7 @@ func (server *Server) callbackHandler(
 		GoogleSub:   claims.Sub,
 		Email:       claims.Email,
 		DisplayName: claims.Name,
+		AvatarUrl:   pgtype.Text{String: claims.Picture, Valid: claims.Picture != ""},
 	})
 	if err != nil {
 		http.Error(w, "db error", http.StatusInternalServerError)
