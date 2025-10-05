@@ -14,8 +14,8 @@ templ (page CRUDPage) Component(data *CommonData) {
                     for _, key := range page.LangIndependent {
                         <th>{key}</th>
                     }
-                    for _, lang := range data.Languages {
-                        <th>{lang.SelfName}</th>
+                    for _, lang := range LanguageIDValues() {
+                        <th>{Languages[int32(lang)].SelfName}</th>
                     }
                     <th><!-- Update button --></th>
                 </tr>
@@ -29,15 +29,15 @@ templ (page CRUDPage) Component(data *CommonData) {
     }
 }
 
-templ UpdateRow(data *CommonData,  id int32, obj interface{Name(id int32) (string, bool)}) {
+templ UpdateRow(data *CommonData,  id int32, obj interface{Name(id LanguageID) (string, bool)}) {
     <tr>
         {children...}
-        for _, lang := range data.Languages {
+        for _, lang := range LanguageIDValues()  {
             <td>
-                if name, ok := obj.Name(lang.ID); ok {
-                    <input class="form-control" data-field="lang" data-lang={fmt.Sprintf("%d", lang.ID)} value={name}/>
+                if name, ok := obj.Name(lang); ok {
+                    <input class="form-control" data-field="lang" data-lang={fmt.Sprintf("%d", lang)} value={name}/>
                 } else {
-                    <input class="form-control"  data-field="lang" data-lang={fmt.Sprintf("%d", lang.ID)} value="?"/>
+                    <input class="form-control"  data-field="lang" data-lang={fmt.Sprintf("%d", lang)} value="?"/>
                 }
             </input>
             </td>
@@ -53,9 +53,9 @@ templ UpdateRow(data *CommonData,  id int32, obj interface{Name(id int32) (strin
 templ CreateRow(data *CommonData) {
     <tr>
         {children...}
-        for _, lang := range data.Languages {
+        for _, lang := range LanguageIDValues() {
             <td>
-                <input class="form-control" value="" data-field="lang" data-lang={fmt.Sprintf("%d", lang.ID)} placeholder={lang.SelfName}/>
+                <input class="form-control" value="" data-field="lang" data-lang={fmt.Sprintf("%d", lang)} placeholder={Languages[int32(lang)].SelfName}/>
                 </input>
             </td>
         }

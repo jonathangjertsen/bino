@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-
-	"github.com/jonathangjertsen/bino/ln"
 )
 
 type ctxKey int32
@@ -34,13 +32,20 @@ func MustLoadCommonData(ctx context.Context) *CommonData {
 }
 
 type CommonData struct {
-	BuildKey  string
-	User      UserData
-	Languages []LanguageView
+	BuildKey string
+	User     UserData
 }
 
 func (cd *CommonData) StaticFile(name string) string {
 	return fmt.Sprintf("/static/%s/%s", cd.BuildKey, name)
+}
+
+func (cd *CommonData) Lang() LanguageID {
+	return cd.User.Language.ID
+}
+
+func (cd *CommonData) Lang32() int32 {
+	return int32(cd.User.Language.ID)
 }
 
 type UserData struct {
@@ -49,7 +54,7 @@ type UserData struct {
 	PreferredHomeID int32
 	Homes           []int32
 	Email           string
-	Language        *ln.Language
+	Language        *Language
 	LoggingConsent  bool
 	AvatarURL       string
 	HasAvatarURL    bool

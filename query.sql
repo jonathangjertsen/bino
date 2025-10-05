@@ -1,8 +1,3 @@
--- name: GetLanguages :many
-SELECT * FROM language
-ORDER BY id ASC
-;
-
 -- name: UpsertUser :one
 INSERT INTO appuser (display_name, google_sub, email, avatar_url)
 VALUES ($1, $2, $3, $4)
@@ -77,13 +72,19 @@ ON CONFLICT (tag_id, language_id) DO UPDATE
     SET name = EXCLUDED.name
 ;
 
--- name: GetTagWithLanguage :many
+-- name: GetTagsWithLanguage :many
 SELECT tag_id, name FROM tag_language
 WHERE language_id = $1
 ORDER BY (tag_id)
 ;
 
--- name: GetTagWithLanguageCheckin :many
+-- name: GetTagName :one
+SELECT name FROM tag_language
+WHERE language_id = $1
+  AND tag_id = $2
+;
+
+-- name: GetTagsWithLanguageCheckin :many
 SELECT tag_id, name, default_show FROM tag_language
 INNER JOIN tag AS t
     ON t.id = tag_language.tag_id
@@ -97,7 +98,7 @@ ORDER BY name
 ;
 
 -- name: GetActivePatients :many
-SELECT p.id, p.name, p.curr_home_id, COALESCE(sl.name, '???') AS species FROM patient AS p
+SELECT p.id, p.name, p.curr_home_id, p.status, COALESCE(sl.name, '???') AS species FROM patient AS p
 LEFT JOIN species_language AS sl
     ON sl.species_id = p.species_id
 WHERE curr_home_id IS NOT NULL
@@ -143,7 +144,6 @@ SELECT home_id FROM home_appuser
 WHERE appuser_id = $1
 ;
 
-
 -- name: SetLoggingConsent :exec
 UPDATE appuser SET logging_consent = NOW() + sqlc.arg(period)::INT * INTERVAL '1 day'
 WHERE id = $1
@@ -167,7 +167,30 @@ ON CONFLICT (patient_id, tag_id) DO NOTHING
 ;
 
 -- name: AddPatientEvent :one
-INSERT INTO patient_event (patient_id, home_id, event_id, note, time)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO patient_event (patient_id, home_id, event_id, associated_id, note, time)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING id
+;
+
+-- name: DeletePatientTag :exec
+DELETE FROM patient_tag
+WHERE patient_id = $1
+  AND tag_id = $2
+;
+
+-- name: MovePatient :exec
+UPDATE patient
+SET curr_home_id = $2
+WHERE id = $1
+;
+
+-- name: GetPatient :one
+SELECT * FROM patient
+WHERE id = $1
+;
+
+-- name: SetPatientStatus :exec
+UPDATE patient
+SET status = $2
+WHERE id = $1
 ;

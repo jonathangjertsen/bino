@@ -11,7 +11,7 @@ import (
 
 type DashboardData struct {
 	Species []GetSpeciesWithLanguageRow
-	Tags    []GetTagWithLanguageCheckinRow
+	Tags    []GetTagsWithLanguageCheckinRow
 	Homes   []HomeView
 }
 
@@ -27,18 +27,36 @@ func (hv HomeView) URL() string {
 
 type PatientView struct {
 	ID      int32
+	Status  int32
 	Name    string
 	Species string
 	Tags    []TagView
+}
+
+func (pv PatientView) CollapseID(prefix string) string {
+	return fmt.Sprintf("%spatient-collapsible-%d", prefix, pv.ID)
+}
+
+func (pv PatientView) CheckoutNoteID(prefix string) string {
+	return fmt.Sprintf("%spatient-checkout-note-%d", prefix, pv.ID)
 }
 
 func (pv PatientView) URL() string {
 	return fmt.Sprintf("/patient/%d", pv.ID)
 }
 
+func (pv PatientView) URLSuffix(suffix string) string {
+	return fmt.Sprintf("/patient/%d/%s", pv.ID, suffix)
+}
+
 type TagView struct {
-	ID   int32
-	Name string
+	ID        int32
+	PatientID int32
+	Name      string
+}
+
+func (tv TagView) URL() string {
+	return fmt.Sprintf("/patient/%d/tag/%d", tv.PatientID, tv.ID)
 }
 
 type DashboardUserView struct {
@@ -52,7 +70,7 @@ func (u DashboardUserView) URL() string {
 	return fmt.Sprintf("/user/%d", u.ID)
 }
 
-func (r GetTagWithLanguageCheckinRow) HTMLID() string {
+func (r GetTagsWithLanguageCheckinRow) HTMLID() string {
 	return fmt.Sprintf("patient-label-%d", r.TagID)
 }
 
@@ -60,13 +78,13 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	commonData := MustLoadCommonData(ctx)
 
-	species, err := server.Queries.GetSpeciesWithLanguage(ctx, commonData.User.Language.ID)
+	species, err := server.Queries.GetSpeciesWithLanguage(ctx, commonData.Lang32())
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return
 	}
 
-	tags, err := server.Queries.GetTagWithLanguageCheckin(ctx, commonData.User.Language.ID)
+	tags, err := server.Queries.GetTagsWithLanguageCheckin(ctx, commonData.Lang32())
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return
@@ -84,39 +102,41 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	patients, err := server.Queries.GetActivePatients(ctx, commonData.User.Language.ID)
+	patients, err := server.Queries.GetActivePatients(ctx, commonData.Lang32())
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return
 	}
 
-	patientTags, err := server.Queries.GetTagsForActivePatients(ctx, commonData.User.Language.ID)
+	patientTags, err := server.Queries.GetTagsForActivePatients(ctx, commonData.Lang32())
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return
 	}
 
-	homeViews := MapSlice(homes, func(h Home) HomeView {
+	homeViews := MapToSlice(homes, func(h Home) HomeView {
 		return HomeView{
 			Home: h,
-			Patients: MapSlice(FilterSlice(patients, func(p GetActivePatientsRow) bool {
+			Patients: MapToSlice(FilterSlice(patients, func(p GetActivePatientsRow) bool {
 				return p.CurrHomeID.Valid && p.CurrHomeID.Int32 == h.ID
 			}), func(p GetActivePatientsRow) PatientView {
 				return PatientView{
-					ID:      p.CurrHomeID.Int32,
+					ID:      p.ID,
 					Species: p.Species,
 					Name:    p.Name,
-					Tags: MapSlice(FilterSlice(patientTags, func(t GetTagsForActivePatientsRow) bool {
+					Status:  p.Status,
+					Tags: MapToSlice(FilterSlice(patientTags, func(t GetTagsForActivePatientsRow) bool {
 						return t.PatientID == p.ID
 					}), func(t GetTagsForActivePatientsRow) TagView {
 						return TagView{
-							ID:   t.TagID,
-							Name: t.Name,
+							ID:        t.TagID,
+							PatientID: p.ID,
+							Name:      t.Name,
 						}
 					}),
 				}
 			}),
-			Users: MapSlice(FilterSlice(users, func(u GetAppusersRow) bool {
+			Users: MapToSlice(FilterSlice(users, func(u GetAppusersRow) bool {
 				return u.HomeID.Valid && u.HomeID.Int32 == h.ID
 			}), func(u GetAppusersRow) DashboardUserView {
 				return DashboardUserView{
@@ -142,7 +162,7 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	}).Render(r.Context(), w)
 }
 
-func (server *Server) postDashboardHandler(w http.ResponseWriter, r *http.Request) {
+func (server *Server) postCheckinHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	commonData := MustLoadCommonData(ctx)
 
@@ -218,6 +238,189 @@ func (server *Server) postDashboardHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	fmt.Printf("fields=%+v\n", fields)
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func (server *Server) deletePatientTagHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	fields, err := server.getPathIDs(r, "patient", "tag")
+	if err != nil {
+		ajaxError(w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	patient, tag := fields["patient"], fields["tag"]
+	if err := server.Queries.DeletePatientTag(ctx, DeletePatientTagParams{
+		PatientID: patient,
+		TagID:     tag,
+	}); err != nil {
+		ajaxError(w, r, err, http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (server *Server) createPatientTagHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
+
+	fields, err := server.getPathIDs(r, "patient", "tag")
+	if err != nil {
+		ajaxError(w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	patient, tag := fields["patient"], fields["tag"]
+
+	LogR(r, "creating tag patient=%d tag=%d", patient, tag)
+
+	if err := server.Queries.AddPatientTags(ctx, AddPatientTagsParams{
+		PatientID: patient,
+		Tags:      []int32{tag},
+	}); err != nil {
+		ajaxError(w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	tagName, err := server.Queries.GetTagName(ctx, GetTagNameParams{
+		LanguageID: commonData.Lang32(),
+		TagID:      tag,
+	})
+	if err != nil {
+		ajaxError(w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	DashboardTag(commonData, TagView{
+		ID:        tag,
+		PatientID: patient,
+		Name:      tagName,
+	}).Render(ctx, w)
+}
+
+func (server *Server) movePatientHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
+
+	patient, err := server.getPathID(r, "patient")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	newHomeID, err := server.getFormID(r, "home")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	patientData, err := server.Queries.GetPatient(ctx, patient)
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	if err := server.Transaction(ctx, func(ctx context.Context, q *Queries) error {
+		if err := q.MovePatient(ctx, MovePatientParams{
+			ID:         patient,
+			CurrHomeID: pgtype.Int4{Int32: newHomeID, Valid: true},
+		}); err != nil {
+			return err
+		}
+
+		q.AddPatientEvent(ctx, AddPatientEventParams{
+			PatientID:    patient,
+			HomeID:       newHomeID,
+			EventID:      int32(EventTransferredToOtherHome),
+			AssociatedID: patientData.CurrHomeID,
+			Note:         "",
+			Time:         pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		})
+
+		return nil
+	}); err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func (server *Server) postCheckoutHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
+
+	patient, err := server.getPathID(r, "patient")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	status, err := server.getFormID(r, "status")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	note, _ := server.getFormValue(r, "note")
+
+	patientData, err := server.Queries.GetPatient(ctx, patient)
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	if err := server.Transaction(ctx, func(ctx context.Context, q *Queries) error {
+		if err := q.SetPatientStatus(ctx, SetPatientStatusParams{
+			ID:     patient,
+			Status: status,
+		}); err != nil {
+			return err
+		}
+
+		if err := q.MovePatient(ctx, MovePatientParams{
+			ID:         patient,
+			CurrHomeID: pgtype.Int4{},
+		}); err != nil {
+			return err
+		}
+
+		var event Event
+		var associatedID pgtype.Int4
+		switch status {
+		case int32(StatusDead):
+			event = EventDied
+		case int32(StatusDeleted):
+			event = EventDeleted
+		case int32(StatusEuthanized):
+			event = EventEuthanized
+		case int32(StatusReleased):
+			event = EventReleased
+		case int32(StatusTransferredOutsideOrganization):
+			event = EventTransferredOutsideOrganization
+		default:
+			event = EventStatusChanged
+			associatedID = pgtype.Int4{Int32: int32(status), Valid: true}
+		}
+
+		if _, err := q.AddPatientEvent(ctx, AddPatientEventParams{
+			PatientID:    patient,
+			HomeID:       patientData.CurrHomeID.Int32,
+			EventID:      int32(event),
+			AssociatedID: associatedID,
+			Note:         note,
+			Time:         pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		}); err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	// TODO: redirect to home
 	http.Redirect(w, r, "/", http.StatusFound)
 }

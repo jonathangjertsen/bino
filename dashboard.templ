@@ -1,5 +1,7 @@
 package main
 
+import "slices"
+
 templ DashboardPage(data *CommonData, dashboardData *DashboardData) {
 	@Layout(data, "dashboard-container") {
         @DashboardForm(data, dashboardData)
@@ -10,7 +12,7 @@ templ DashboardPage(data *CommonData, dashboardData *DashboardData) {
 
 templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
     @Card("dashboard-form", "shadow-m") {
-        <form action="/" method="POST">
+        <form action="/checkin" method="POST">
             <div class="form-group">
                 <label>{data.User.Language.CheckinPatientName}</label>
                 <input class="form-control" name="name">
@@ -96,7 +98,7 @@ templ DashboardHomeCard(data *CommonData, dashboardData *DashboardData, home *Ho
         <div class="card-content">
             if len(home.Patients) > 0 {
                 for _, patient := range home.Patients {
-                    @DashboardPatientCard(data, dashboardData, patient)
+                    @DashboardPatientCard(data, dashboardData, home, patient)
                 }
             } else {
                 <p class="m-2">{data.User.Language.DashboardNoPatientsInHome}</p>
@@ -105,73 +107,138 @@ templ DashboardHomeCard(data *CommonData, dashboardData *DashboardData, home *Ho
     </div>
 }
 
-templ DashboardPatientCard(data *CommonData, dashboardData *DashboardData, patient PatientView) {
+templ DashboardPatientCard(data *CommonData, dashboardData *DashboardData, home *HomeView, patient PatientView) {
     @Card("dashboard-patient-card") {
-        <div class="card-header">
-            <a href={patient.URL()}>{patient.Name}</a>                                
+        <div class="card-header card-header-patient d-flex justify-content-between">
+            <a href={patient.URL()}>{patient.Name}</a>
+            <div>
+                <span class="patient-species-header">{patient.Species}</span>    
+                <button class="expander btn btn-sm btn-outline-success" data-bs-toggle="collapse" data-bs-target={patient.CollapseID("#")}>{data.User.Language.GenericDetails}</button>
+            </div>
         </div>
-        <div class="card-content">
-            @DashboardPatientTable(data, dashboardData, patient)
+        <div class="card-content collapse" id={patient.CollapseID("")}>
+            @DashboardPatientTable(data, dashboardData, home, patient)
         </div>
     }
 }
 
-templ DashboardPatientTable(data *CommonData, dashboardData *DashboardData, patient PatientView) {
+templ DashboardPatientTable(data *CommonData, dashboardData *DashboardData, home *HomeView, patient PatientView) {
     <table class="patient-table table table-bordered">
         <tbody>
-            <tr>
-                <th>{data.User.Language.GenericSpecies}</th>
-                <td>{patient.Species}</td>
-            </tr>
+            @DashboardMove(data, dashboardData, home, patient)
+            @DashboardCheckout(data, patient)
+            @DashboardHistory(data, patient)
+
+            // This must be the last one.
             @DashboardTagRows(data, dashboardData, patient)
         </tbody>
     </table>
 }
 
-templ DashboardTagRows(data *CommonData, dashboardData *DashboardData, patient PatientView) {
-    if len(patient.Tags) > 0 {
-        <tr>
-            @DashboardTagLabel(data, len(patient.Tags)+1)
-            @DashboardTag(data, patient.Tags[0])
-        </tr>
-        for i := 1; i < len(patient.Tags); i++ {
-            <tr>
-                @DashboardTag(data, patient.Tags[i])
-            </tr>
-        }
-        <tr>
-            @DashboardAddTag(data, dashboardData)
-        </tr>
-    } else {
-        <tr>
-            @DashboardTagLabel(data, 1)
-            @DashboardAddTag(data, dashboardData)
-        </tr>
-    }
+templ DashboardMove(data *CommonData, dashboardData *DashboardData, home *HomeView, patient PatientView) {
+    <tr>
+        <th class="w-25">{data.User.Language.GenericMoveTo}</th>
+        <td>
+            <form
+                action={patient.URLSuffix("move")}
+                method="POST"
+                class="form-control-sm form-control-plaintext d-flex justify-content-between"
+            >
+                <select class="form-control form-select" name="home">
+                    for _, otherHome := range dashboardData.Homes {
+                        if otherHome.Home.ID != home.Home.ID {
+                            <option value={otherHome.Home.ID}>{otherHome.Home.Name}</option>
+                        }
+                    }
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm w-50">{data.User.Language.GenericMove}</button>
+            </form>
+        </td>
+    </tr>
 }
 
-templ DashboardTagLabel(data *CommonData, rowspan int) {
-    <th rowspan={rowspan}>
+templ DashboardCheckout(data *CommonData, patient PatientView) {
+    <tr>
+        <th class="w-25">{data.User.Language.DashboardCheckOut}</th>
+        <td>
+            <form
+                action={patient.URLSuffix("checkout")}
+                method="POST"
+                class="form-control-sm form-control-plaintext"
+            >
+                <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext">
+                    <label for={patient.CheckoutNoteID("#")} class="input-group-text">{data.User.Language.GenericNote}</label>
+                    <input type="text" class="form-control" id={patient.CheckoutNoteID("")} name="note"></input>
+                </form-group>
+                <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext">
+                    <select class="form-control form-select" name="status">
+                        for _, status := range StatusValues() {
+                            if IsCheckoutStatus[status] {
+                                <option value={int32(status)}>{data.User.Language.Status[status]}</option>
+                            }
+                        }
+                    </select>
+                    <button type="submit" class="btn btn-primary btn-sm w-50">{data.User.Language.DashboardCheckOut}</button>
+                </form-group>
+            </form>
+        </td>
+    </tr>
+}
+
+templ DashboardHistory(data *CommonData, patient PatientView) {
+    <tr>
+        <th class="w-25">{data.User.Language.GenericJournal}</th>
+        <td>
+            <a href={patient.URL()}>
+                {data.User.Language.DashboardGoToJournal}
+            </a>
+        </td>
+    </tr>
+}
+
+templ DashboardTagRows(data *CommonData, dashboardData *DashboardData, patient PatientView) {
+    <tr>
+        @DashboardTagLabel(data)
+        <td class="d-none"></td>
+    </tr>
+    for _, tag := range patient.Tags {
+        <tr>
+            @DashboardTag(data, tag)
+        </tr>
+    }
+    <tr>
+        @DashboardAddTag(data, dashboardData, patient)
+    </tr>
+}
+
+templ DashboardTagLabel(data *CommonData) {
+    <th rowspan="1000">
         {data.User.Language.GenericTags}
     </th>
 }
 
 templ DashboardTag(data *CommonData, tag TagView) {
-    <td class="d-flex justify-content-between">
-        {tag.Name}
-        <button disabled type="submit" class="btn btn-warning btn-sm w-25">{data.User.Language.GenericDelete}</button>
+    <td class="d-flex justify-content-between border-0">
+        <span class="d-flex">{tag.Name}</span>
+        <form action={tag.URL()} method="DELETE" class="tag-delete">
+            <button type="submit" class="btn btn-warning btn-sm">{data.User.Language.GenericDelete}</button>
+        </form>
     </td>
 }
 
-templ DashboardAddTag(data *CommonData, dashboardData *DashboardData) {
+templ DashboardAddTag(data *CommonData, dashboardData *DashboardData, patient PatientView) {
     <td>
-        <form class="form-control-sm form-control-plaintext d-flex justify-content-between">
+        <form class="form-control-sm form-control-plaintext d-flex justify-content-between tag-create">
             <select class="form-control form-select">
                 for _, tag := range dashboardData.Tags {
-                    <option value={tag.TagID}>{tag.Name}</option>
+                    if !slices.ContainsFunc(patient.Tags, func(existingTag TagView) bool {
+                        return existingTag.ID == tag.TagID
+                    }) {
+                        <option value={tag.TagID}>{tag.Name}</option>
+                    }
                 }
             </select>
-            <button disabled type="submit" class="btn btn-primary btn-sm w-25">+</button>
+            <button type="submit" class="btn btn-primary btn-sm w-25" data-patient-id={patient.ID}>+</button>
         </form>
     </td>
 }

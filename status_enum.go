@@ -17,28 +17,49 @@ const (
 	StatusPendingAdmission Status = 1
 	// StatusAdmitted is a Status of type Admitted.
 	StatusAdmitted Status = 2
-	// StatusAdopted is a Status of type Adopted.
-	StatusAdopted Status = 3
 	// StatusReleased is a Status of type Released.
-	StatusReleased Status = 4
-	// StatusTransferredOutsideOrganization is a Status of type TransferredOutsideOrganization.
-	StatusTransferredOutsideOrganization Status = 5
+	StatusReleased Status = 3
 	// StatusDead is a Status of type Dead.
-	StatusDead Status = 6
+	StatusDead Status = 4
+	// StatusEuthanized is a Status of type Euthanized.
+	StatusEuthanized Status = 5
+	// StatusTransferredOutsideOrganization is a Status of type TransferredOutsideOrganization.
+	StatusTransferredOutsideOrganization Status = 6
+	// StatusAdopted is a Status of type Adopted.
+	StatusAdopted Status = 7
+	// StatusDeleted is a Status of type Deleted.
+	StatusDeleted Status = 8
 )
 
 var ErrInvalidStatus = errors.New("not a valid Status")
 
-const _StatusName = "UnknownPendingAdmissionAdmittedAdoptedReleasedTransferredOutsideOrganizationDead"
+const _StatusName = "UnknownPendingAdmissionAdmittedReleasedDeadEuthanizedTransferredOutsideOrganizationAdoptedDeleted"
+
+// StatusValues returns a list of the values for Status
+func StatusValues() []Status {
+	return []Status{
+		StatusUnknown,
+		StatusPendingAdmission,
+		StatusAdmitted,
+		StatusReleased,
+		StatusDead,
+		StatusEuthanized,
+		StatusTransferredOutsideOrganization,
+		StatusAdopted,
+		StatusDeleted,
+	}
+}
 
 var _StatusMap = map[Status]string{
 	StatusUnknown:                        _StatusName[0:7],
 	StatusPendingAdmission:               _StatusName[7:23],
 	StatusAdmitted:                       _StatusName[23:31],
-	StatusAdopted:                        _StatusName[31:38],
-	StatusReleased:                       _StatusName[38:46],
-	StatusTransferredOutsideOrganization: _StatusName[46:76],
-	StatusDead:                           _StatusName[76:80],
+	StatusReleased:                       _StatusName[31:39],
+	StatusDead:                           _StatusName[39:43],
+	StatusEuthanized:                     _StatusName[43:53],
+	StatusTransferredOutsideOrganization: _StatusName[53:83],
+	StatusAdopted:                        _StatusName[83:90],
+	StatusDeleted:                        _StatusName[90:97],
 }
 
 // String implements the Stringer interface.
@@ -60,10 +81,12 @@ var _StatusValue = map[string]Status{
 	_StatusName[0:7]:   StatusUnknown,
 	_StatusName[7:23]:  StatusPendingAdmission,
 	_StatusName[23:31]: StatusAdmitted,
-	_StatusName[31:38]: StatusAdopted,
-	_StatusName[38:46]: StatusReleased,
-	_StatusName[46:76]: StatusTransferredOutsideOrganization,
-	_StatusName[76:80]: StatusDead,
+	_StatusName[31:39]: StatusReleased,
+	_StatusName[39:43]: StatusDead,
+	_StatusName[43:53]: StatusEuthanized,
+	_StatusName[53:83]: StatusTransferredOutsideOrganization,
+	_StatusName[83:90]: StatusAdopted,
+	_StatusName[90:97]: StatusDeleted,
 }
 
 // ParseStatus attempts to convert a string to a Status.

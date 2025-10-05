@@ -22,6 +22,7 @@ const (
 	// EventReleased is a Event of type Released.
 	EventReleased Event = 4
 	// EventTransferredToOtherHome is a Event of type TransferredToOtherHome.
+	// Associated ID is previous home ID
 	EventTransferredToOtherHome Event = 5
 	// EventTransferredOutsideOrganization is a Event of type TransferredOutsideOrganization.
 	EventTransferredOutsideOrganization Event = 6
@@ -29,11 +30,22 @@ const (
 	EventDied Event = 7
 	// EventEuthanized is a Event of type Euthanized.
 	EventEuthanized Event = 8
+	// EventTagAdded is a Event of type TagAdded.
+	// Associated ID is tag ID
+	EventTagAdded Event = 9
+	// EventTagRemoved is a Event of type TagRemoved.
+	// Associated ID is tag ID
+	EventTagRemoved Event = 10
+	// EventStatusChanged is a Event of type StatusChanged.
+	// Associated ID is status
+	EventStatusChanged Event = 11
+	// EventDeleted is a Event of type Deleted.
+	EventDeleted Event = 12
 )
 
 var ErrInvalidEvent = errors.New("not a valid Event")
 
-const _EventName = "UnknownRegisteredAdmittedAdoptedReleasedTransferredToOtherHomeTransferredOutsideOrganizationDiedEuthanized"
+const _EventName = "UnknownRegisteredAdmittedAdoptedReleasedTransferredToOtherHomeTransferredOutsideOrganizationDiedEuthanizedTagAddedTagRemovedStatusChangedDeleted"
 
 var _EventMap = map[Event]string{
 	EventUnknown:                        _EventName[0:7],
@@ -45,6 +57,10 @@ var _EventMap = map[Event]string{
 	EventTransferredOutsideOrganization: _EventName[62:92],
 	EventDied:                           _EventName[92:96],
 	EventEuthanized:                     _EventName[96:106],
+	EventTagAdded:                       _EventName[106:114],
+	EventTagRemoved:                     _EventName[114:124],
+	EventStatusChanged:                  _EventName[124:137],
+	EventDeleted:                        _EventName[137:144],
 }
 
 // String implements the Stringer interface.
@@ -63,15 +79,19 @@ func (x Event) IsValid() bool {
 }
 
 var _EventValue = map[string]Event{
-	_EventName[0:7]:    EventUnknown,
-	_EventName[7:17]:   EventRegistered,
-	_EventName[17:25]:  EventAdmitted,
-	_EventName[25:32]:  EventAdopted,
-	_EventName[32:40]:  EventReleased,
-	_EventName[40:62]:  EventTransferredToOtherHome,
-	_EventName[62:92]:  EventTransferredOutsideOrganization,
-	_EventName[92:96]:  EventDied,
-	_EventName[96:106]: EventEuthanized,
+	_EventName[0:7]:     EventUnknown,
+	_EventName[7:17]:    EventRegistered,
+	_EventName[17:25]:   EventAdmitted,
+	_EventName[25:32]:   EventAdopted,
+	_EventName[32:40]:   EventReleased,
+	_EventName[40:62]:   EventTransferredToOtherHome,
+	_EventName[62:92]:   EventTransferredOutsideOrganization,
+	_EventName[92:96]:   EventDied,
+	_EventName[96:106]:  EventEuthanized,
+	_EventName[106:114]: EventTagAdded,
+	_EventName[114:124]: EventTagRemoved,
+	_EventName[124:137]: EventStatusChanged,
+	_EventName[137:144]: EventDeleted,
 }
 
 // ParseEvent attempts to convert a string to a Event.

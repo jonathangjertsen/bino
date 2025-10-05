@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strconv"
 )
 
 func (server *Server) adminRootHandler(w http.ResponseWriter, r *http.Request) {
@@ -21,11 +20,11 @@ func (server *Server) postLanguageHandler(w http.ResponseWriter, r *http.Request
 	ctx := r.Context()
 	commonData := MustLoadCommonData(ctx)
 
-	lang, err := getSelectedLanguage(r.FormValue("language"), commonData)
+	lang, err := ParseLanguageID(r.FormValue("language"))
 	if err == nil {
 		err = server.Queries.SetUserLanguage(ctx, SetUserLanguageParams{
 			AppuserID:  commonData.User.AppuserID,
-			LanguageID: lang,
+			LanguageID: int32(lang),
 		})
 	}
 
@@ -34,19 +33,6 @@ func (server *Server) postLanguageHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
-}
-
-func getSelectedLanguage(langStr string, commonData *CommonData) (int32, error) {
-	langID, err := strconv.Atoi(langStr)
-	if err != nil {
-		return 0, fmt.Errorf("invalid language ID: %w", langStr)
-	}
-	for _, lang := range commonData.Languages {
-		if lang.ID == int32(langID) {
-			return lang.ID, nil
-		}
-	}
-	return 0, fmt.Errorf("unsupported language ID: %d", langID)
 }
 
 func (server *Server) renderError(w http.ResponseWriter, r *http.Request, commonData *CommonData, err error) {

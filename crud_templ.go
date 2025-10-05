@@ -97,15 +97,15 @@ func (page CRUDPage) Component(data *CommonData) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				}
-				for _, lang := range data.Languages {
+				for _, lang := range LanguageIDValues() {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<th>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var6 string
-					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(lang.SelfName)
+					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(Languages[int32(lang)].SelfName)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 18, Col: 42}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 18, Col: 60}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 					if templ_7745c5c3_Err != nil {
@@ -161,7 +161,9 @@ func (page CRUDPage) Component(data *CommonData) templ.Component {
 	})
 }
 
-func UpdateRow(data *CommonData, id int32, obj interface{ Name(id int32) (string, bool) }) templ.Component {
+func UpdateRow(data *CommonData, id int32, obj interface {
+	Name(id LanguageID) (string, bool)
+}) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -190,20 +192,20 @@ func UpdateRow(data *CommonData, id int32, obj interface{ Name(id int32) (string
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, lang := range data.Languages {
+		for _, lang := range LanguageIDValues() {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if name, ok := obj.Name(lang.ID); ok {
+			if name, ok := obj.Name(lang); ok {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<input class=\"form-control\" data-field=\"lang\" data-lang=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var9 string
-				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", lang.ID))
+				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", lang))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 38, Col: 103}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 38, Col: 100}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -216,7 +218,7 @@ func UpdateRow(data *CommonData, id int32, obj interface{ Name(id int32) (string
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 38, Col: 116}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 38, Col: 113}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -232,9 +234,9 @@ func UpdateRow(data *CommonData, id int32, obj interface{ Name(id int32) (string
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var11 string
-				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", lang.ID))
+				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", lang))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 40, Col: 104}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 40, Col: 101}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -313,15 +315,15 @@ func CreateRow(data *CommonData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, lang := range data.Languages {
+		for _, lang := range LanguageIDValues() {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<td><input class=\"form-control\" value=\"\" data-field=\"lang\" data-lang=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var15 string
-			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", lang.ID))
+			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", lang))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 58, Col: 108}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 58, Col: 105}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -332,9 +334,9 @@ func CreateRow(data *CommonData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var16 string
-			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(lang.SelfName)
+			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(Languages[int32(lang)].SelfName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 58, Col: 136}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `crud.templ`, Line: 58, Col: 151}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {

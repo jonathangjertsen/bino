@@ -37,15 +37,6 @@ type HomeAppuser struct {
 	HomeID    int32
 }
 
-// Each row is a supported language
-type Language struct {
-	ID int32
-	// A short name used to refer to this language in code
-	ShortName string
-	// The name of this language, in that language
-	SelfName string
-}
-
 // Each row represents a patient
 type Patient struct {
 	ID         int32
@@ -57,12 +48,13 @@ type Patient struct {
 
 // Each row represents an event that has occurred to a specific patient
 type PatientEvent struct {
-	ID        int32
-	PatientID int32
-	HomeID    int32
-	Note      string
-	EventID   int32
-	Time      pgtype.Timestamptz
+	ID           int32
+	PatientID    int32
+	HomeID       int32
+	Note         string
+	EventID      int32
+	Time         pgtype.Timestamptz
+	AssociatedID pgtype.Int4
 }
 
 // Each row represents a tag on a patient

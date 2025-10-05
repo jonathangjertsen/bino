@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/jonathangjertsen/bino/ln"
 	"golang.org/x/oauth2"
 )
 
@@ -71,26 +70,15 @@ func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (Comm
 		Email:           user.Email,
 		AvatarURL:       user.AvatarUrl.String,
 		HasAvatarURL:    user.AvatarUrl.Valid,
-		Language:        ln.GetLanguage(user.LanguageID),
+		Language:        GetLanguage(user.LanguageID),
 		PreferredHomeID: preferredHome,
 		Homes:           homes,
 		LoggingConsent:  loggingConsent,
 	}
 
-	languages, err := server.Queries.GetLanguages(ctx)
-	if err != nil {
-		return CommonData{}, fmt.Errorf("couldn't read languages: %w", err)
-	}
-
-	viewLanguages := make([]LanguageView, 0, len(languages))
-	for _, lang := range languages {
-		viewLanguages = append(viewLanguages, LanguageView{ID: lang.ID, Emoji: lang.ShortName, SelfName: lang.SelfName})
-	}
-
 	commonData := CommonData{
-		User:      userData,
-		Languages: viewLanguages,
-		BuildKey:  server.BuildKey,
+		User:     userData,
+		BuildKey: server.BuildKey,
 	}
 
 	return commonData, err

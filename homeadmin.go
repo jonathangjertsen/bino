@@ -157,22 +157,26 @@ func (server *Server) getFormIDs(r *http.Request, fields ...string) (map[string]
 	if err != nil {
 		return nil, err
 	}
-	return MapMap(strings, func(str string) (int32, error) {
-		v, err := strconv.ParseInt(str, 10, 32)
-		if err != nil {
-			return 0, err
-		}
-		return int32(v), nil
-	})
+	return stringsToIDs(strings)
 }
 
 func (server *Server) getFormValues(r *http.Request, fields ...string) (map[string]string, error) {
-	out := make(map[string]string)
-	var err error
-	for _, f := range fields {
-		out[f], err = server.getFormValue(r, f)
+	return SliceToMapErr(fields, func(_ int, field string) (string, string, error) {
+		v, err := server.getFormValue(r, field)
+		return field, v, err
+	})
+}
+
+func (server *Server) getFormID(r *http.Request, field string) (int32, error) {
+	vStr, err := server.getFormValue(r, field)
+	if err != nil {
+		return 0, err
 	}
-	return out, err
+	v, err := strconv.ParseInt(vStr, 10, 32)
+	if err != nil {
+		return 0, err
+	}
+	return int32(v), nil
 }
 
 func (server *Server) getFormValue(r *http.Request, field string) (string, error) {
@@ -189,7 +193,50 @@ func (server *Server) getFormValue(r *http.Request, field string) (string, error
 	return values[0], nil
 }
 
+func (server *Server) getPathIDs(r *http.Request, fields ...string) (map[string]int32, error) {
+	strings, err := server.getPathValues(r, fields...)
+	if err != nil {
+		return nil, err
+	}
+	return stringsToIDs(strings)
+}
+
+func (server *Server) getPathValues(r *http.Request, fields ...string) (map[string]string, error) {
+	return SliceToMapErr(fields, func(_ int, field string) (string, string, error) {
+		v, err := server.getPathValue(r, field)
+		return field, v, err
+	})
+}
+
+func (server *Server) getPathID(r *http.Request, field string) (int32, error) {
+	vStr := r.PathValue(field)
+	v, err := strconv.ParseInt(vStr, 10, 32)
+	if err != nil {
+		return 0, err
+	}
+	return int32(v), nil
+}
+
+func (server *Server) getPathValue(r *http.Request, field string) (string, error) {
+	v := r.PathValue(field)
+	var err error
+	if v == "" {
+		err = fmt.Errorf("no such path value: '%s'", field)
+	}
+	return v, err
+}
+
 func (server *Server) getCheckboxValue(r *http.Request, field string) bool {
 	v, err := server.getFormValue(r, field)
 	return err == nil && v == "on"
+}
+
+func stringsToIDs(in map[string]string) (map[string]int32, error) {
+	return MapToMapErr(in, func(str string) (int32, error) {
+		v, err := strconv.ParseInt(str, 10, 32)
+		if err != nil {
+			return 0, err
+		}
+		return int32(v), nil
+	})
 }

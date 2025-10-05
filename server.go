@@ -131,6 +131,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 	mux.Handle("GET /tag", chainf(server.getTagHandler, loggedInChain...))
 	mux.Handle("GET /admin", chainf(server.adminRootHandler, loggedInChain...))
 	mux.Handle("GET /homes", chainf(server.getHomesHandler, loggedInChain...))
+	mux.Handle("GET /privacy", chainf(server.privacyHandler, loggedInChain...))
 
 	// Admin AJAX
 	mux.Handle("POST /species", chainf(server.postSpeciesHandler, loggedInChain...))
@@ -138,9 +139,16 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 	mux.Handle("POST /tag", chainf(server.postTagHandler, loggedInChain...))
 	mux.Handle("PUT /tag", chainf(server.putTagHandler, loggedInChain...))
 
+	// Dashboard ajax
+	mux.Handle("DELETE /patient/{patient}/tag/{tag}", chainf(server.deletePatientTagHandler, loggedInChain...))
+	mux.Handle("POST /patient/{patient}/tag/{tag}", chainf(server.createPatientTagHandler, loggedInChain...))
+
 	// Forms
-	mux.Handle("POST /", chainf(server.postDashboardHandler, loggedInChain...))
+	mux.Handle("POST /checkin", chainf(server.postCheckinHandler, loggedInChain...))
 	mux.Handle("POST /homes", chainf(server.postHomeHandler, loggedInChain...))
+	mux.Handle("POST /privacy", chainf(server.postPrivacyHandler, loggedInChain...))
+	mux.Handle("POST /patient/{patient}/move", chainf(server.movePatientHandler, loggedInChain...))
+	mux.Handle("POST /patient/{patient}/checkout", chainf(server.postCheckoutHandler, loggedInChain...))
 
 	// Available to all
 	staticDir := fmt.Sprintf("/static/%s/", buildKey)
@@ -148,9 +156,6 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 		"GET "+staticDir,
 		http.StripPrefix(staticDir, http.FileServer(http.Dir("static"))),
 	)
-
-	mux.Handle("GET /privacy", chainf(server.privacyHandler, loggedInChain...))
-	mux.Handle("POST /privacy", chainf(server.postPrivacyHandler, loggedInChain...))
 
 	mux.Handle("GET /", chainf(server.fourOhFourHandler, loggedInChain...))
 

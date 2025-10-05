@@ -11621,12 +11621,23 @@ a {
   user-select: default !important;
   touch-action: default !important;
   cursor: pointer;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 
 .dashboard-patient-card {
   user-select: default !important;
   touch-action: default !important;
   cursor: pointer;
+}
+
+.pending-deletion {
+  opacity: 0.5;
+  background-color: rgb(235.75, 164.75, 117.5);
+  transition: opacity 0.3s, background-color 0.3s;
 }
 
 html, body {
@@ -11925,6 +11936,20 @@ label {
 
 input[data-field=latin] {
   font-style: italic;
+}
+
+.expander {
+  border-radius: 1em;
+}
+
+.patient-species-header {
+  font-weight: normal;
+  margin-right: 1em;
+  color: rgb(60, 60, 80);
+}
+
+.card-header-patient {
+  background-color: rgb(218.5, 214.25, 232.4);
 }
 
 /*# sourceMappingURL=gen.css.map */

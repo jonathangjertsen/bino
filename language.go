@@ -1,7 +1,18 @@
-package ln
+//go:generate go tool go-enum --no-iota --values
+package main
+
+// ENUM(
+//
+//	NO = 1,
+//	EN = 2,
+//
+// )
+type LanguageID int32
 
 type Language struct {
-	ID int32
+	ID       LanguageID
+	Emoji    string
+	SelfName string
 
 	AdminDefaultIncludeTag string
 	AdminDisplayName       string
@@ -21,6 +32,8 @@ type Language struct {
 	CheckinYouAreHomeless  string
 
 	DashboardNoPatientsInHome string
+	DashboardGoToJournal      string
+	DashboardCheckOut         string
 
 	ErrorPageHead         string
 	ErrorPageInstructions string
@@ -30,11 +43,15 @@ type Language struct {
 
 	GenericAdd     string
 	GenericDelete  string
+	GenericDetails string
+	GenericJournal string
 	GenericLatin   string
 	GenericMove    string
 	GenericMoveTo  string
 	GenericNone    string
+	GenericNote    string
 	GenericSpecies string
+	GenericStatus  string
 	GenericTags    string
 	GenericUpdate  string
 
@@ -51,10 +68,14 @@ type Language struct {
 
 	NavbarCalendar  string
 	NavbarDashboard string
+
+	Status map[Status]string
 }
 
 var NO = &Language{
-	ID: 1,
+	ID:       LanguageIDNO,
+	Emoji:    "🇳🇴",
+	SelfName: "Norsk",
 
 	AdminDefaultIncludeTag: "Vis ved innsjekk",
 	AdminDisplayName:       "Navn",
@@ -74,6 +95,8 @@ var NO = &Language{
 	CheckinYouAreHomeless:  "Du kan ikke sjekke inn pasienter ennå fordi du ikke er koblet til et rehabhjem.",
 
 	DashboardNoPatientsInHome: "Ingen pasienter",
+	DashboardGoToJournal:      "Gå til pasientjournal",
+	DashboardCheckOut:         "Sjekk ut",
 
 	ErrorPageHead:         "Feilmelding",
 	ErrorPageInstructions: "Det skjedde noe feil under lasting av siden. Feilen har blitt logget og vil bli undersøkt. Send melding til administrator for hjelp. Den tekniske feilmeldingen følger under.",
@@ -83,11 +106,15 @@ var NO = &Language{
 
 	GenericAdd:     "Legg til",
 	GenericDelete:  "Slett",
+	GenericDetails: "Detaljer",
+	GenericJournal: "Journal",
 	GenericLatin:   "Latin",
 	GenericMove:    "Flytt",
 	GenericMoveTo:  "Flytt til",
 	GenericNone:    "Ingen",
+	GenericNote:    "Notis",
 	GenericSpecies: "Art",
+	GenericStatus:  "Status",
 	GenericTags:    "Tagger",
 	GenericUpdate:  "Oppdater",
 
@@ -103,10 +130,24 @@ var NO = &Language{
 
 	NavbarCalendar:  "Kalender",
 	NavbarDashboard: "Hovedside",
+
+	Status: map[Status]string{
+		StatusUnknown:                        "Ukjent",
+		StatusPendingAdmission:               "Venter på inntak",
+		StatusAdmitted:                       "I rehab",
+		StatusAdopted:                        "Adoptert",
+		StatusReleased:                       "Sluppet fri",
+		StatusTransferredOutsideOrganization: "Overført til annet tiltak",
+		StatusDead:                           "Død",
+		StatusEuthanized:                     "Avlivet",
+		StatusDeleted:                        "Slettet",
+	},
 }
 
 var EN = &Language{
-	ID: 2,
+	ID:       LanguageIDEN,
+	Emoji:    "🇬🇧",
+	SelfName: "English",
 
 	AdminDefaultIncludeTag: "Show at check-in",
 	AdminDisplayName:       "Name",
@@ -126,6 +167,8 @@ var EN = &Language{
 	CheckinYouAreHomeless:  "You can't check in patients yet because you're not connected to a rehab home.",
 
 	DashboardNoPatientsInHome: "No patients",
+	DashboardGoToJournal:      "Go to patient journal",
+	DashboardCheckOut:         "Checkout",
 
 	ErrorPageHead:         "Error",
 	ErrorPageInstructions: "An error occurred while loading the page. The error has been logged and will be investigated. Send a message to the site admin for help. The technical error message is as follows.",
@@ -135,11 +178,15 @@ var EN = &Language{
 
 	GenericAdd:     "Add",
 	GenericDelete:  "Delete",
+	GenericDetails: "Details",
+	GenericJournal: "Journal",
 	GenericLatin:   "Latin",
 	GenericMove:    "Move",
 	GenericMoveTo:  "Move to",
 	GenericNone:    "None",
+	GenericNote:    "Note",
 	GenericSpecies: "Species",
+	GenericStatus:  "Status",
 	GenericTags:    "Tags",
 	GenericUpdate:  "Update",
 
@@ -155,11 +202,23 @@ var EN = &Language{
 
 	NavbarCalendar:  "Calendar",
 	NavbarDashboard: "Dashboard",
+
+	Status: map[Status]string{
+		StatusUnknown:                        "Unknown",
+		StatusPendingAdmission:               "Pending admission",
+		StatusAdmitted:                       "In rehab",
+		StatusAdopted:                        "Adopted",
+		StatusReleased:                       "Released",
+		StatusTransferredOutsideOrganization: "Transferred outside organization",
+		StatusDead:                           "Dead",
+		StatusEuthanized:                     "Euthanized",
+		StatusDeleted:                        "Deleted",
+	},
 }
 
 var Languages = map[int32]*Language{
-	NO.ID: NO,
-	EN.ID: EN,
+	int32(LanguageIDNO): NO,
+	int32(LanguageIDEN): EN,
 }
 
 func GetLanguage(id int32) *Language {

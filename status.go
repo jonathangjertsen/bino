@@ -1,4 +1,4 @@
-//go:generate go tool go-enum --no-iota
+//go:generate go tool go-enum --no-iota --values
 package main
 
 // ENUM(
@@ -6,10 +6,24 @@ package main
 //	Unknown                        = 0,
 //	PendingAdmission               = 1,
 //	Admitted                       = 2,
-//	Adopted                        = 3,
-//	Released                       = 4,
-//	TransferredOutsideOrganization = 5,
-//	Dead                           = 6,
+//	Released                       = 3,
+//	Dead                           = 4,
+//	Euthanized                     = 5,
+//	TransferredOutsideOrganization = 6,
+//	Adopted                        = 7,
+//	Deleted                        = 8,
 //
 // )
 type Status int32
+
+var IsCheckoutStatus = map[Status]bool{
+	StatusUnknown:                        false,
+	StatusPendingAdmission:               false,
+	StatusAdmitted:                       false,
+	StatusAdopted:                        true,
+	StatusReleased:                       true,
+	StatusTransferredOutsideOrganization: true,
+	StatusDead:                           true,
+	StatusEuthanized:                     true,
+	StatusDeleted:                        true,
+}

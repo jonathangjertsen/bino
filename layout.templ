@@ -70,8 +70,8 @@ templ LanguageSelect(data *CommonData) {
     <div class="b-navbar-item">
         <form class="d-flex" action="/language" method="post">
             <select id="language-select" class="form-select" aria-label="Select language" name="language">
-                for _, language := range data.Languages {
-                    <option value={language.ID} selected?={language.ID == data.User.Language.ID}>{language.Emoji}</option>
+                for _, language := range LanguageIDValues() {
+                    <option value={language} selected?={language == data.User.Language.ID}>{Languages[int32(language)].Emoji}</option>
                 }
             </select>
         </form>

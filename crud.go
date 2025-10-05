@@ -7,7 +7,7 @@ type CRUDPage struct {
 
 type Names map[int32]string
 
-func (n Names) Name(i int32) (string, bool) {
-	name, found := n[i]
+func (n Names) Name(i LanguageID) (string, bool) {
+	name, found := n[int32(i)]
 	return name, found
 }
