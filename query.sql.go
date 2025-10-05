@@ -120,6 +120,46 @@ func (q *Queries) AddUserToHome(ctx context.Context, arg AddUserToHomeParams) er
 	return err
 }
 
+const getActivePatients = `-- name: GetActivePatients :many
+SELECT p.id, p.name, p.curr_home_id, COALESCE(sl.name, '???') AS species FROM patient AS p
+LEFT JOIN species_language AS sl
+    ON sl.species_id = p.species_id
+WHERE curr_home_id IS NOT NULL
+  AND language_id = $1
+`
+
+type GetActivePatientsRow struct {
+	ID         int32
+	Name       string
+	CurrHomeID pgtype.Int4
+	Species    string
+}
+
+func (q *Queries) GetActivePatients(ctx context.Context, languageID int32) ([]GetActivePatientsRow, error) {
+	rows, err := q.db.Query(ctx, getActivePatients, languageID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetActivePatientsRow
+	for rows.Next() {
+		var i GetActivePatientsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.CurrHomeID,
+			&i.Species,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAppusers = `-- name: GetAppusers :many
 SELECT au.id, au.display_name, au.google_sub, au.email, au.logging_consent, ha.home_id FROM appuser AS au
 LEFT JOIN home_appuser AS ha
@@ -398,6 +438,42 @@ func (q *Queries) GetTags(ctx context.Context) ([]Tag, error) {
 	for rows.Next() {
 		var i Tag
 		if err := rows.Scan(&i.ID, &i.DefaultShow); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTagsForActivePatients = `-- name: GetTagsForActivePatients :many
+SELECT pt.patient_id, pt.tag_id, COALESCE(tl.name, '???') AS name from patient_tag AS pt
+LEFT JOIN tag_language AS tl
+    ON tl.tag_id = pt.tag_id
+LEFT JOIN patient AS p
+    ON p.id = pt.patient_id
+WHERE p.curr_home_id IS NOT NULL
+AND tl.language_id = $1
+`
+
+type GetTagsForActivePatientsRow struct {
+	PatientID int32
+	TagID     int32
+	Name      string
+}
+
+func (q *Queries) GetTagsForActivePatients(ctx context.Context, languageID int32) ([]GetTagsForActivePatientsRow, error) {
+	rows, err := q.db.Query(ctx, getTagsForActivePatients, languageID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTagsForActivePatientsRow
+	for rows.Next() {
+		var i GetTagsForActivePatientsRow
+		if err := rows.Scan(&i.PatientID, &i.TagID, &i.Name); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

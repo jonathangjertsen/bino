@@ -1,6 +1,6 @@
 package main
 
-templ HomesPage(data *CommonData, homes []HomeView, homeless []UserView) {
+templ HomesPage(data *CommonData, homes []HomeViewAdmin, homeless []UserView) {
     @Layout(data) {
         <h1>{data.User.Language.HomesViewHomes}</h1>
         @Card() {
@@ -25,7 +25,7 @@ templ HomesPage(data *CommonData, homes []HomeView, homeless []UserView) {
                                 <input type="hidden" name="form-id" value="add-user">
                                 <input type="hidden" name="user-id" value={user.ID}>
                                 <input type="hidden" name="curr-home-id" value={home.ID}>
-                                <button type="submit" class="btn btn-primary mb-2">{data.User.Language.GenericMove}</button>
+                                <button type="submit" class="btn btn-primary btn-sm mb-2">{data.User.Language.GenericMove}</button>
                                 <br/>
                                 <label for="remove-from-current">{data.User.Language.HomesRemoveFromCurrent}</label>
                                 <input type="checkbox" name="remove-from-current" checked>
@@ -54,7 +54,7 @@ templ HomesPage(data *CommonData, homes []HomeView, homeless []UserView) {
                     // Archive rehab home
                     <form class="form-inline" action="/homes" method="POST">
                         <input type="hidden" name="form-id" value="archive-home">
-                        <button type="submit" class="btn btn-warning mb-2" name="home" value={home.ID}>{data.User.Language.HomesArchiveHome}</button>
+                        <button type="submit" class="btn btn-warning mb-2 btn-sm" name="home" value={home.ID}>{data.User.Language.HomesArchiveHome}</button>
                     </form>
                 }
             }
@@ -94,6 +94,7 @@ templ HomesPage(data *CommonData, homes []HomeView, homeless []UserView) {
             }
         }
     }
+    <script src={data.StaticFile("dashboard.js")}></script>
 }
 
 templ (u *UserView) Component(data *CommonData) {

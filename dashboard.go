@@ -12,7 +12,32 @@ import (
 type DashboardData struct {
 	Species []GetSpeciesWithLanguageRow
 	Tags    []GetTagWithLanguageCheckinRow
-	Homes   []Home
+	Homes   []HomeView
+}
+
+type HomeView struct {
+	Home     Home
+	Patients []PatientView
+}
+
+func (hv HomeView) URL() string {
+	return fmt.Sprintf("/home/%d", hv.Home.ID)
+}
+
+type PatientView struct {
+	ID      int32
+	Name    string
+	Species string
+	Tags    []TagView
+}
+
+func (pv PatientView) URL() string {
+	return fmt.Sprintf("/patient/%d", pv.ID)
+}
+
+type TagView struct {
+	ID   int32
+	Name string
 }
 
 func (r GetTagWithLanguageCheckinRow) HTMLID() string {
@@ -41,10 +66,51 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = DashboardPage(commonData, DashboardData{
+	patients, err := server.Queries.GetActivePatients(ctx, commonData.User.Language.ID)
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	patientTags, err := server.Queries.GetTagsForActivePatients(ctx, commonData.User.Language.ID)
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	homeViews := MapSlice(homes, func(h Home) HomeView {
+		return HomeView{
+			Home: h,
+			Patients: MapSlice(FilterSlice(patients, func(p GetActivePatientsRow) bool {
+				return p.CurrHomeID.Valid && p.CurrHomeID.Int32 == h.ID
+			}), func(p GetActivePatientsRow) PatientView {
+				return PatientView{
+					ID:      p.CurrHomeID.Int32,
+					Species: p.Species,
+					Name:    p.Name,
+					Tags: MapSlice(FilterSlice(patientTags, func(t GetTagsForActivePatientsRow) bool {
+						return t.PatientID == p.ID
+					}), func(t GetTagsForActivePatientsRow) TagView {
+						return TagView{
+							ID:   t.TagID,
+							Name: t.Name,
+						}
+					}),
+				}
+			}),
+		}
+	})
+
+	if preferredHomeIdx := Find(homes, func(h Home) bool {
+		return h.ID == commonData.User.PreferredHomeID
+	}); preferredHomeIdx != -1 {
+		MoveToFront(homeViews, preferredHomeIdx)
+	}
+
+	_ = DashboardPage(commonData, &DashboardData{
 		Species: species,
 		Tags:    tags,
-		Homes:   homes,
+		Homes:   homeViews,
 	}).Render(r.Context(), w)
 }
 

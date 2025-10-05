@@ -8,7 +8,7 @@ templ (page CRUDPage) Component(data *CommonData) {
     @Layout(data) {
         <h1>{page.Header}</h1>
         @Card() {
-            <table class="table">
+            <table>
             <thead>
                 <tr>
                     for _, key := range page.LangIndependent {
@@ -25,7 +25,7 @@ templ (page CRUDPage) Component(data *CommonData) {
             </tbody>
             </table>
         }
-        <script src="/static/crud.js"></script>
+        <script src={data.StaticFile("crud.js")}></script>
     }
 }
 
@@ -60,7 +60,7 @@ templ CreateRow(data *CommonData) {
             </td>
         }
         <td>
-            <button class="btn btn-outline-success" id="new-submit">
+            <button class="btn btn-outline-success w-100" id="new-submit">
                 {data.User.Language.GenericAdd}
             </button>
         </td>

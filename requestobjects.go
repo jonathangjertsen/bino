@@ -39,6 +39,10 @@ type CommonData struct {
 	Languages []LanguageView
 }
 
+func (cd *CommonData) StaticFile(name string) string {
+	return fmt.Sprintf("/static/%s/%s", cd.BuildKey, name)
+}
+
 type UserData struct {
 	AppuserID       int32
 	DisplayName     string

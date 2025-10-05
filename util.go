@@ -33,3 +33,28 @@ func MapSlice[TIn any, TOut any](in []TIn, f func(TIn) TOut) []TOut {
 	}
 	return out
 }
+
+func FilterSlice[TIn any](in []TIn, f func(v TIn) bool) []TIn {
+	out := make([]TIn, 0, len(in))
+	for _, v := range in {
+		if f(v) {
+			out = append(out, v)
+		}
+	}
+	return out
+}
+
+func Find[TIn any](in []TIn, f func(v TIn) bool) int {
+	for i, v := range in {
+		if f(v) {
+			return i
+		}
+	}
+	return -1
+}
+
+func MoveToFront[T any](in []T, j int) {
+	for i := j; i > 0; i-- {
+		in[i], in[i-1] = in[i-1], in[i]
+	}
+}

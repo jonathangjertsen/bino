@@ -18,5 +18,5 @@ templ TagPage(data *CommonData, tags []TagLangs) {
             </td>
         }
     }
-    <script src="/static/tagadmin.js"></script>
+    <script src={data.StaticFile("tagadmin.js")}></script>
 }

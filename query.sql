@@ -95,6 +95,24 @@ SELECT * FROM home
 ORDER BY name
 ;
 
+-- name: GetActivePatients :many
+SELECT p.id, p.name, p.curr_home_id, COALESCE(sl.name, '???') AS species FROM patient AS p
+LEFT JOIN species_language AS sl
+    ON sl.species_id = p.species_id
+WHERE curr_home_id IS NOT NULL
+  AND language_id = $1
+;
+
+-- name: GetTagsForActivePatients :many
+SELECT pt.patient_id, pt.tag_id, COALESCE(tl.name, '???') AS name from patient_tag AS pt
+LEFT JOIN tag_language AS tl
+    ON tl.tag_id = pt.tag_id
+LEFT JOIN patient AS p
+    ON p.id = pt.patient_id
+WHERE p.curr_home_id IS NOT NULL
+AND tl.language_id = $1
+;
+
 -- name: GetAppusers :many
 SELECT au.*, ha.home_id FROM appuser AS au
 LEFT JOIN home_appuser AS ha
@@ -123,6 +141,7 @@ WHERE home_id = $1
 SELECT home_id FROM home_appuser
 WHERE appuser_id = $1
 ;
+
 
 -- name: SetLoggingConsent :exec
 UPDATE appuser SET logging_consent = NOW() + sqlc.arg(period)::INT * INTERVAL '1 day'

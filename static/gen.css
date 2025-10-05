@@ -11618,6 +11618,9 @@ textarea.form-control-lg {
 }
 a {
   color: rgb(0, 140, 95);
+  user-select: default !important;
+  touch-action: default !important;
+  cursor: pointer;
 }
 
 html, body {
@@ -11625,11 +11628,89 @@ html, body {
   margin: 0;
 }
 
+:root {
+  --bs-body-font-family: "Roboto", sans-serif;
+  font-optical-sizing: auto;
+}
+
 body {
   display: flex;
   flex-direction: column;
   background-color: rgb(210, 212, 225);
   color: rgb(245, 245, 250);
+}
+
+@media (min-width: 1000px) {
+  .navbar-collapse.show {
+    display: flex;
+  }
+}
+@media (max-width: 1000px) {
+  .navbar-collapse.show {
+    display: grid !important;
+  }
+}
+
+#language-select {
+  width: 5em;
+}
+
+@media (min-width: 1000px) {
+  .dashboard {
+    display: flex;
+  }
+}
+@media (max-width: 1000px) {
+  .dashboard {
+    display: block;
+  }
+}
+.dashboard {
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+  cursor: grab;
+}
+.dashboard :active {
+  cursor: grabbing;
+}
+.dashboard {
+  border: 1px solid rgb(60, 60, 80);
+  margin-bottom: 1rem;
+}
+
+.break-on-mobile {
+  display: none;
+}
+@media (min-width: 1000px) {
+  .break-on-mobile {
+    display: flex;
+  }
+}
+@media (max-width: 1000px) {
+  .break-on-mobile {
+    display: block;
+  }
+}
+
+.b-container.dashboard-container {
+  cursor: grab;
+}
+.b-container.dashboard-container :active {
+  cursor: grabbing;
+}
+@media (min-width: 1000px) {
+  .b-container.dashboard-container {
+    display: flex;
+  }
+}
+@media (max-width: 1000px) {
+  .b-container.dashboard-container {
+    display: block;
+  }
+}
+.b-container.dashboard-container {
+  max-width: 96%;
 }
 
 .main {
@@ -11671,6 +11752,10 @@ body {
   text-decoration: none;
 }
 
+.patient-table {
+  margin-bottom: 0;
+}
+
 .logged-in-as {
   margin-right: 1em;
 }
@@ -11692,8 +11777,9 @@ body {
 .checkbox {
   padding: 0.1rem 0.5rem;
   border: 0.2rem solid rgb(0, 140, 95);
-  background-color: rgb(119, 189.5, 170);
+  background-color: rgb(48.375, 153.5625, 122.1875);
   margin: 0.5rem;
+  color: black;
 }
 
 .checkbox:hover {
@@ -11725,6 +11811,64 @@ h1 {
   background-color: rgb(238, 239, 245);
 }
 
+.dashboard-home {
+  background-color: rgb(238, 239, 245);
+}
+@media (min-width: 1000px) {
+  .dashboard-home {
+    margin-right: 0.5rem;
+    margin-bottom: 0;
+  }
+}
+@media (max-width: 1000px) {
+  .dashboard-home {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.dashboard-home:last-of-type {
+  margin-right: 0 !important;
+}
+@media (max-width: 1000px) {
+  .dashboard-home:last-of-type {
+    margin-bottom: 0 !important;
+  }
+}
+
+.card-header {
+  background-color: rgb(193.5, 194.25, 203.75);
+  color: rgb(238, 239, 245);
+  padding: 0.5rem;
+  color: black;
+  font-weight: bold;
+}
+
+.dashboard-patient-card {
+  padding: 0 !important;
+}
+
+.dashboard-form {
+  min-width: min(100%, 450px);
+  background-color: rgb(193.5, 194.25, 203.75);
+  cursor: default;
+}
+.dashboard-form :active {
+  cursor: default !important;
+}
+.dashboard-form {
+  margin-top: 0 !important;
+  margin-left: 0 !important;
+  margin-bottom: 1rem !important;
+  margin-right: 1rem !important;
+  flex: 1;
+  align-self: flex-start;
+}
+
+.dashboard-home {
+  min-width: min(100%, 350px);
+}
+
 .b-create-patient {
   width: 100% !important;
   margin-top: 0.5em !important;
@@ -11753,6 +11897,10 @@ h1 {
 
 label {
   user-select: none;
+}
+
+input[data-field=latin] {
+  font-style: italic;
 }
 
 /*# sourceMappingURL=gen.css.map */

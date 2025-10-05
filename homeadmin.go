@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-type HomeView struct {
+type HomeViewAdmin struct {
 	ID    int32
 	Name  string
 	Users []UserView
@@ -35,9 +35,9 @@ func (server *Server) getHomesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	homes := make([]HomeView, len(homesDB))
+	homes := make([]HomeViewAdmin, len(homesDB))
 	for i, home := range homesDB {
-		homes[i] = HomeView{
+		homes[i] = HomeViewAdmin{
 			ID:    home.ID,
 			Name:  home.Name,
 			Users: nil,

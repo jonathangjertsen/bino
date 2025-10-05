@@ -1,62 +1,162 @@
 package main
 
-templ DashboardPage(data *CommonData, dashboardData DashboardData) {
-	@Layout(data) {
-        <div class="dashboard">
-            @Card() {
-                <form action="/" method="POST">
-                    <div class="form-group">
-                        <label>{data.User.Language.CheckinPatientName}</label>
-                        <input class="form-control" name="name">
-                    </div>
-                    <div class="form-group">
-                        <label>{data.User.Language.GenericSpecies}</label>
-                        <select class="form-control" name="species">
-                            for _, sp := range dashboardData.Species {
-                                <option value={sp.SpeciesID}>{sp.Name}</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>{data.User.Language.GenericTags}</label>
-                        <br/>
-                        for _, tag := range dashboardData.Tags {
-                            <div class="form-check-inline checkbox" data-hidden={!tag.DefaultShow}>
-                                <input type="checkbox" name="tag" id={tag.HTMLID()} value={tag.TagID}>
-                                <label for={tag.HTMLID()}>
-                                    {tag.Name}
-                                </label>
-                            </div>
-                        }
-                    </div>
+templ DashboardPage(data *CommonData, dashboardData *DashboardData) {
+	@Layout(data, "dashboard-container") {
+        @DashboardForm(data, dashboardData)
+        @DashboardHomes(data, dashboardData)
+    }
+    <script src={data.StaticFile("dashboard.js")}></script>
+}
 
-                    <div class="form-group">
-                        <label for="patient-home">{data.User.Language.HomesHomeName}</label>
-                        <select class="form-control" name="home">
-                            for _, home := range dashboardData.Homes {
-                                <option value={home.ID} selected?={home.ID == data.User.PreferredHomeID}>{home.Name}</option>
-                            }
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <div class="form-check-inline">
-                            <input type="checkbox" name="admitted" id="admitted" checked>
-                            <label for="admitted">
-                                {data.User.Language.CheckinIHaveThePatient}
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <button type="submit" disabled?={data.User.PreferredHomeID == 0} class="b-create-patient btn btn-primary">{data.User.Language.CheckinCheckInPatient}</button>
-                    </div>
-
-                    if data.User.PreferredHomeID == 0 {
-                        <p class="small m-0">{data.User.Language.CheckinYouAreHomeless}</p>
+templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
+    @Card("dashboard-form", "shadow-m") {
+        <form action="/" method="POST">
+            <div class="form-group">
+                <label>{data.User.Language.CheckinPatientName}</label>
+                <input class="form-control" name="name">
+            </div>
+            <div class="form-group">
+                <label>{data.User.Language.GenericSpecies}</label>
+                <select class="form-control form-select" name="species">
+                    for _, sp := range dashboardData.Species {
+                        <option value={sp.SpeciesID}>{sp.Name}</option>
                     }
-                </form>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>{data.User.Language.GenericTags}</label>
+                <br/>
+                for _, tag := range dashboardData.Tags {
+                    <div class="form-check-inline checkbox" data-hidden={!tag.DefaultShow}>
+                        <input type="checkbox" name="tag" id={tag.HTMLID()} value={tag.TagID}>
+                        <label for={tag.HTMLID()}>
+                            {tag.Name}
+                        </label>
+                    </div>
+                }
+            </div>
+
+            <div class="form-group">
+                <label for="patient-home">{data.User.Language.HomesHomeName}</label>
+                <select class="form-control form-select" name="home">
+                    for _, home := range dashboardData.Homes {
+                        <option value={home.Home.ID} selected?={home.Home.ID == data.User.PreferredHomeID}>{home.Home.Name}</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <div class="form-check-inline">
+                    <input type="checkbox" name="admitted" id="admitted" checked>
+                    <label for="admitted">
+                        {data.User.Language.CheckinIHaveThePatient}
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" disabled?={data.User.PreferredHomeID == 0} class="b-create-patient btn btn-primary">{data.User.Language.CheckinCheckInPatient}</button>
+            </div>
+
+            if data.User.PreferredHomeID == 0 {
+                <p class="small m-0">{data.User.Language.CheckinYouAreHomeless}</p>
+            }
+        </form>
+    }
+}
+
+templ DashboardHomes(data *CommonData, dashboardData *DashboardData) {
+    <div class="dashboard">
+        for _, home := range dashboardData.Homes {
+            @DashboardHomeCard(data, dashboardData, home)
+        }
+    </div>
+}
+
+templ DashboardHomeCard(data *CommonData, dashboardData *DashboardData, home HomeView) {
+    <div class="dashboard-home card"> 
+        <div class="card-header">
+            <a href={home.URL()}>{home.Home.Name}</a>
+        </div>
+        <div class="card-content">
+            if len(home.Patients) > 0 {
+                for _, patient := range home.Patients {
+                    @DashboardPatientCard(data, dashboardData, patient)
+                }
+            } else {
+                <p class="m-2">{data.User.Language.DashboardNoPatientsInHome}</p>
             }
         </div>
+    </div>
+}
+
+templ DashboardPatientCard(data *CommonData, dashboardData *DashboardData, patient PatientView) {
+    @Card("dashboard-patient-card") {
+        <div class="card-header">
+            <a href={patient.URL()}>{patient.Name}</a>                                
+        </div>
+        <div class="card-content">
+            @DashboardPatientTable(data, dashboardData, patient)
+        </div>
     }
+}
+
+templ DashboardPatientTable(data *CommonData, dashboardData *DashboardData, patient PatientView) {
+    <table class="patient-table table table-bordered">
+        <tbody>
+            <tr>
+                <th>{data.User.Language.GenericSpecies}</th>
+                <td>{patient.Species}</td>
+            </tr>
+            @DashboardTagRows(data, dashboardData, patient)
+        </tbody>
+    </table>
+}
+
+templ DashboardTagRows(data *CommonData, dashboardData *DashboardData, patient PatientView) {
+    if len(patient.Tags) > 0 {
+        <tr>
+            @DashboardTagLabel(data, len(patient.Tags)+1)
+            @DashboardTag(data, patient.Tags[0])
+        </tr>
+        for i := 1; i < len(patient.Tags); i++ {
+            <tr>
+                @DashboardTag(data, patient.Tags[i])
+            </tr>
+        }
+        <tr>
+            @DashboardAddTag(data, dashboardData)
+        </tr>
+    } else {
+        <tr>
+            @DashboardTagLabel(data, 1)
+            @DashboardAddTag(data, dashboardData)
+        </tr>
+    }
+}
+
+templ DashboardTagLabel(data *CommonData, rowspan int) {
+    <th rowspan={rowspan}>
+        {data.User.Language.GenericTags}
+    </th>
+}
+
+templ DashboardTag(data *CommonData, tag TagView) {
+    <td class="d-flex justify-content-between">
+        {tag.Name}
+        <button disabled type="submit" class="btn btn-warning btn-sm w-25">{data.User.Language.GenericDelete}</button>
+    </td>
+}
+
+templ DashboardAddTag(data *CommonData, dashboardData *DashboardData) {
+    <td>
+        <form class="form-control-sm form-control-plaintext d-flex justify-content-between">
+            <select class="form-control form-select">
+                for _, tag := range dashboardData.Tags {
+                    <option value={tag.TagID}>{tag.Name}</option>
+                }
+            </select>
+            <button disabled type="submit" class="btn btn-primary btn-sm w-25">+</button>
+        </form>
+    </td>
 }

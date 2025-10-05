@@ -5,6 +5,9 @@ $light: rgb(238, 239, 245);
 $dark: rgb(60, 60, 80);
 $text: rgb(245, 245, 250);
 $warning: rgb(235, 140, 75);
+$midgray: mix($dark, $light, 25);
+
+$mobilethreshold: 1000px;
 
 @use "node_modules/bootstrap/scss/bootstrap" with (
     $enable-shadows: true,
@@ -15,11 +18,19 @@ $warning: rgb(235, 140, 75);
 
 a {
     color: $accent;
+    user-select: default !important;
+    touch-action: default !important;
+    cursor: pointer;
 }
 
 html, body {
     height: 100%;
     margin: 0;
+}
+
+:root {
+    --bs-body-font-family: 'Roboto', sans-serif;
+    font-optical-sizing: auto;
 }
 
 body {
@@ -28,6 +39,62 @@ body {
     background-color: $body;
     color: $text;
 }
+
+.navbar-collapse.show {
+    @media (min-width: $mobilethreshold) {
+        display: flex;
+    }
+    @media (max-width: $mobilethreshold) {
+        display: grid !important;
+    }
+}
+
+#language-select {
+    width: 5em;
+}
+
+.dashboard {
+    @media (min-width: $mobilethreshold) {
+        display: flex;
+    }
+    @media (max-width: $mobilethreshold) {
+        display: block;
+    }
+    overflow: hidden;
+    user-select: none;
+    touch-action: none;
+    cursor: grab;
+    :active {
+        cursor: grabbing;
+    }
+    border: 1px solid $dark;
+    margin-bottom: 1rem;
+}
+
+.break-on-mobile {
+    display: none;
+    @media (min-width: $mobilethreshold) {
+        display: flex;
+    }
+    @media (max-width: $mobilethreshold) {
+        display: block;
+    }
+}
+
+.b-container.dashboard-container {
+    cursor: grab;
+    :active {
+        cursor: grabbing;
+    }
+    @media (min-width: $mobilethreshold) {
+        display: flex;
+    }
+    @media (max-width: $mobilethreshold) {
+        display: block;
+    }
+    max-width: 96%;
+}
+
 
 .main {
     flex: 1;
@@ -68,6 +135,10 @@ body {
     text-decoration: none;
 }
 
+.patient-table {
+    margin-bottom: 0;
+}
+
 .logged-in-as {
     margin-right: 1em;
 }
@@ -77,7 +148,7 @@ body {
 }
 
 .b-container {
-    max-width: 1000px;
+    max-width: $mobilethreshold;
     margin: auto;
 }
 
@@ -89,8 +160,9 @@ body {
 .checkbox {
     padding: 0.1rem 0.5rem;
     border: 0.2rem solid $accent;
-    background-color: mix($light, $accent, 50);
+    background-color: mix($accent, $midgray, 75);
     margin: 0.5rem;
+    color: black;
 }
 
 .checkbox:hover {
@@ -122,6 +194,57 @@ h1 {
     background-color: $light;
 }
 
+.dashboard-home {
+    background-color: $light;
+
+    @media (min-width: $mobilethreshold) {    
+        margin-right: 0.5rem;
+        margin-bottom: 0;
+    }
+    @media (max-width: $mobilethreshold) {
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+}
+
+.dashboard-home:last-of-type {
+    margin-right: 0 !important;
+    @media (max-width: $mobilethreshold) {
+        margin-bottom: 0 !important;
+    }
+}
+
+.card-header {
+    background-color: $midgray;
+    color: $light;
+    padding: 0.5rem;
+    color: black;
+    font-weight: bold;
+}
+
+.dashboard-patient-card {
+    padding: 0 !important;
+}
+
+.dashboard-form {
+    min-width: min(100%, 450px);
+    background-color: $midgray;
+    cursor: default;
+    :active {
+        cursor: default !important;
+    }
+    margin-top: 0 !important;
+    margin-left: 0 !important;
+    margin-bottom: 1rem !important;
+    margin-right: 1rem !important;
+    flex: 1;  
+    align-self: flex-start;  
+}
+
+.dashboard-home {
+    min-width: min(100%, 350px);
+}
+
 .b-create-patient {
     width: 100% !important;
     margin-top: 0.5em !important;
@@ -150,4 +273,8 @@ h1 {
 
 label {
     user-select: none;
+}
+
+input[data-field="latin"] {
+    font-style: italic;
 }
