@@ -40,7 +40,8 @@ templ HomesPage(data *CommonData, homes []HomeViewAdmin, homeless []UserView) {
                     if len(homeless) > 0 {
                         <form class="form-inline" action="/homes" method="POST">
                             <label>{data.User.Language.HomesAddToHome}</label>
-                            <select class="form-control-color r-2 select-user" name="user-id">
+                            <select autocomplete="off" class="form-control-color r-2 select-user" name="user-id">
+                                <option value="" disabled selected>{data.User.Language.DashboardSelectHome}</option>
                                 for _, user := range homeless {
                                     <option value={user.ID}>{user.DisplayName}</option>
                                 }
@@ -54,7 +55,7 @@ templ HomesPage(data *CommonData, homes []HomeViewAdmin, homeless []UserView) {
                     // Archive rehab home
                     <form class="form-inline" action="/homes" method="POST">
                         <input type="hidden" name="form-id" value="archive-home">
-                        <button type="submit" class="btn btn-warning mb-2 btn-sm" name="home" value={home.ID}>{data.User.Language.HomesArchiveHome}</button>
+                        <button disabled type="submit" class="btn btn-warning mb-2 btn-sm" name="home" value={home.ID}>{data.User.Language.HomesArchiveHome}</button>
                     </form>
                 }
             }

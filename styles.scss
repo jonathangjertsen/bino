@@ -75,6 +75,10 @@ body {
     align-content: center;
 }
 
+.center {
+    text-align: center;
+}
+
 .navbar-collapse.show {
     @media (min-width: $mobilethreshold) {
         display: flex;
@@ -217,10 +221,14 @@ nav {
     }
 }
 
-h1 {
+h1, h2, h3, h4, h5, h6 {
     margin-bottom: 0.5rem;
     margin-left: 0.5rem;
     color: $dark;
+}
+
+.b-card > h1, .b-card > h2, .b-card > h3, .b-card > h4, .b-card > h5, .b-card > h6 {
+    margin-left: 0;
 }
 
 .b-card {
@@ -327,4 +335,9 @@ input[data-field="latin"] {
 
 .card-header-patient {
     background-color: $slightprimary;
+}
+
+.patient-page {
+    width: 800px;
+    max-width: 98%;
 }

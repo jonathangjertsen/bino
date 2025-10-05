@@ -1,11 +1,21 @@
 package main
 
+import "runtime/debug"
+
 templ ErrorPage(data *CommonData, err error) {
 	@Layout(data) {
         <div class="card b-card">
             <h1>{data.User.Language.ErrorPageHead}</h1>
             <p>{data.User.Language.ErrorPageInstructions}</p>
-            <pre>{err.Error()}</pre>
+            <pre>
+                if err != nil {
+                    {err.Error()}
+                } else {
+                    ErrorPage called on nil error
+
+                    {string(debug.Stack())}
+                }
+            </pre>
         </div>
     }
 }

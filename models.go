@@ -55,6 +55,7 @@ type PatientEvent struct {
 	EventID      int32
 	Time         pgtype.Timestamptz
 	AssociatedID pgtype.Int4
+	AppuserID    int32
 }
 
 // Each row represents a tag on a patient

@@ -36,7 +36,7 @@ func (server *Server) postPrivacyHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	http.Redirect(w, r, "/privacy", http.StatusFound)
+	server.redirectToReferer(w, r)
 }
 
 // Log from request if the user has given explicit concent

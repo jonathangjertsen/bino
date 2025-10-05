@@ -1,6 +1,14 @@
 //go:generate go tool go-enum --no-iota --values
 package main
 
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
+)
+
 // ENUM(
 //
 //	NO = 1,
@@ -13,6 +21,8 @@ type Language struct {
 	ID       LanguageID
 	Emoji    string
 	SelfName string
+	Weekdays map[time.Weekday]string
+	Months   map[time.Month]string
 
 	AdminDefaultIncludeTag string
 	AdminDisplayName       string
@@ -34,6 +44,10 @@ type Language struct {
 	DashboardNoPatientsInHome string
 	DashboardGoToJournal      string
 	DashboardCheckOut         string
+	DashboardSelectHome       string
+	DashboardSelectCheckout   string
+	DashboardSelectTag        string
+	DashboardSelectSpecies    string
 
 	ErrorPageHead         string
 	ErrorPageInstructions string
@@ -42,8 +56,10 @@ type Language struct {
 	FooterSourceCode string
 
 	GenericAdd     string
+	GenericAge     string
 	GenericDelete  string
 	GenericDetails string
+	GenericHome    string
 	GenericJournal string
 	GenericLatin   string
 	GenericMove    string
@@ -66,17 +82,48 @@ type Language struct {
 	HomesViewHomes         string
 	HomesUnassignedUsers   string
 
+	PatientRegisteredTime string
+	PatientCheckedOutTime string
+	PatientEventTime      string
+	PatientEventEvent     string
+	PatientEventNote      string
+	PatientEventUser      string
+	PatientEventHome      string
+
 	NavbarCalendar  string
 	NavbarDashboard string
 
 	Status map[Status]string
+	Event  map[Event]string
 }
 
 var NO = &Language{
 	ID:       LanguageIDNO,
 	Emoji:    "🇳🇴",
 	SelfName: "Norsk",
-
+	Weekdays: map[time.Weekday]string{
+		time.Monday:    "mandag",
+		time.Tuesday:   "tirsdag",
+		time.Wednesday: "onsdag",
+		time.Thursday:  "torsdag",
+		time.Friday:    "fredag",
+		time.Saturday:  "lørdag",
+		time.Sunday:    "søndag",
+	},
+	Months: map[time.Month]string{
+		time.January:   "januar",
+		time.February:  "februar",
+		time.March:     "mars",
+		time.April:     "april",
+		time.May:       "mai",
+		time.June:      "juni",
+		time.July:      "juli",
+		time.August:    "august",
+		time.September: "september",
+		time.October:   "oktober",
+		time.November:  "november",
+		time.December:  "desember",
+	},
 	AdminDefaultIncludeTag: "Vis ved innsjekk",
 	AdminDisplayName:       "Navn",
 	AdminEmailAddress:      "Epostaddresse",
@@ -97,6 +144,10 @@ var NO = &Language{
 	DashboardNoPatientsInHome: "Ingen pasienter",
 	DashboardGoToJournal:      "Gå til pasientjournal",
 	DashboardCheckOut:         "Sjekk ut",
+	DashboardSelectHome:       "Velg rehabhjem",
+	DashboardSelectCheckout:   "Velg status",
+	DashboardSelectTag:        "Velg tagg",
+	DashboardSelectSpecies:    "Velg art",
 
 	ErrorPageHead:         "Feilmelding",
 	ErrorPageInstructions: "Det skjedde noe feil under lasting av siden. Feilen har blitt logget og vil bli undersøkt. Send melding til administrator for hjelp. Den tekniske feilmeldingen følger under.",
@@ -105,8 +156,10 @@ var NO = &Language{
 	FooterSourceCode: "Kildekode",
 
 	GenericAdd:     "Legg til",
+	GenericAge:     "Alder",
 	GenericDelete:  "Slett",
 	GenericDetails: "Detaljer",
+	GenericHome:    "Rehabhjem",
 	GenericJournal: "Journal",
 	GenericLatin:   "Latin",
 	GenericMove:    "Flytt",
@@ -131,6 +184,14 @@ var NO = &Language{
 	NavbarCalendar:  "Kalender",
 	NavbarDashboard: "Hovedside",
 
+	PatientRegisteredTime: "Registrert",
+	PatientCheckedOutTime: "Sjekket ut",
+	PatientEventTime:      "Tidspunkt",
+	PatientEventEvent:     "Hendelse",
+	PatientEventNote:      "Notis",
+	PatientEventUser:      "Endret av",
+	PatientEventHome:      "Rehabhjem",
+
 	Status: map[Status]string{
 		StatusUnknown:                        "Ukjent",
 		StatusPendingAdmission:               "Venter på inntak",
@@ -142,13 +203,51 @@ var NO = &Language{
 		StatusEuthanized:                     "Avlivet",
 		StatusDeleted:                        "Slettet",
 	},
+
+	Event: map[Event]string{
+		EventUnknown:                        "Ukjent",
+		EventRegistered:                     "Registrert",
+		EventAdmitted:                       "Tatt inn",
+		EventAdopted:                        "Adoptert",
+		EventReleased:                       "Sluppet fri",
+		EventTransferredToOtherHome:         "Overført",
+		EventTransferredOutsideOrganization: "Overført til annen organisasjon",
+		EventDied:                           "Døde",
+		EventEuthanized:                     "Avlivet",
+		EventTagAdded:                       "La til tagg",
+		EventTagRemoved:                     "Fjernet tagg",
+		EventStatusChanged:                  "Endret status",
+		EventDeleted:                        "Slettet",
+	},
 }
 
 var EN = &Language{
 	ID:       LanguageIDEN,
 	Emoji:    "🇬🇧",
 	SelfName: "English",
-
+	Weekdays: map[time.Weekday]string{
+		time.Monday:    time.Monday.String(),
+		time.Tuesday:   time.Tuesday.String(),
+		time.Wednesday: time.Wednesday.String(),
+		time.Thursday:  time.Thursday.String(),
+		time.Friday:    time.Friday.String(),
+		time.Saturday:  time.Saturday.String(),
+		time.Sunday:    time.Sunday.String(),
+	},
+	Months: map[time.Month]string{
+		time.January:   time.January.String(),
+		time.February:  time.February.String(),
+		time.March:     time.March.String(),
+		time.April:     time.April.String(),
+		time.May:       time.May.String(),
+		time.June:      time.June.String(),
+		time.July:      time.July.String(),
+		time.August:    time.August.String(),
+		time.September: time.September.String(),
+		time.October:   time.October.String(),
+		time.November:  time.November.String(),
+		time.December:  time.December.String(),
+	},
 	AdminDefaultIncludeTag: "Show at check-in",
 	AdminDisplayName:       "Name",
 	AdminEmailAddress:      "Email address",
@@ -169,6 +268,10 @@ var EN = &Language{
 	DashboardNoPatientsInHome: "No patients",
 	DashboardGoToJournal:      "Go to patient journal",
 	DashboardCheckOut:         "Checkout",
+	DashboardSelectHome:       "Select home",
+	DashboardSelectCheckout:   "Select status",
+	DashboardSelectTag:        "Select tag",
+	DashboardSelectSpecies:    "Select species",
 
 	ErrorPageHead:         "Error",
 	ErrorPageInstructions: "An error occurred while loading the page. The error has been logged and will be investigated. Send a message to the site admin for help. The technical error message is as follows.",
@@ -177,8 +280,10 @@ var EN = &Language{
 	FooterSourceCode: "Source code",
 
 	GenericAdd:     "Add",
+	GenericAge:     "Age",
 	GenericDelete:  "Delete",
 	GenericDetails: "Details",
+	GenericHome:    "Home",
 	GenericJournal: "Journal",
 	GenericLatin:   "Latin",
 	GenericMove:    "Move",
@@ -203,6 +308,14 @@ var EN = &Language{
 	NavbarCalendar:  "Calendar",
 	NavbarDashboard: "Dashboard",
 
+	PatientRegisteredTime: "Registrert",
+	PatientCheckedOutTime: "Checked out",
+	PatientEventTime:      "Time",
+	PatientEventEvent:     "Event",
+	PatientEventNote:      "Note",
+	PatientEventUser:      "User",
+	PatientEventHome:      "Home",
+
 	Status: map[Status]string{
 		StatusUnknown:                        "Unknown",
 		StatusPendingAdmission:               "Pending admission",
@@ -214,6 +327,131 @@ var EN = &Language{
 		StatusEuthanized:                     "Euthanized",
 		StatusDeleted:                        "Deleted",
 	},
+
+	Event: map[Event]string{
+		EventUnknown:                        "Unknown",
+		EventRegistered:                     "Registered",
+		EventAdmitted:                       "Admitted",
+		EventAdopted:                        "Adopted",
+		EventReleased:                       "Released",
+		EventTransferredToOtherHome:         "Transferred",
+		EventTransferredOutsideOrganization: "Transferred outside of organisation",
+		EventDied:                           "Died",
+		EventEuthanized:                     "Euthanized",
+		EventTagAdded:                       "Tag added",
+		EventTagRemoved:                     "Tag removed",
+		EventStatusChanged:                  "Status changed",
+		EventDeleted:                        "Deleted",
+	},
+}
+
+func (l *Language) FormatEvent(ctx context.Context, e int32, assocID pgtype.Int4, server *Server) string {
+	event := Event(e)
+
+	switch event {
+	case EventTagAdded:
+		if tagName, err := server.Queries.GetTagName(ctx, GetTagNameParams{
+			LanguageID: int32(l.ID),
+			TagID:      assocID.Int32,
+		}); err == nil {
+			return l.formatTagAdded(tagName)
+		}
+	case EventTagRemoved:
+		if tagName, err := server.Queries.GetTagName(ctx, GetTagNameParams{
+			LanguageID: int32(l.ID),
+			TagID:      assocID.Int32,
+		}); err == nil {
+			return l.formatTagRemoved(tagName)
+		}
+	case EventStatusChanged:
+		return l.formatStatusChanged(Status(assocID.Int32))
+	default:
+		if str, ok := l.Event[event]; ok {
+			return str
+		}
+	}
+	return event.String()
+}
+
+func (l *Language) formatTagAdded(tagName string) string {
+	switch l.ID {
+	case LanguageIDNO:
+		return fmt.Sprintf("Tagget som '%s'", tagName)
+	case LanguageIDEN:
+		return fmt.Sprintf("Tagged as '%s'", tagName)
+	default:
+		return tagName
+	}
+}
+
+func (l *Language) formatTagRemoved(tagName string) string {
+	switch l.ID {
+	case LanguageIDNO:
+		return fmt.Sprintf("Fjernet taggen '%s'", tagName)
+	case LanguageIDEN:
+		return fmt.Sprintf("Removed tag '%s'", tagName)
+	default:
+		return tagName
+	}
+}
+
+func (l *Language) formatStatusChanged(status Status) string {
+	switch l.ID {
+	case LanguageIDNO:
+		return fmt.Sprintf("Endret status til '%s'", status)
+	case LanguageIDEN:
+		return fmt.Sprintf("Changed status to '%s'", status)
+	default:
+		return status.String()
+	}
+}
+
+func (l *Language) FormatTimeAbs(t time.Time) string {
+	switch l.ID {
+	case LanguageIDNO:
+		return fmt.Sprintf("%d. %s %d kl. %02d:%02d",
+			t.Day(),
+			l.Months[t.Month()],
+			t.Year(),
+			t.Hour(),
+			t.Minute(),
+		)
+	case LanguageIDEN:
+		return t.Format("January 2, 2006 at 3:04 PM")
+	default:
+		return t.String()
+	}
+}
+
+func (l *Language) FormatTimeRel(t time.Time) string {
+	now := time.Now()
+	diff := now.Sub(t)
+
+	switch l.ID {
+	case LanguageIDNO:
+		if diff < time.Minute {
+			return "akkurat nå"
+		} else if diff < time.Hour {
+			return fmt.Sprintf("for %d minutter siden", int(diff.Minutes()))
+		} else if diff < 24*time.Hour {
+			return fmt.Sprintf("for %d timer siden", int(diff.Hours()))
+		}
+		if now.Year() == t.Year() && now.YearDay()-t.YearDay() < 7 {
+			return fmt.Sprintf("%s kl. %02d:%02d", l.Weekdays[t.Weekday()], t.Hour(), t.Minute())
+		}
+	case LanguageIDEN:
+		if diff < time.Minute {
+			return "just now"
+		} else if diff < time.Hour {
+			return fmt.Sprintf("%d minutes ago", int(diff.Minutes()))
+		} else if diff < 24*time.Hour {
+			return fmt.Sprintf("%d hours ago", int(diff.Hours()))
+		}
+		if now.Year() == t.Year() && now.YearDay()-t.YearDay() < 7 {
+			return t.Format("Monday at 3:04 PM")
+		}
+	}
+	return l.FormatTimeAbs(t)
 }
 
 var Languages = map[int32]*Language{

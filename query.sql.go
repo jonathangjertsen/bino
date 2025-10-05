@@ -37,8 +37,8 @@ func (q *Queries) AddPatient(ctx context.Context, arg AddPatientParams) (int32, 
 }
 
 const addPatientEvent = `-- name: AddPatientEvent :one
-INSERT INTO patient_event (patient_id, home_id, event_id, associated_id, note, time)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO patient_event (patient_id, home_id, event_id, associated_id, note, appuser_id, time)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id
 `
 
@@ -48,6 +48,7 @@ type AddPatientEventParams struct {
 	EventID      int32
 	AssociatedID pgtype.Int4
 	Note         string
+	AppuserID    int32
 	Time         pgtype.Timestamptz
 }
 
@@ -58,6 +59,7 @@ func (q *Queries) AddPatientEvent(ctx context.Context, arg AddPatientEventParams
 		arg.EventID,
 		arg.AssociatedID,
 		arg.Note,
+		arg.AppuserID,
 		arg.Time,
 	)
 	var id int32
@@ -224,6 +226,79 @@ func (q *Queries) GetAppusers(ctx context.Context) ([]GetAppusersRow, error) {
 	return items, nil
 }
 
+const getEventsForPatient = `-- name: GetEventsForPatient :many
+SELECT
+    pe.id, pe.patient_id, pe.home_id, pe.note, pe.event_id, pe.time, pe.associated_id, pe.appuser_id,
+    h.name AS home_name,
+    au.display_name AS user_name,
+    au.avatar_url AS avatar_url
+FROM patient_event AS pe
+JOIN home AS h
+  ON h.id = pe.home_id
+JOIN appuser AS au
+  ON au.id = pe.appuser_id
+WHERE pe.patient_id = $1
+ORDER BY pe.time
+`
+
+type GetEventsForPatientRow struct {
+	ID           int32
+	PatientID    int32
+	HomeID       int32
+	Note         string
+	EventID      int32
+	Time         pgtype.Timestamptz
+	AssociatedID pgtype.Int4
+	AppuserID    int32
+	HomeName     string
+	UserName     string
+	AvatarUrl    pgtype.Text
+}
+
+func (q *Queries) GetEventsForPatient(ctx context.Context, patientID int32) ([]GetEventsForPatientRow, error) {
+	rows, err := q.db.Query(ctx, getEventsForPatient, patientID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetEventsForPatientRow
+	for rows.Next() {
+		var i GetEventsForPatientRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.PatientID,
+			&i.HomeID,
+			&i.Note,
+			&i.EventID,
+			&i.Time,
+			&i.AssociatedID,
+			&i.AppuserID,
+			&i.HomeName,
+			&i.UserName,
+			&i.AvatarUrl,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getHome = `-- name: GetHome :one
+SELECT id, name FROM home
+WHERE id = $1
+`
+
+func (q *Queries) GetHome(ctx context.Context, id int32) (Home, error) {
+	row := q.db.QueryRow(ctx, getHome, id)
+	var i Home
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 const getHomes = `-- name: GetHomes :many
 SELECT id, name FROM home
 ORDER BY name
@@ -288,6 +363,42 @@ func (q *Queries) GetPatient(ctx context.Context, id int32) (Patient, error) {
 		&i.CurrHomeID,
 		&i.Name,
 		&i.Status,
+	)
+	return i, err
+}
+
+const getPatientWithSpecies = `-- name: GetPatientWithSpecies :one
+SELECT p.id, p.species_id, p.curr_home_id, p.name, p.status, sl.name AS species_name FROM patient AS p
+JOIN species_language AS sl
+  ON sl.species_id = p.species_id
+WHERE p.id = $1
+  AND sl.language_id = $2
+`
+
+type GetPatientWithSpeciesParams struct {
+	ID         int32
+	LanguageID int32
+}
+
+type GetPatientWithSpeciesRow struct {
+	ID          int32
+	SpeciesID   int32
+	CurrHomeID  pgtype.Int4
+	Name        string
+	Status      int32
+	SpeciesName string
+}
+
+func (q *Queries) GetPatientWithSpecies(ctx context.Context, arg GetPatientWithSpeciesParams) (GetPatientWithSpeciesRow, error) {
+	row := q.db.QueryRow(ctx, getPatientWithSpecies, arg.ID, arg.LanguageID)
+	var i GetPatientWithSpeciesRow
+	err := row.Scan(
+		&i.ID,
+		&i.SpeciesID,
+		&i.CurrHomeID,
+		&i.Name,
+		&i.Status,
+		&i.SpeciesName,
 	)
 	return i, err
 }
@@ -442,6 +553,44 @@ func (q *Queries) GetTagsForActivePatients(ctx context.Context, languageID int32
 	for rows.Next() {
 		var i GetTagsForActivePatientsRow
 		if err := rows.Scan(&i.PatientID, &i.TagID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTagsForPatient = `-- name: GetTagsForPatient :many
+SELECT pt.tag_id, COALESCE(tl.name, '???') AS name from patient_tag AS pt
+LEFT JOIN tag_language AS tl
+    ON tl.tag_id = pt.tag_id
+WHERE pt.patient_id = $1
+  AND tl.language_id = $2
+`
+
+type GetTagsForPatientParams struct {
+	PatientID  int32
+	LanguageID int32
+}
+
+type GetTagsForPatientRow struct {
+	TagID int32
+	Name  string
+}
+
+func (q *Queries) GetTagsForPatient(ctx context.Context, arg GetTagsForPatientParams) ([]GetTagsForPatientRow, error) {
+	rows, err := q.db.Query(ctx, getTagsForPatient, arg.PatientID, arg.LanguageID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTagsForPatientRow
+	for rows.Next() {
+		var i GetTagsForPatientRow
+		if err := rows.Scan(&i.TagID, &i.Name); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

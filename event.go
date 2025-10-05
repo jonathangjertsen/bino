@@ -8,7 +8,7 @@ package main
 //	Admitted                       = 2,
 //	Adopted                        = 3,
 //	Released                       = 4,
-//	TransferredToOtherHome         = 5,  // Associated ID is previous home ID
+//	TransferredToOtherHome         = 5,
 //	TransferredOutsideOrganization = 6,
 //	Died                           = 7,
 //	Euthanized                     = 8,

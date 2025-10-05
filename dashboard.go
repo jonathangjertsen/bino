@@ -212,6 +212,7 @@ func (server *Server) postCheckinHandler(w http.ResponseWriter, r *http.Request)
 
 		if _, err := q.AddPatientEvent(ctx, AddPatientEventParams{
 			PatientID: patientID,
+			AppuserID: commonData.User.AppuserID,
 			EventID:   int32(EventRegistered),
 			HomeID:    fields["home"],
 			Note:      "",
@@ -223,6 +224,7 @@ func (server *Server) postCheckinHandler(w http.ResponseWriter, r *http.Request)
 		if admitted {
 			if _, err := q.AddPatientEvent(ctx, AddPatientEventParams{
 				PatientID: patientID,
+				AppuserID: commonData.User.AppuserID,
 				EventID:   int32(EventAdmitted),
 				HomeID:    fields["home"],
 				Note:      "",
@@ -238,11 +240,12 @@ func (server *Server) postCheckinHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusFound)
+	server.redirectToReferer(w, r)
 }
 
 func (server *Server) deletePatientTagHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
 
 	fields, err := server.getPathIDs(r, "patient", "tag")
 	if err != nil {
@@ -251,13 +254,39 @@ func (server *Server) deletePatientTagHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	patient, tag := fields["patient"], fields["tag"]
-	if err := server.Queries.DeletePatientTag(ctx, DeletePatientTagParams{
-		PatientID: patient,
-		TagID:     tag,
+
+	patientData, err := server.Queries.GetPatient(ctx, patient)
+	if err != nil {
+		ajaxError(w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	if err := server.Transaction(ctx, func(ctx context.Context, q *Queries) error {
+		if err := q.DeletePatientTag(ctx, DeletePatientTagParams{
+			PatientID: patient,
+			TagID:     tag,
+		}); err != nil {
+			return err
+		}
+
+		if _, err := q.AddPatientEvent(ctx, AddPatientEventParams{
+			PatientID:    patient,
+			HomeID:       patientData.CurrHomeID.Int32,
+			EventID:      int32(EventTagRemoved),
+			AssociatedID: pgtype.Int4{Int32: tag, Valid: true},
+			Note:         "",
+			AppuserID:    commonData.User.AppuserID,
+			Time:         pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		}); err != nil {
+			return err
+		}
+
+		return nil
 	}); err != nil {
 		ajaxError(w, r, err, http.StatusInternalServerError)
 		return
 	}
+
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -273,11 +302,33 @@ func (server *Server) createPatientTagHandler(w http.ResponseWriter, r *http.Req
 
 	patient, tag := fields["patient"], fields["tag"]
 
-	LogR(r, "creating tag patient=%d tag=%d", patient, tag)
+	patientData, err := server.Queries.GetPatient(ctx, patient)
+	if err != nil {
+		ajaxError(w, r, err, http.StatusInternalServerError)
+		return
+	}
 
-	if err := server.Queries.AddPatientTags(ctx, AddPatientTagsParams{
-		PatientID: patient,
-		Tags:      []int32{tag},
+	if err := server.Transaction(ctx, func(ctx context.Context, q *Queries) error {
+		if err := q.AddPatientTags(ctx, AddPatientTagsParams{
+			PatientID: patient,
+			Tags:      []int32{tag},
+		}); err != nil {
+			return err
+		}
+
+		if _, err := q.AddPatientEvent(ctx, AddPatientEventParams{
+			PatientID:    patient,
+			HomeID:       patientData.CurrHomeID.Int32,
+			EventID:      int32(EventTagAdded),
+			AssociatedID: pgtype.Int4{Int32: tag, Valid: true},
+			Note:         "",
+			AppuserID:    commonData.User.AppuserID,
+			Time:         pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		}); err != nil {
+			return err
+		}
+
+		return nil
 	}); err != nil {
 		ajaxError(w, r, err, http.StatusInternalServerError)
 		return
@@ -331,6 +382,7 @@ func (server *Server) movePatientHandler(w http.ResponseWriter, r *http.Request)
 
 		q.AddPatientEvent(ctx, AddPatientEventParams{
 			PatientID:    patient,
+			AppuserID:    commonData.User.AppuserID,
 			HomeID:       newHomeID,
 			EventID:      int32(EventTransferredToOtherHome),
 			AssociatedID: patientData.CurrHomeID,
@@ -344,7 +396,7 @@ func (server *Server) movePatientHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusFound)
+	server.redirectToReferer(w, r)
 }
 
 func (server *Server) postCheckoutHandler(w http.ResponseWriter, r *http.Request) {
@@ -406,6 +458,7 @@ func (server *Server) postCheckoutHandler(w http.ResponseWriter, r *http.Request
 
 		if _, err := q.AddPatientEvent(ctx, AddPatientEventParams{
 			PatientID:    patient,
+			AppuserID:    commonData.User.AppuserID,
 			HomeID:       patientData.CurrHomeID.Int32,
 			EventID:      int32(event),
 			AssociatedID: associatedID,
@@ -421,6 +474,5 @@ func (server *Server) postCheckoutHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// TODO: redirect to home
-	http.Redirect(w, r, "/", http.StatusFound)
+	server.redirectToReferer(w, r)
 }

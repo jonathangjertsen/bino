@@ -32,6 +32,10 @@ func (server *Server) postLanguageHandler(w http.ResponseWriter, r *http.Request
 		fmt.Fprintln(os.Stderr, err.Error())
 	}
 
+	server.redirectToReferer(w, r)
+}
+
+func (server *Server) redirectToReferer(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
 }
 

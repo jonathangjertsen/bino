@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/coreos/go-oidc"
@@ -132,6 +133,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 	mux.Handle("GET /admin", chainf(server.adminRootHandler, loggedInChain...))
 	mux.Handle("GET /homes", chainf(server.getHomesHandler, loggedInChain...))
 	mux.Handle("GET /privacy", chainf(server.privacyHandler, loggedInChain...))
+	mux.Handle("GET /patient/{patient}", chainf(server.getPatientHandler, loggedInChain...))
 
 	// Admin AJAX
 	mux.Handle("POST /species", chainf(server.postSpeciesHandler, loggedInChain...))
@@ -173,4 +175,69 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 	}()
 
 	return nil
+}
+
+func (server *Server) getFormIDs(r *http.Request, fields ...string) (map[string]int32, error) {
+	strings, err := server.getFormValues(r, fields...)
+	if err != nil {
+		return nil, err
+	}
+	return stringsToIDs(strings)
+}
+
+func (server *Server) getFormValues(r *http.Request, fields ...string) (map[string]string, error) {
+	return SliceToMapErr(fields, func(_ int, field string) (string, string, error) {
+		v, err := server.getFormValue(r, field)
+		return field, v, err
+	})
+}
+
+func (server *Server) getFormID(r *http.Request, field string) (int32, error) {
+	vStr, err := server.getFormValue(r, field)
+	if err != nil {
+		return 0, err
+	}
+	v, err := strconv.ParseInt(vStr, 10, 32)
+	if err != nil {
+		return 0, err
+	}
+	return int32(v), nil
+}
+
+func (server *Server) getFormValue(r *http.Request, field string) (string, error) {
+	if err := r.ParseForm(); err != nil {
+		return "", fmt.Errorf("parsing form: %w", err)
+	}
+	values, ok := r.Form[field]
+	if !ok {
+		return "", fmt.Errorf("missing form value '%s'", field)
+	}
+	if len(values) != 1 {
+		return "", fmt.Errorf("expect 1 form value for '%s', got %d", field, len(values))
+	}
+	return values[0], nil
+}
+
+func (server *Server) getPathIDs(r *http.Request, fields ...string) (map[string]int32, error) {
+	strings, err := server.getPathValues(r, fields...)
+	if err != nil {
+		return nil, err
+	}
+	return stringsToIDs(strings)
+}
+
+func (server *Server) getPathValues(r *http.Request, fields ...string) (map[string]string, error) {
+	return SliceToMapErr(fields, func(_ int, field string) (string, string, error) {
+		v, err := server.getPathValue(r, field)
+		return field, v, err
+	})
+}
+
+func (server *Server) getPathID(r *http.Request, field string) (int32, error) {
+	vStr := r.PathValue(field)
+	v, err := strconv.ParseInt(vStr, 10, 32)
+	if err != nil {
+		return 0, err
+	}
+	return int32(v), nil
 }

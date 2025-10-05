@@ -115,6 +115,14 @@ WHERE p.curr_home_id IS NOT NULL
 AND tl.language_id = $1
 ;
 
+-- name: GetTagsForPatient :many
+SELECT pt.tag_id, COALESCE(tl.name, '???') AS name from patient_tag AS pt
+LEFT JOIN tag_language AS tl
+    ON tl.tag_id = pt.tag_id
+WHERE pt.patient_id = $1
+  AND tl.language_id = $2
+;
+
 -- name: GetAppusers :many
 SELECT au.*, ha.home_id FROM appuser AS au
 LEFT JOIN home_appuser AS ha
@@ -167,8 +175,8 @@ ON CONFLICT (patient_id, tag_id) DO NOTHING
 ;
 
 -- name: AddPatientEvent :one
-INSERT INTO patient_event (patient_id, home_id, event_id, associated_id, note, time)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO patient_event (patient_id, home_id, event_id, associated_id, note, appuser_id, time)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id
 ;
 
@@ -189,8 +197,36 @@ SELECT * FROM patient
 WHERE id = $1
 ;
 
+-- name: GetPatientWithSpecies :one
+SELECT p.*, sl.name AS species_name FROM patient AS p
+JOIN species_language AS sl
+  ON sl.species_id = p.species_id
+WHERE p.id = $1
+  AND sl.language_id = $2
+;
+
 -- name: SetPatientStatus :exec
 UPDATE patient
 SET status = $2
+WHERE id = $1
+;
+
+-- name: GetEventsForPatient :many
+SELECT
+    pe.*,
+    h.name AS home_name,
+    au.display_name AS user_name,
+    au.avatar_url AS avatar_url
+FROM patient_event AS pe
+JOIN home AS h
+  ON h.id = pe.home_id
+JOIN appuser AS au
+  ON au.id = pe.appuser_id
+WHERE pe.patient_id = $1
+ORDER BY pe.time
+;
+
+-- name: GetHome :one
+SELECT * FROM home
 WHERE id = $1
 ;

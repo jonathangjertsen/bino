@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"runtime/debug"
 	"time"
 )
 
@@ -32,7 +34,8 @@ func withRecover(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if rec := recover(); rec != nil {
-				http.Error(w, "internal error", http.StatusInternalServerError)
+				msg := fmt.Sprintf("runtime panic: %s\ntraceback: %s", rec, string(debug.Stack()))
+				http.Error(w, msg, http.StatusInternalServerError)
 			}
 		}()
 		next.ServeHTTP(w, r)

@@ -43,6 +43,14 @@ func SliceToMap[TIn any, KOut comparable, VOut any](in []TIn, f func(int, TIn) (
 	return out
 }
 
+func SliceToSlice[TIn any, TOut any](in []TIn, f func(int, TIn) TOut) []TOut {
+	out := make([]TOut, len(in))
+	for i, v := range in {
+		out[i] = f(i, v)
+	}
+	return out
+}
+
 func SliceToMapErr[TIn any, KOut comparable, VOut any](in []TIn, f func(int, TIn) (KOut, VOut, error)) (map[KOut]VOut, error) {
 	out := make(map[KOut]VOut)
 	for i, vin := range in {

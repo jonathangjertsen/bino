@@ -22,7 +22,6 @@ const (
 	// EventReleased is a Event of type Released.
 	EventReleased Event = 4
 	// EventTransferredToOtherHome is a Event of type TransferredToOtherHome.
-	// Associated ID is previous home ID
 	EventTransferredToOtherHome Event = 5
 	// EventTransferredOutsideOrganization is a Event of type TransferredOutsideOrganization.
 	EventTransferredOutsideOrganization Event = 6

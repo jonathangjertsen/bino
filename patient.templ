@@ -1,0 +1,86 @@
+package main
+
+import (
+    "context"
+)
+
+templ PatientPage(ctx context.Context, data *CommonData, view PatientPageView, server *Server) {
+	@Layout(data, "patient-page") {
+        @Card() {
+            <h1>{view.Patient.Name}</h1>
+            <h2>Personalia</h2>
+            <table class="table table-bordered mb-2">
+            <tbody>
+                if len(view.Events) > 0 {
+                    <tr>
+                        <th>{data.User.Language.PatientRegisteredTime}</th>
+                        <td>@UserTimeLong(view.Events[0].TimeRel, view.Events[0].TimeAbs)</td>
+                    </tr>
+                }
+                <tr>
+                    <th>{data.User.Language.GenericStatus}</th>
+                    <td>{data.User.Language.Status[Status(view.Patient.Status)]}</td>
+                </tr>
+                <tr>
+                    <th>{data.User.Language.GenericSpecies}</th>
+                    <td>{view.Patient.Species}</td>
+                </tr>
+                if view.Home != nil {
+                    <tr>
+                        <th>{data.User.Language.GenericHome}</th>
+                        <td>{view.Home.Home.Name}</td>
+                    </tr>
+                }
+            </tbody>
+            </table>
+
+            <h2>Oppdater</h2>
+            <table class="patient-table table table-bordered mb-2">
+                <tbody>
+                    if !IsCheckoutStatus[Status(view.Patient.Status)] {
+                        @DashboardMove(data, view.Homes, view.Home, view.Patient)
+                        @DashboardCheckout(data, view.Patient)
+                    }
+
+                    // This must be the last one.
+                    @DashboardTagRows(data, view.Tags, view.Patient)
+                </tbody>
+            </table>
+
+            <h2>Historikk</h2>
+            <table class="table table-bordered table-sm table-striped">
+            <thead>
+                <th>{data.User.Language.PatientEventTime}</th>
+                <th>{data.User.Language.PatientEventUser}</th>
+                <th>{data.User.Language.PatientEventEvent}</th>
+                <th>{data.User.Language.PatientEventHome}</th>
+                <th>{data.User.Language.PatientEventNote}</th>
+            </thead>
+            <tbody>
+                for _, event := range view.Events {
+                    <tr>
+                        <td>@UserTime(event.TimeRel, event.TimeAbs)</td>
+                        <td class="center">
+                            @Avatar(event.User)
+                        </td>
+                        <td>{data.User.Language.FormatEvent(ctx, event.Row.EventID, event.Row.AssociatedID, server)}</td>
+                        <td><a href={event.Home.URL()}>{event.Home.Home.Name}</a></td>
+                        <td>{event.Row.Note}</td>
+                    </tr>
+                }
+            </tbody>
+            </table>
+        }
+    }
+    <script src={data.StaticFile("patienttags.js")}></script>
+}
+
+templ UserTime(rel, abs string) {
+    <span class="reltime" data-toggle="tooltip" data-placement="top" title={abs}>
+        {rel}
+    </span>
+}
+
+templ UserTimeLong(rel, abs string) {
+    {abs} ({rel})
+}

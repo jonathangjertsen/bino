@@ -8,6 +8,7 @@ templ DashboardPage(data *CommonData, dashboardData *DashboardData) {
         @DashboardHomes(data, dashboardData)
     }
     <script src={data.StaticFile("dashboard.js")}></script>
+    <script src={data.StaticFile("patienttags.js")}></script>
 }
 
 templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
@@ -19,7 +20,8 @@ templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
             </div>
             <div class="form-group">
                 <label>{data.User.Language.GenericSpecies}</label>
-                <select class="form-control form-select" name="species">
+                <select autocomplete="off" class="form-control form-select" name="species">
+                    <option value="" disabled selected>{data.User.Language.DashboardSelectSpecies}</option>
                     for _, sp := range dashboardData.Species {
                         <option value={sp.SpeciesID}>{sp.Name}</option>
                     }
@@ -30,7 +32,7 @@ templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
                 <br/>
                 for _, tag := range dashboardData.Tags {
                     <div class="form-check-inline checkbox" data-hidden={!tag.DefaultShow}>
-                        <input type="checkbox" name="tag" id={tag.HTMLID()} value={tag.TagID}>
+                        <input autocomplete="off" type="checkbox" name="tag" id={tag.HTMLID()} value={tag.TagID}>
                         <label for={tag.HTMLID()}>
                             {tag.Name}
                         </label>
@@ -40,7 +42,7 @@ templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
 
             <div class="form-group">
                 <label for="patient-home">{data.User.Language.HomesHomeName}</label>
-                <select class="form-control form-select" name="home">
+                <select autocomplete="off" class="form-control form-select" name="home">
                     for _, home := range dashboardData.Homes {
                         <option value={home.Home.ID} selected?={home.Home.ID == data.User.PreferredHomeID}>{home.Home.Name}</option>
                     }
@@ -49,7 +51,7 @@ templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
 
             <div class="form-group">
                 <div class="form-check-inline">
-                    <input type="checkbox" name="admitted" id="admitted" checked>
+                    <input autocomplete="off" type="checkbox" name="admitted" id="admitted" checked>
                     <label for="admitted">
                         {data.User.Language.CheckinIHaveThePatient}
                     </label>
@@ -75,23 +77,27 @@ templ DashboardHomes(data *CommonData, dashboardData *DashboardData) {
     </div>
 }
 
+templ Avatar(u DashboardUserView) {
+    <a href={u.URL()}>
+        if u.HasAvatarURL {
+            <img src={u.AvatarURL} class="dashboard-head-profile" data-toggle="tooltip" data-placement="top" title={u.Name}>
+        } else {
+            <div class="dashboard-head-profile" data-toggle="tooltip" data-placement="top" title={u.Name}>
+                if len(u.Name) > 0 {
+                    {u.Name[:1]}
+                }
+            </div>
+        }
+    </a>
+}
+
 templ DashboardHomeCard(data *CommonData, dashboardData *DashboardData, home *HomeView) {
     <div class="dashboard-home card"> 
         <div class="card-header d-flex justify-content-between">
             <a href={home.URL()}>{home.Home.Name}</a>
             <div>
                 for _, u := range home.Users {
-                    <a href={u.URL()}>
-                        if u.HasAvatarURL {
-                            <img src={u.AvatarURL} class="dashboard-head-profile">
-                        } else {
-                            <div class="dashboard-head-profile">
-                                if len(u.Name) > 0 {
-                                    {u.Name[:1]}
-                                }
-                            </div>
-                        }
-                    </a>
+                    @Avatar(u)
                 }
             </div>
         </div>
@@ -117,25 +123,31 @@ templ DashboardPatientCard(data *CommonData, dashboardData *DashboardData, home 
             </div>
         </div>
         <div class="card-content collapse" id={patient.CollapseID("")}>
-            @DashboardPatientTable(data, dashboardData, home, patient)
+            @DashboardPatientTable(data, dashboardData.Homes, dashboardData.Tags, home, patient)
         </div>
     }
 }
 
-templ DashboardPatientTable(data *CommonData, dashboardData *DashboardData, home *HomeView, patient PatientView) {
+templ DashboardPatientTable(
+    data *CommonData,
+    homes []HomeView,
+    tags []GetTagsWithLanguageCheckinRow,
+    home *HomeView,
+    patient PatientView,
+) {
     <table class="patient-table table table-bordered">
         <tbody>
-            @DashboardMove(data, dashboardData, home, patient)
+            @DashboardMove(data, homes, home, patient)
             @DashboardCheckout(data, patient)
             @DashboardHistory(data, patient)
 
             // This must be the last one.
-            @DashboardTagRows(data, dashboardData, patient)
+            @DashboardTagRows(data, tags, patient)
         </tbody>
     </table>
 }
 
-templ DashboardMove(data *CommonData, dashboardData *DashboardData, home *HomeView, patient PatientView) {
+templ DashboardMove(data *CommonData, homes []HomeView, home *HomeView, patient PatientView) {
     <tr>
         <th class="w-25">{data.User.Language.GenericMoveTo}</th>
         <td>
@@ -144,9 +156,10 @@ templ DashboardMove(data *CommonData, dashboardData *DashboardData, home *HomeVi
                 method="POST"
                 class="form-control-sm form-control-plaintext d-flex justify-content-between"
             >
-                <select class="form-control form-select" name="home">
-                    for _, otherHome := range dashboardData.Homes {
-                        if otherHome.Home.ID != home.Home.ID {
+                <select autocomplete="off" class="form-control form-select form-select-sm" name="home">
+                    <option value="" disabled selected>{data.User.Language.DashboardSelectHome}</option>
+                    for _, otherHome := range homes {
+                        if home == nil || otherHome.Home.ID != home.Home.ID {
                             <option value={otherHome.Home.ID}>{otherHome.Home.Name}</option>
                         }
                     }
@@ -168,10 +181,11 @@ templ DashboardCheckout(data *CommonData, patient PatientView) {
             >
                 <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext">
                     <label for={patient.CheckoutNoteID("#")} class="input-group-text">{data.User.Language.GenericNote}</label>
-                    <input type="text" class="form-control" id={patient.CheckoutNoteID("")} name="note"></input>
+                    <input autocomplete="off" type="text" class="form-control" id={patient.CheckoutNoteID("")} name="note"></input>
                 </form-group>
                 <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext">
-                    <select class="form-control form-select" name="status">
+                    <select autocomplete="off" class="form-control form-select form-select-sm" name="status">
+                        <option value="" disabled selected>{data.User.Language.DashboardSelectCheckout}</option>
                         for _, status := range StatusValues() {
                             if IsCheckoutStatus[status] {
                                 <option value={int32(status)}>{data.User.Language.Status[status]}</option>
@@ -196,7 +210,7 @@ templ DashboardHistory(data *CommonData, patient PatientView) {
     </tr>
 }
 
-templ DashboardTagRows(data *CommonData, dashboardData *DashboardData, patient PatientView) {
+templ DashboardTagRows(data *CommonData, tags []GetTagsWithLanguageCheckinRow, patient PatientView) {
     <tr>
         @DashboardTagLabel(data)
         <td class="d-none"></td>
@@ -207,7 +221,7 @@ templ DashboardTagRows(data *CommonData, dashboardData *DashboardData, patient P
         </tr>
     }
     <tr>
-        @DashboardAddTag(data, dashboardData, patient)
+        @DashboardAddTag(data, tags, patient)
     </tr>
 }
 
@@ -226,11 +240,12 @@ templ DashboardTag(data *CommonData, tag TagView) {
     </td>
 }
 
-templ DashboardAddTag(data *CommonData, dashboardData *DashboardData, patient PatientView) {
+templ DashboardAddTag(data *CommonData, tags []GetTagsWithLanguageCheckinRow, patient PatientView) {
     <td>
         <form class="form-control-sm form-control-plaintext d-flex justify-content-between tag-create">
-            <select class="form-control form-select">
-                for _, tag := range dashboardData.Tags {
+            <select autocomplete="off" class="form-control form-select form-select-sm">
+                <option value="" disabled selected>{data.User.Language.DashboardSelectTag}</option>
+                for _, tag := range tags {
                     if !slices.ContainsFunc(patient.Tags, func(existingTag TagView) bool {
                         return existingTag.ID == tag.TagID
                     }) {

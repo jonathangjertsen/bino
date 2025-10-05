@@ -15,7 +15,7 @@ templ (page CRUDPage) Component(data *CommonData) {
                         <th>{key}</th>
                     }
                     for _, lang := range LanguageIDValues() {
-                        <th>{Languages[int32(lang)].SelfName}</th>
+                        <th>{Languages[int32(lang)].Emoji}</th>
                     }
                     <th><!-- Update button --></th>
                 </tr>
