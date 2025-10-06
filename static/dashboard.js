@@ -76,3 +76,5 @@ const setupBoard = (elem) => {
     }
   }, true);
 };
+
+document.querySelectorAll(".dashboard").forEach(setupBoard);
