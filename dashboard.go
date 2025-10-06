@@ -476,3 +476,58 @@ func (server *Server) postCheckoutHandler(w http.ResponseWriter, r *http.Request
 
 	server.redirectToReferer(w, r)
 }
+
+func (server *Server) postSetNameHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
+
+	patient, err := server.getPathID(r, "patient")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	newName, err := server.getFormValue(r, "value")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	patientData, err := server.Queries.GetPatient(ctx, patient)
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	if newName == patientData.Name {
+		server.redirectToReferer(w, r)
+		return
+	}
+
+	if err := server.Transaction(ctx, func(ctx context.Context, q *Queries) error {
+		if err := q.SetPatientName(ctx, SetPatientNameParams{
+			ID:   patient,
+			Name: newName,
+		}); err != nil {
+			return err
+		}
+
+		if _, err := q.AddPatientEvent(ctx, AddPatientEventParams{
+			PatientID: patient,
+			HomeID:    patientData.CurrHomeID.Int32,
+			EventID:   int32(EventNameChanged),
+			Note:      fmt.Sprintf("'%s' -> '%s'", patientData.Name, newName),
+			AppuserID: commonData.User.AppuserID,
+			Time:      pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		}); err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	server.redirectToReferer(w, r)
+}

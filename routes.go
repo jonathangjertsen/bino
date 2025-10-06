@@ -41,7 +41,15 @@ func (server *Server) redirectToReferer(w http.ResponseWriter, r *http.Request) 
 
 func (server *Server) renderError(w http.ResponseWriter, r *http.Request, commonData *CommonData, err error) {
 	ctx := r.Context()
+	w.WriteHeader(http.StatusInternalServerError)
 	_ = ErrorPage(commonData, err).Render(ctx, w)
+	logError(r, err)
+}
+
+func (server *Server) render404(w http.ResponseWriter, r *http.Request, commonData *CommonData, err error) {
+	ctx := r.Context()
+	w.WriteHeader(http.StatusNotFound)
+	_ = NotFoundPage(commonData, err.Error()).Render(ctx, w)
 	logError(r, err)
 }
 
@@ -57,7 +65,7 @@ func logError(r *http.Request, err error) {
 func (server *Server) fourOhFourHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	commonData := MustLoadCommonData(ctx)
-	server.renderError(w, r, commonData, fmt.Errorf("not found: %s", r.RequestURI))
+	server.render404(w, r, commonData, fmt.Errorf("not found: %s %s", r.Method, r.RequestURI))
 }
 
 func jsonHandler[T any](

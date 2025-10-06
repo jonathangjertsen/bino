@@ -1,0 +1,13 @@
+package main
+
+templ NotFoundPage(data *CommonData, msg string) {
+	@Layout(data) {
+        <div class="card b-card">
+            <h1>{data.User.Language.NotFoundPageHead}</h1>
+            <p>{data.User.Language.NotFoundPageInstructions}</p>
+            <pre>
+                {msg}
+            </pre>
+        </div>
+    }
+}

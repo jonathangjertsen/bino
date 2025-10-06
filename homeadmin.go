@@ -13,6 +13,10 @@ type HomeViewAdmin struct {
 	Users []UserView
 }
 
+func (hva *HomeViewAdmin) SetNameURL() string {
+	return fmt.Sprintf("/homes/%d/set-name", hva.ID)
+}
+
 type UserView struct {
 	ID          int32
 	DisplayName string
@@ -93,6 +97,34 @@ func (server *Server) postHomeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (server *Server) postHomeSetName(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
+
+	home, err := server.getPathID(r, "home")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	newName, err := server.getFormValue(r, "value")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	err = server.Queries.UpdateHomeName(ctx, UpdateHomeNameParams{
+		ID:   home,
+		Name: newName,
+	})
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	server.redirectToReferer(w, r)
+}
+
 func (server *Server) postHomeCreateHome(w http.ResponseWriter, r *http.Request, commonData *CommonData) {
 	ctx := r.Context()
 
@@ -102,7 +134,7 @@ func (server *Server) postHomeCreateHome(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	err = server.Queries.UpsertHome(ctx, name)
+	err = server.Queries.InsertHome(ctx, name)
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return

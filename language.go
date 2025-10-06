@@ -82,6 +82,9 @@ type Language struct {
 	HomesViewHomes         string
 	HomesUnassignedUsers   string
 
+	NotFoundPageHead         string
+	NotFoundPageInstructions string
+
 	PatientRegisteredTime string
 	PatientCheckedOutTime string
 	PatientEventTime      string
@@ -181,6 +184,9 @@ var NO = &Language{
 	HomesUnassignedUsers:   "Brukere som ikke er koblet til noe rehabhjem",
 	HomesViewHomes:         "Rehabhjem",
 
+	NotFoundPageHead:         "Ikke funnet",
+	NotFoundPageInstructions: "Siden ble ikke funnet. Se feilmelding:",
+
 	NavbarCalendar:  "Kalender",
 	NavbarDashboard: "Hovedside",
 
@@ -218,6 +224,7 @@ var NO = &Language{
 		EventTagRemoved:                     "Fjernet tagg",
 		EventStatusChanged:                  "Endret status",
 		EventDeleted:                        "Slettet",
+		EventNameChanged:                    "Endret navn",
 	},
 }
 
@@ -342,6 +349,7 @@ var EN = &Language{
 		EventTagRemoved:                     "Tag removed",
 		EventStatusChanged:                  "Status changed",
 		EventDeleted:                        "Deleted",
+		EventNameChanged:                    "Name changed",
 	},
 }
 

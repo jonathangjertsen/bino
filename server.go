@@ -148,9 +148,12 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 	// Forms
 	mux.Handle("POST /checkin", chainf(server.postCheckinHandler, loggedInChain...))
 	mux.Handle("POST /homes", chainf(server.postHomeHandler, loggedInChain...))
+	mux.Handle("POST /homes/{home}/set-name", chainf(server.postHomeSetName, loggedInChain...))
 	mux.Handle("POST /privacy", chainf(server.postPrivacyHandler, loggedInChain...))
 	mux.Handle("POST /patient/{patient}/move", chainf(server.movePatientHandler, loggedInChain...))
 	mux.Handle("POST /patient/{patient}/checkout", chainf(server.postCheckoutHandler, loggedInChain...))
+	mux.Handle("POST /patient/{patient}/set-name", chainf(server.postSetNameHandler, loggedInChain...))
+	mux.Handle("POST /event/{event}/set-note", chainf(server.postEventSetNoteHandler, loggedInChain...))
 
 	// Available to all
 	staticDir := fmt.Sprintf("/static/%s/", buildKey)
@@ -160,6 +163,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 	)
 
 	mux.Handle("GET /", chainf(server.fourOhFourHandler, loggedInChain...))
+	mux.Handle("POST /", chainf(server.fourOhFourHandler, loggedInChain...))
 
 	go func() {
 		handler := chain(mux, withRecover)

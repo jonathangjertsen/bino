@@ -7,7 +7,7 @@ import (
 templ PatientPage(ctx context.Context, data *CommonData, view PatientPageView, server *Server) {
 	@Layout(data, "patient-page") {
         @Card() {
-            <h1>{view.Patient.Name}</h1>
+            <h1 class="editable" data-action={view.Patient.URLSuffix("set-name")}>{view.Patient.Name}</h1>
             <h2>Personalia</h2>
             <table class="table table-bordered mb-2">
             <tbody>
@@ -65,7 +65,11 @@ templ PatientPage(ctx context.Context, data *CommonData, view PatientPageView, s
                         </td>
                         <td>{data.User.Language.FormatEvent(ctx, event.Row.EventID, event.Row.AssociatedID, server)}</td>
                         <td><a href={event.Home.URL()}>{event.Home.Home.Name}</a></td>
-                        <td>{event.Row.Note}</td>
+                        <td>
+                            <span class="editable editable-fill" data-action={event.SetNoteURL()}>
+                                {event.Row.Note}
+                            </span>
+                        </td>
                     </tr>
                 }
             </tbody>

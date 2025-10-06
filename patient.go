@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -18,6 +19,10 @@ type EventView struct {
 	TimeRel string
 	Home    HomeView
 	User    DashboardUserView
+}
+
+func (ev *EventView) SetNoteURL() string {
+	return fmt.Sprintf("/event/%d/set-note", ev.Row.ID)
 }
 
 func (server *Server) getPatientHandler(w http.ResponseWriter, r *http.Request) {

@@ -7,7 +7,7 @@ templ HomesPage(data *CommonData, homes []HomeViewAdmin, homeless []UserView) {
             // List of homes
             for _, home := range homes {
                 @Card() {
-                    <h2>{home.Name}</h2>
+                    <h2 class="editable" data-action={home.SetNameURL()}>{home.Name}</h2>
                     for _, user := range home.Users {
                         @user.Component(data) {
                             // Move user to different home

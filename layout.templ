@@ -6,7 +6,7 @@ templ Layout(data *CommonData, classes ...string) {
     <head>
         @Head(data)
     </head>
-    <body>
+    <body data-lang={templ.JSONString(data.User.Language)}>
         @Navbar(data)
         <div class={"main b-container", classes}>
             { children... }
@@ -22,7 +22,9 @@ templ Layout(data *CommonData, classes ...string) {
 			  crossorigin="anonymous"></script>
 		
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+        <script src={data.StaticFile("lang.js")}></script>
         <script src={data.StaticFile("main.js")}></script>
+        <script src={data.StaticFile("editable.js")}></script>
     </body>
     </html>
 }
@@ -60,7 +62,6 @@ templ Navbar(data *CommonData) {
                 @AuthLogOut(&data.User)
             </div>
         </div>
-       
     </nav>
 }
 

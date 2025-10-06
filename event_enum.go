@@ -40,11 +40,13 @@ const (
 	EventStatusChanged Event = 11
 	// EventDeleted is a Event of type Deleted.
 	EventDeleted Event = 12
+	// EventNameChanged is a Event of type NameChanged.
+	EventNameChanged Event = 13
 )
 
 var ErrInvalidEvent = errors.New("not a valid Event")
 
-const _EventName = "UnknownRegisteredAdmittedAdoptedReleasedTransferredToOtherHomeTransferredOutsideOrganizationDiedEuthanizedTagAddedTagRemovedStatusChangedDeleted"
+const _EventName = "UnknownRegisteredAdmittedAdoptedReleasedTransferredToOtherHomeTransferredOutsideOrganizationDiedEuthanizedTagAddedTagRemovedStatusChangedDeletedNameChanged"
 
 var _EventMap = map[Event]string{
 	EventUnknown:                        _EventName[0:7],
@@ -60,6 +62,7 @@ var _EventMap = map[Event]string{
 	EventTagRemoved:                     _EventName[114:124],
 	EventStatusChanged:                  _EventName[124:137],
 	EventDeleted:                        _EventName[137:144],
+	EventNameChanged:                    _EventName[144:155],
 }
 
 // String implements the Stringer interface.
@@ -91,6 +94,7 @@ var _EventValue = map[string]Event{
 	_EventName[114:124]: EventTagRemoved,
 	_EventName[124:137]: EventStatusChanged,
 	_EventName[137:144]: EventDeleted,
+	_EventName[144:155]: EventNameChanged,
 }
 
 // ParseEvent attempts to convert a string to a Event.

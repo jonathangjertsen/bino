@@ -723,6 +723,16 @@ func (q *Queries) GetUser(ctx context.Context, id int32) (GetUserRow, error) {
 	return i, err
 }
 
+const insertHome = `-- name: InsertHome :exec
+INSERT INTO home (name)
+VALUES ($1)
+`
+
+func (q *Queries) InsertHome(ctx context.Context, name string) error {
+	_, err := q.db.Exec(ctx, insertHome, name)
+	return err
+}
+
 const movePatient = `-- name: MovePatient :exec
 UPDATE patient
 SET curr_home_id = $2
@@ -765,6 +775,22 @@ func (q *Queries) RevokeLoggingConsent(ctx context.Context, id int32) error {
 	return err
 }
 
+const setEventNote = `-- name: SetEventNote :exec
+UPDATE patient_event
+SET note = $2
+WHERE id = $1
+`
+
+type SetEventNoteParams struct {
+	ID   int32
+	Note string
+}
+
+func (q *Queries) SetEventNote(ctx context.Context, arg SetEventNoteParams) error {
+	_, err := q.db.Exec(ctx, setEventNote, arg.ID, arg.Note)
+	return err
+}
+
 const setLoggingConsent = `-- name: SetLoggingConsent :exec
 UPDATE appuser SET logging_consent = NOW() + $2::INT * INTERVAL '1 day'
 WHERE id = $1
@@ -777,6 +803,22 @@ type SetLoggingConsentParams struct {
 
 func (q *Queries) SetLoggingConsent(ctx context.Context, arg SetLoggingConsentParams) error {
 	_, err := q.db.Exec(ctx, setLoggingConsent, arg.ID, arg.Period)
+	return err
+}
+
+const setPatientName = `-- name: SetPatientName :exec
+UPDATE patient
+SET name = $2
+WHERE id = $1
+`
+
+type SetPatientNameParams struct {
+	ID   int32
+	Name string
+}
+
+func (q *Queries) SetPatientName(ctx context.Context, arg SetPatientNameParams) error {
+	_, err := q.db.Exec(ctx, setPatientName, arg.ID, arg.Name)
 	return err
 }
 
@@ -813,6 +855,22 @@ func (q *Queries) SetUserLanguage(ctx context.Context, arg SetUserLanguageParams
 	return err
 }
 
+const updateHomeName = `-- name: UpdateHomeName :exec
+UPDATE home
+SET name = $2
+WHERE id = $1
+`
+
+type UpdateHomeNameParams struct {
+	ID   int32
+	Name string
+}
+
+func (q *Queries) UpdateHomeName(ctx context.Context, arg UpdateHomeNameParams) error {
+	_, err := q.db.Exec(ctx, updateHomeName, arg.ID, arg.Name)
+	return err
+}
+
 const updateTagDefaultShown = `-- name: UpdateTagDefaultShown :exec
 UPDATE tag SET default_show = $1
 WHERE id = $2
@@ -825,18 +883,6 @@ type UpdateTagDefaultShownParams struct {
 
 func (q *Queries) UpdateTagDefaultShown(ctx context.Context, arg UpdateTagDefaultShownParams) error {
 	_, err := q.db.Exec(ctx, updateTagDefaultShown, arg.DefaultShow, arg.ID)
-	return err
-}
-
-const upsertHome = `-- name: UpsertHome :exec
-INSERT INTO home (name)
-VALUES ($1)
-ON CONFLICT (id) DO UPDATE
-    SET name = EXCLUDED.name
-`
-
-func (q *Queries) UpsertHome(ctx context.Context, name string) error {
-	_, err := q.db.Exec(ctx, upsertHome, name)
 	return err
 }
 

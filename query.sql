@@ -129,11 +129,15 @@ LEFT JOIN home_appuser AS ha
     ON ha.appuser_id = au.id
 ;
 
--- name: UpsertHome :exec
+-- name: InsertHome :exec
 INSERT INTO home (name)
 VALUES ($1)
-ON CONFLICT (id) DO UPDATE
-    SET name = EXCLUDED.name
+;
+
+-- name: UpdateHomeName :exec
+UPDATE home
+SET name = $2
+WHERE id = $1
 ;
 
 -- name: AddUserToHome :exec
@@ -211,6 +215,12 @@ SET status = $2
 WHERE id = $1
 ;
 
+-- name: SetPatientName :exec
+UPDATE patient
+SET name = $2
+WHERE id = $1
+;
+
 -- name: GetEventsForPatient :many
 SELECT
     pe.*,
@@ -228,5 +238,11 @@ ORDER BY pe.time
 
 -- name: GetHome :one
 SELECT * FROM home
+WHERE id = $1
+;
+
+-- name: SetEventNote :exec
+UPDATE patient_event
+SET note = $2
 WHERE id = $1
 ;
