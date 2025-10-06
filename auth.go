@@ -144,6 +144,15 @@ func (server *Server) callbackHandler(
 		http.Error(w, "exchange failed", http.StatusUnauthorized)
 		return
 	}
+
+	// Store the OAuth token for Drive API access
+	tokenJSON, err := json.Marshal(token)
+	if err != nil {
+		http.Error(w, "token serialization failed", http.StatusInternalServerError)
+		return
+	}
+	sess.Values["oauth_token"] = string(tokenJSON)
+
 	rawIDToken, ok := token.Extra("id_token").(string)
 	if !ok {
 		http.Error(w, "no id_token", http.StatusUnauthorized)
@@ -177,4 +186,19 @@ func (server *Server) callbackHandler(
 	sess.Values["email"] = claims.Email
 	_ = sess.Save(r, w)
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func (server *Server) getTokenFromSession(r *http.Request) (*oauth2.Token, error) {
+	sess, _ := server.Cookies.Get(r, "auth")
+	tokenData, ok := sess.Values["oauth_token"].(string)
+	if !ok {
+		return nil, fmt.Errorf("no oauth token in session")
+	}
+
+	var token oauth2.Token
+	if err := json.Unmarshal([]byte(tokenData), &token); err != nil {
+		return nil, err
+	}
+
+	return &token, nil
 }

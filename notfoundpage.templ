@@ -1,9 +1,10 @@
 package main
 
-templ NotFoundPage(data *CommonData, msg string) {
+templ NotFoundPage(data *CommonData, msg string, referer string) {
 	@Layout(data) {
+        <a href={referer}>{data.User.Language.GenericGoBack}</a>
+        <h1>{data.User.Language.NotFoundPageHead}</h1>
         <div class="card b-card">
-            <h1>{data.User.Language.NotFoundPageHead}</h1>
             <p>{data.User.Language.NotFoundPageInstructions}</p>
             <pre>
                 {msg}

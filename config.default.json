@@ -8,13 +8,10 @@
     },
     "Auth": {
         "SessionKeyLocation": "secret/session_key",
+        "GooglePickerKeyLocation": "secret/google_picker_key",
         "OAuthCredentialsLocation": "secret/oauth.json",
-        "OIDCURL": "https://accounts.google.com",
-        "OIDCScopes": [
-            "openid",
-            "email",
-            "profile"
-        ]
+        "ClientID": "YOUR-CLIENT-ID.apps.googleusercontent.com",
+        "DriveBase": "ID of the shared drive in which to search for a journal folder"
     },
     "Privacy": {
         "LogDeletionPolicy": 3,

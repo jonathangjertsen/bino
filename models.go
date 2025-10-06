@@ -25,6 +25,12 @@ type AppuserLanguage struct {
 	LanguageID int32
 }
 
+// Each row represents a cache entry
+type Cache struct {
+	Key   string
+	Value pgtype.Text
+}
+
 // Each row is a rehab home
 type Home struct {
 	ID   int32

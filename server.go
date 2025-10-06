@@ -17,6 +17,14 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
+const OIDCURL = "https://accounts.google.com"
+
+var ProfileScopes = []string{
+	"openid",
+	"email",
+	"profile",
+}
+
 type Server struct {
 	Conn          *pgxpool.Pool
 	Queries       *Queries
@@ -30,8 +38,8 @@ type Server struct {
 type AuthConfig struct {
 	SessionKeyLocation       string
 	OAuthCredentialsLocation string
-	OIDCURL                  string
-	OIDCScopes               []string
+	ClientID                 string
+	DriveBase                string
 }
 
 type HTTPConfig struct {
@@ -81,7 +89,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 		return err
 	}
 
-	provider, err := oidc.NewProvider(ctx, config.Auth.OIDCURL)
+	provider, err := oidc.NewProvider(ctx, OIDCURL)
 	if err != nil {
 		return err
 	}
@@ -100,7 +108,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 			ClientSecret: c.Web.ClientSecret,
 			RedirectURL:  c.Web.RedirectURIs[0],
 			Endpoint:     google.Endpoint,
-			Scopes:       config.Auth.OIDCScopes,
+			Scopes:       append(ProfileScopes, GoogleDriveScopes...),
 		},
 		TokenVerifier: provider.Verifier(&oidc.Config{
 			ClientID: c.Web.ClientID,
@@ -133,6 +141,11 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 	mux.Handle("GET /admin", chainf(server.adminRootHandler, loggedInChain...))
 	mux.Handle("GET /homes", chainf(server.getHomesHandler, loggedInChain...))
 	mux.Handle("GET /privacy", chainf(server.privacyHandler, loggedInChain...))
+	mux.Handle("GET /gdrive", chainf(server.getGDriveHandler, loggedInChain...))
+	mux.Handle("POST /gdrive/reload-folders", chainf(server.reloadGDriveFoldersHandler, loggedInChain...))
+	mux.Handle("POST /gdrive/set-base-folder/{id}", chainf(server.setGDriveBaseFolderHandler, loggedInChain...))
+	mux.Handle("POST /gdrive/find-template", chainf(server.gdriveFindTemplate, loggedInChain...))
+	mux.Handle("POST /gdrive/set-template/{id}", chainf(server.gdriveSetTemplate, loggedInChain...))
 	mux.Handle("GET /patient/{patient}", chainf(server.getPatientHandler, loggedInChain...))
 
 	// Admin AJAX

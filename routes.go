@@ -36,20 +36,24 @@ func (server *Server) postLanguageHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (server *Server) redirectToReferer(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+	server.redirect(w, r, r.Header.Get("Referer"))
+}
+
+func (server *Server) redirect(w http.ResponseWriter, r *http.Request, url string) {
+	http.Redirect(w, r, url, http.StatusFound)
 }
 
 func (server *Server) renderError(w http.ResponseWriter, r *http.Request, commonData *CommonData, err error) {
 	ctx := r.Context()
 	w.WriteHeader(http.StatusInternalServerError)
-	_ = ErrorPage(commonData, err).Render(ctx, w)
+	_ = ErrorPage(commonData, err, r.Referer()).Render(ctx, w)
 	logError(r, err)
 }
 
 func (server *Server) render404(w http.ResponseWriter, r *http.Request, commonData *CommonData, err error) {
 	ctx := r.Context()
 	w.WriteHeader(http.StatusNotFound)
-	_ = NotFoundPage(commonData, err.Error()).Render(ctx, w)
+	_ = NotFoundPage(commonData, err.Error(), r.Referer()).Render(ctx, w)
 	logError(r, err)
 }
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 )
@@ -41,7 +42,11 @@ func (server *Server) postPrivacyHandler(w http.ResponseWriter, r *http.Request)
 
 // Log from request if the user has given explicit concent
 func LogR(r *http.Request, format string, args ...any) {
-	commonData, err := LoadCommonData(r.Context())
+	LogCtx(r.Context(), format, args...)
+}
+
+func LogCtx(ctx context.Context, format string, args ...any) {
+	commonData, err := LoadCommonData(ctx)
 	if err != nil {
 		return
 	}

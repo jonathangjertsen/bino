@@ -1,0 +1,143 @@
+package main
+
+templ GDrivePage(
+    data *CommonData,
+    folders GDriveFoldersResult,
+    selectedDir string,
+    templateCandidates []GDriveFile,
+    selectedTemplate GDriveFile,
+) {
+    @Layout(data) {
+        <h1>{data.User.Language.AdminManageGoogleDrive}</h1>
+        @Card() {
+            <h2>{data.User.Language.GDriveBaseDir}</h2>
+            <p>{data.User.Language.GDriveSelectFolderInstruction}</p>
+            <form
+                action="/gdrive/reload-folders"
+                method="POST"
+                class="d-flex justify-content-between"
+            >
+                <button
+                    id="reload-google-folders"
+                    type="submit"
+                    class="btn btn-outline-primary"
+                >{data.User.Language.GDriveReloadFolders} 🔄</button>
+            </form>
+            for _, folder := range folders.Folders {
+                <div
+                    class="card b-card gdrive-doc-select"
+                    selected?={selectedDir==folder.ID}
+                >
+                    <form
+                        action={folder.URLSelectBaseFolder()}
+                        method="POST"
+                        class="d-flex justify-content-between"
+                    >
+                        <label for={folder.HTMLIDSelectBaseFolder("#")}>
+                            <a href={"https://drive.google.com/drive/folders/" + folder.ID}>{folder.Name}</a>
+                        </label>
+                        <button
+                            id={folder.HTMLIDSelectBaseFolder("#")}
+                            type="submit"
+                            if selectedDir == folder.ID {
+                                disabled
+                                class="btn"
+                            } else {
+                                class="btn btn-outline-primary"
+                            }
+                        >
+                        if selectedDir==folder.ID {
+                            {data.User.Language.GDriveSelectedFolder}
+                        } else {
+                            {data.User.Language.GDriveSelectFolder}
+                        }
+                        </button>
+                    </form>                
+                </div>
+            }
+        }
+        if selectedDir != "" {
+            @Card() {
+                <h2>{data.User.Language.GDriveTemplate}</h2>
+                <p>{data.User.Language.GDriveTemplateInstruction}</p>
+                <form
+                    action="/gdrive/find-template"
+                    method="POST"
+                    class="d-flex justify-content-between mb-2"
+                >
+                    <input
+                        id="load-google-docs-filter"
+                        type="text"
+                        class="form-control"
+                        name="filter"
+                        placeholder={data.User.Language.GDriveReloadDocsFilter}
+                    ></input>
+                    <button
+                        id="load-google-docs"
+                        type="submit"
+                        class="btn btn-outline-primary"
+                    >{data.User.Language.GDriveReloadDocs} 🔄</button>
+                </form>
+                if len(templateCandidates) > 0 {
+                    for _, file := range templateCandidates {
+                        <div
+                            class="card b-card gdrive-doc-select"
+                            selected?={selectedTemplate.ID==file.ID}
+                        >
+                            <form
+                                action={file.URLSelectTemplate()}
+                                method="POST"
+                                class="d-flex justify-content-between"
+                            >
+                                <label for={file.HTMLIDSelectTemplate("#")}>
+                                    <a href={"https://docs.google.com/document/d/" + file.ID}>{file.Name}</a>
+                                </label>
+                                <input type="hidden" name="name" value={file.Name}></input>
+                                <button
+                                    id={file.HTMLIDSelectTemplate("#")}
+                                    type="submit"
+                                    if selectedTemplate.ID == file.ID {
+                                        disabled
+                                        class="btn"
+                                    } else {
+                                        class="btn btn-outline-primary"
+                                    }
+                                >
+                                if selectedTemplate.ID==file.ID {
+                                    {data.User.Language.GDriveSelectedTemplate}
+                                } else {
+                                    {data.User.Language.GDriveSelectedTemplate}
+                                }
+                                </button>
+                            </form>                
+                        </div>
+                    }
+                } else if selectedTemplate.ID != "" {
+                    <div
+                        class="card b-card gdrive-doc-select"
+                        selected
+                    >
+                        <div class="d-flex justify-content-between">
+                            <label>
+                                <a href={"https://docs.google.com/document/d/" + selectedTemplate.ID}>{selectedTemplate.Name}</a>
+                            </label>
+                            <button
+                                type="submit"
+                                class="btn"
+                                disabled
+                            >
+                            {data.User.Language.GDriveSelectedFolder}
+                            </button>
+                        </div>              
+                    </div>
+                } else {
+                    <div
+                        class="card b-card gdrive-doc-select"
+                    >
+                        <p>{data.User.Language.GDriveNoTemplateSelected}</p>         
+                    </div>
+                }
+            }
+        }
+    }
+}

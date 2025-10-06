@@ -8,6 +8,7 @@ $warning: rgb(235, 140, 75);
 $midgray: mix($dark, $light, 25);
 $slightdark: mix($dark, $midgray, 50);
 $slightprimary: mix($primary, $light, 15);
+$slighaccent: mix($accent, $light, 15);
 
 $mobilethreshold: 1000px;
 
@@ -353,4 +354,16 @@ input[data-field="latin"] {
     margin-left: 0.4em;
     font-size: 0.5em;
     opacity: 0.6;
+}
+
+pre {
+    white-space:pre-line;
+}
+
+#reload-google-folders {
+    margin: 0 auto 1rem;
+}
+
+.gdrive-doc-select[selected]{
+    background-color: $slighaccent;
 }

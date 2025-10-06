@@ -124,6 +124,47 @@ func (q *Queries) AddUserToHome(ctx context.Context, arg AddUserToHomeParams) er
 	return err
 }
 
+const cacheDelete = `-- name: CacheDelete :exec
+DELETE
+FROM cache
+WHERE key = $1
+`
+
+func (q *Queries) CacheDelete(ctx context.Context, key string) error {
+	_, err := q.db.Exec(ctx, cacheDelete, key)
+	return err
+}
+
+const cacheGet = `-- name: CacheGet :one
+SELECT value
+FROM cache
+WHERE key = $1
+`
+
+func (q *Queries) CacheGet(ctx context.Context, key string) (pgtype.Text, error) {
+	row := q.db.QueryRow(ctx, cacheGet, key)
+	var value pgtype.Text
+	err := row.Scan(&value)
+	return value, err
+}
+
+const cacheSet = `-- name: CacheSet :exec
+INSERT INTO cache (key, value)
+VALUES ($1, $2)
+ON CONFLICT (key) DO UPDATE
+  SET value = EXCLUDED.value
+`
+
+type CacheSetParams struct {
+	Key   string
+	Value pgtype.Text
+}
+
+func (q *Queries) CacheSet(ctx context.Context, arg CacheSetParams) error {
+	_, err := q.db.Exec(ctx, cacheSet, arg.Key, arg.Value)
+	return err
+}
+
 const deletePatientTag = `-- name: DeletePatientTag :exec
 DELETE FROM patient_tag
 WHERE patient_id = $1

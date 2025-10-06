@@ -28,6 +28,7 @@ type Language struct {
 	AdminDisplayName       string
 	AdminEmailAddress      string
 	AdminManageEvents      string
+	AdminManageGoogleDrive string
 	AdminManageHomes       string
 	AdminManageSpecies     string
 	AdminManageStatuses    string
@@ -55,10 +56,25 @@ type Language struct {
 	FooterPrivacy    string
 	FooterSourceCode string
 
+	GDriveBaseDir                 string
+	GDriveSelectFolder            string
+	GDriveSelectFolderInstruction string
+	GDriveSelectedFolder          string
+	GDriveReloadFolders           string
+	GDriveTemplate                string
+	GDriveSelectTemplate          string
+	GDriveSelectedTemplate        string
+	GDriveTemplateInstruction     string
+	GDriveReloadDocs              string
+	GDriveReloadDocsFilter        string
+	GDriveNoBaseDirSelected       string
+	GDriveNoTemplateSelected      string
+
 	GenericAdd     string
 	GenericAge     string
 	GenericDelete  string
 	GenericDetails string
+	GenericGoBack  string
 	GenericHome    string
 	GenericJournal string
 	GenericLatin   string
@@ -131,6 +147,7 @@ var NO = &Language{
 	AdminDisplayName:       "Navn",
 	AdminEmailAddress:      "Epostaddresse",
 	AdminManageEvents:      "Konfigurer hendelsestyper",
+	AdminManageGoogleDrive: "Konfigurer Google Drive",
 	AdminManageHomes:       "Konfigurer rehabhjem",
 	AdminManageSpecies:     "Konfigurer arter",
 	AdminManageStatuses:    "Konfigurer statuser",
@@ -158,10 +175,25 @@ var NO = &Language{
 	FooterPrivacy:    "Personvern",
 	FooterSourceCode: "Kildekode",
 
+	GDriveBaseDir:                 "Velg journalmappe",
+	GDriveSelectFolder:            "Velg mappe",
+	GDriveSelectedFolder:          "Valgt",
+	GDriveSelectFolderInstruction: "Her kan du velge hvilken mappe nye journaler skal opprettes i.",
+	GDriveReloadFolders:           "Hent mapper fra Google Drive på nytt",
+	GDriveTemplate:                "Velg mal",
+	GDriveTemplateInstruction:     "Her kan du velge hvilket dokument som skal brukes som mal. Når du henter dokumenter bør du skrive et søkeord, f.eks 'Navn' hvis tittelen på malen inneholder det ordet. Ellers vil det komme opp veldig mange dokumenter.",
+	GDriveSelectTemplate:          "Velg som mal",
+	GDriveSelectedTemplate:        "Valgt",
+	GDriveReloadDocs:              "Hent dokumenter fra Google Drive",
+	GDriveReloadDocsFilter:        "Søkeord",
+	GDriveNoBaseDirSelected:       "Det er ikke valgt noen journalmappe",
+	GDriveNoTemplateSelected:      "Det er ikke valgt noen mal",
+
 	GenericAdd:     "Legg til",
 	GenericAge:     "Alder",
 	GenericDelete:  "Slett",
 	GenericDetails: "Detaljer",
+	GenericGoBack:  "Tilbake",
 	GenericHome:    "Rehabhjem",
 	GenericJournal: "Journal",
 	GenericLatin:   "Latin",
@@ -259,6 +291,7 @@ var EN = &Language{
 	AdminDisplayName:       "Name",
 	AdminEmailAddress:      "Email address",
 	AdminManageEvents:      "Manage event types",
+	AdminManageGoogleDrive: "Configure Google Drive",
 	AdminManageHomes:       "Manage rehab homes",
 	AdminManageSpecies:     "Manage species",
 	AdminManageStatuses:    "Manage statuses",
@@ -286,10 +319,25 @@ var EN = &Language{
 	FooterPrivacy:    "Privacy",
 	FooterSourceCode: "Source code",
 
+	GDriveBaseDir:                 "Select journal folder",
+	GDriveSelectFolder:            "Select folder",
+	GDriveSelectedFolder:          "Selected",
+	GDriveSelectFolderInstruction: "Select the folder in which new patient journals will be created.",
+	GDriveReloadFolders:           "Reload folders from Google Drive",
+	GDriveTemplate:                "Choose template",
+	GDriveTemplateInstruction:     "Select the document that will be used as a template. When reloading documents you should select a search filter, e.g., 'Name' if the template contains that word in the title. That way you don't need to look through all the documents.",
+	GDriveSelectTemplate:          "Select as template",
+	GDriveSelectedTemplate:        "Selected",
+	GDriveReloadDocs:              "Load documents",
+	GDriveReloadDocsFilter:        "Search filter",
+	GDriveNoBaseDirSelected:       "No base folder selected",
+	GDriveNoTemplateSelected:      "No template document selected",
+
 	GenericAdd:     "Add",
 	GenericAge:     "Age",
 	GenericDelete:  "Delete",
 	GenericDetails: "Details",
+	GenericGoBack:  "Go back",
 	GenericHome:    "Home",
 	GenericJournal: "Journal",
 	GenericLatin:   "Latin",
