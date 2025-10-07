@@ -19,8 +19,8 @@ templ (server *Server) GDrivePage(
             @GDriveSelectBaseFolder(data, folders, selectedDir)
         }
         if selectedDir.Valid {
-            @server.GDrivePermissionOverview(ctx, data, selectedDir)
             @GDriveSelectTemplate(data, templateCandidates, selectedTemplate)
+            @server.GDrivePermissionOverview(ctx, data, selectedDir)
         }
     }
 }

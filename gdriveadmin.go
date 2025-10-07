@@ -13,15 +13,11 @@ type GoogleDriveConfig struct {
 	ClientID string
 }
 
-func (s *Server) folders(w http.ResponseWriter, r *http.Request) (GDriveFoldersResult, error) {
+func (s *Server) folders(w http.ResponseWriter, r *http.Request, g *GDrive) (GDriveFoldersResult, error) {
 	ctx := r.Context()
 
 	var folders GDriveFoldersResult
-	g, err := s.getDriveService(r)
-	if err != nil {
-		return folders, fmt.Errorf("connecting to Google Drive: %w", err)
-	}
-
+	var err error
 	folders.Folders, err = s.GetFolders(ctx, g)
 	if err != nil {
 		return folders, fmt.Errorf("listing folders: %w", err)
@@ -65,7 +61,7 @@ func (s *Server) getGDriveHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	folders, err := s.folders(w, r)
+	folders, err := s.folders(w, r, g)
 	if err != nil {
 		commonData.Error(commonData.User.Language.GDriveLoadFoldersFailed, err)
 	}
@@ -100,6 +96,7 @@ func (s *Server) setGDriveBaseFolderHandler(w http.ResponseWriter, r *http.Reque
 
 	// Have to reset the template since it's not in the same dir anymore
 	s.Queries.CacheDelete(ctx, cacheKeyGDriveTemplate)
+	s.Queries.ClearAllUserGDriveAccess(ctx)
 
 	s.redirectToReferer(w, r)
 }
@@ -138,7 +135,7 @@ func (s *Server) gdriveFindTemplate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	folders, err := s.folders(w, r)
+	folders, err := s.folders(w, r, g)
 	if err != nil {
 		s.renderError(w, r, commonData, err)
 		return
@@ -162,7 +159,8 @@ func (s *Server) gdriveFindTemplate(w http.ResponseWriter, r *http.Request) {
 func (s *Server) getExtraBinoUsers(ctx context.Context, selectedDir GDriveItem) map[string]UserView {
 	extraUsers := s.getUserViews(ctx)
 	for _, perm := range selectedDir.Permissions {
-		if slices.Contains([]string{"owner", "organizer", "fileOrganizer", "writer"}, perm.Role) {
+		hasAccess := slices.Contains([]string{"owner", "organizer", "fileOrganizer", "writer"}, perm.Role)
+		if hasAccess && perm.BinoUser.Valid() {
 			delete(extraUsers, perm.BinoUser.Email)
 		}
 	}
@@ -176,6 +174,45 @@ func (s *Server) gdriveSetTemplate(w http.ResponseWriter, r *http.Request) {
 	id, err := s.getPathValue(r, "id")
 	if err != nil {
 		s.renderError(w, r, commonData, err)
+		return
+	}
+
+	g, err := s.getDriveService(r)
+	if err != nil {
+		s.renderError(w, r, commonData, fmt.Errorf("connecting to Google Drive: %w", err))
+		return
+	}
+
+	gdriveItem, err := s.GetFile(ctx, g, id)
+	if err != nil {
+		s.renderError(w, r, commonData, fmt.Errorf("getting selected template file: %w", err))
+		return
+	}
+	if s.Transaction(ctx, func(ctx context.Context, q *Queries) error {
+		extraUsers := s.getUserViews(ctx)
+		for _, perm := range gdriveItem.Permissions {
+			hasAccess := slices.Contains([]string{"owner", "organizer", "fileOrganizer", "writer", "commenter", "reader"}, perm.Role)
+			if hasAccess && perm.BinoUser.Valid() {
+				if err := q.SetUserGDriveAccess(ctx, SetUserGDriveAccessParams{
+					ID:              perm.BinoUser.ID,
+					HasGdriveAccess: true,
+				}); err != nil {
+					return err
+				}
+				delete(extraUsers, perm.BinoUser.Email)
+			}
+		}
+		for _, user := range extraUsers {
+			if err := q.SetUserGDriveAccess(ctx, SetUserGDriveAccessParams{
+				ID:              user.ID,
+				HasGdriveAccess: false,
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		s.renderError(w, r, commonData, fmt.Errorf("updating users with access: %w", err))
 		return
 	}
 

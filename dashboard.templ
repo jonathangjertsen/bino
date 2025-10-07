@@ -137,9 +137,12 @@ templ DashboardPatientTable(
 ) {
     <table class="patient-table table table-bordered">
         <tbody>
+            @DashboardGoToPatientPage(data, patient)
+            if data.User.HasGDriveAccess {
+                @DashboardJournalUpdate(data, patient)
+            }
             @DashboardMove(data, homes, home, patient)
             @DashboardCheckout(data, patient)
-            @DashboardGoToPatientPage(data, patient)
 
             // This must be the last one.
             @DashboardTagRows(data, tags, patient)
@@ -206,6 +209,29 @@ templ DashboardGoToPatientPage(data *CommonData, patient PatientView) {
             <a href={patient.URL()}>
                 {data.User.Language.DashboardGoToPatientPage}
             </a>
+        </td>
+    </tr>
+}
+
+templ DashboardJournalUpdate(data *CommonData, patient PatientView) {
+    <tr>
+        <th class="w-25">{data.User.Language.GenericJournal}</th>
+        <td>
+            if patient.JournalURL != "" {
+                <a href={templ.URL(patient.JournalURL)}>
+                    {data.User.Language.DashboardGoToJournal}
+                </a>
+            } else {
+                <p>{data.User.Language.GDriveNoJournalForPatient}</p>
+                <div class="d-flex flex-column center gap-2">
+                    <button class="btn btn-sm btn-primary">
+                        {data.User.Language.GDriveCreateJournalForPatient}
+                    </button>
+                    <button class="btn btn-sm btn-primary">
+                        {data.User.Language.GDriveSelectExistingJournalForPatient}
+                    </button>
+                </div>
+            }
         </td>
     </tr>
 }

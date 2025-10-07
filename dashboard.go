@@ -26,11 +26,12 @@ func (hv HomeView) URL() string {
 }
 
 type PatientView struct {
-	ID      int32
-	Status  int32
-	Name    string
-	Species string
-	Tags    []TagView
+	ID         int32
+	Status     int32
+	Name       string
+	Species    string
+	Tags       []TagView
+	JournalURL string
 }
 
 func (pv PatientView) CollapseID(prefix string) string {

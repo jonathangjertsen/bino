@@ -265,3 +265,15 @@ VALUES ($1, $2)
 ON CONFLICT (key) DO UPDATE
   SET value = EXCLUDED.value
 ;
+
+-- name: SetUserGDriveAccess :exec
+UPDATE appuser
+SET has_gdrive_access = $2
+WHERE id = $1
+;
+
+-- name: ClearAllUserGDriveAccess :exec
+UPDATE appuser
+SET has_gdrive_access = FALSE
+WHERE 1
+;

@@ -35,7 +35,8 @@ type CommonData struct {
 	BuildKey   string
 	User       UserData
 	QueryCache struct {
-		AllUsers map[string]UserView
+		AllUsers         map[string]UserView
+		CanCreateJournal bool
 	}
 	Feedback Feedback
 }
@@ -106,6 +107,7 @@ type UserData struct {
 	LoggingConsent  bool
 	AvatarURL       string
 	HasAvatarURL    bool
+	HasGDriveAccess bool
 }
 
 type LanguageView struct {

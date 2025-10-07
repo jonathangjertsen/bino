@@ -70,6 +70,7 @@ func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (Comm
 		Email:           user.Email,
 		AvatarURL:       user.AvatarUrl.String,
 		HasAvatarURL:    user.AvatarUrl.Valid,
+		HasGDriveAccess: user.HasGdriveAccess,
 		Language:        GetLanguage(user.LanguageID),
 		PreferredHomeID: preferredHome,
 		Homes:           homes,

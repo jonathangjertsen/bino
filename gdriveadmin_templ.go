@@ -81,7 +81,7 @@ func (server *Server) GDrivePage(
 				return templ_7745c5c3_Err
 			}
 			if selectedDir.Valid {
-				templ_7745c5c3_Err = server.GDrivePermissionOverview(ctx, data, selectedDir).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = GDriveSelectTemplate(data, templateCandidates, selectedTemplate).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -89,7 +89,7 @@ func (server *Server) GDrivePage(
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = GDriveSelectTemplate(data, templateCandidates, selectedTemplate).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = server.GDrivePermissionOverview(ctx, data, selectedDir).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

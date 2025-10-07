@@ -165,6 +165,17 @@ func (q *Queries) CacheSet(ctx context.Context, arg CacheSetParams) error {
 	return err
 }
 
+const clearAllUserGDriveAccess = `-- name: ClearAllUserGDriveAccess :exec
+UPDATE appuser
+SET has_gdrive_access = FALSE
+WHERE 1
+`
+
+func (q *Queries) ClearAllUserGDriveAccess(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, clearAllUserGDriveAccess)
+	return err
+}
+
 const deletePatientTag = `-- name: DeletePatientTag :exec
 DELETE FROM patient_tag
 WHERE patient_id = $1
@@ -224,19 +235,20 @@ func (q *Queries) GetActivePatients(ctx context.Context, languageID int32) ([]Ge
 }
 
 const getAppusers = `-- name: GetAppusers :many
-SELECT au.id, au.display_name, au.google_sub, au.email, au.logging_consent, au.avatar_url, ha.home_id FROM appuser AS au
+SELECT au.id, au.display_name, au.google_sub, au.email, au.logging_consent, au.avatar_url, au.has_gdrive_access, ha.home_id FROM appuser AS au
 LEFT JOIN home_appuser AS ha
     ON ha.appuser_id = au.id
 `
 
 type GetAppusersRow struct {
-	ID             int32
-	DisplayName    string
-	GoogleSub      string
-	Email          string
-	LoggingConsent pgtype.Timestamptz
-	AvatarUrl      pgtype.Text
-	HomeID         pgtype.Int4
+	ID              int32
+	DisplayName     string
+	GoogleSub       string
+	Email           string
+	LoggingConsent  pgtype.Timestamptz
+	AvatarUrl       pgtype.Text
+	HasGdriveAccess bool
+	HomeID          pgtype.Int4
 }
 
 func (q *Queries) GetAppusers(ctx context.Context) ([]GetAppusersRow, error) {
@@ -255,6 +267,7 @@ func (q *Queries) GetAppusers(ctx context.Context) ([]GetAppusersRow, error) {
 			&i.Email,
 			&i.LoggingConsent,
 			&i.AvatarUrl,
+			&i.HasGdriveAccess,
 			&i.HomeID,
 		); err != nil {
 			return nil, err
@@ -733,20 +746,21 @@ func (q *Queries) GetTagsWithLanguageCheckin(ctx context.Context, languageID int
 }
 
 const getUser = `-- name: GetUser :one
-SELECT au.id, au.display_name, au.google_sub, au.email, au.logging_consent, au.avatar_url, COALESCE(al.language_id, 1) FROM appuser AS au
+SELECT au.id, au.display_name, au.google_sub, au.email, au.logging_consent, au.avatar_url, au.has_gdrive_access, COALESCE(al.language_id, 1) FROM appuser AS au
 LEFT JOIN appuser_language AS al
 ON au.id = al.appuser_id
 WHERE id = $1
 `
 
 type GetUserRow struct {
-	ID             int32
-	DisplayName    string
-	GoogleSub      string
-	Email          string
-	LoggingConsent pgtype.Timestamptz
-	AvatarUrl      pgtype.Text
-	LanguageID     int32
+	ID              int32
+	DisplayName     string
+	GoogleSub       string
+	Email           string
+	LoggingConsent  pgtype.Timestamptz
+	AvatarUrl       pgtype.Text
+	HasGdriveAccess bool
+	LanguageID      int32
 }
 
 func (q *Queries) GetUser(ctx context.Context, id int32) (GetUserRow, error) {
@@ -759,6 +773,7 @@ func (q *Queries) GetUser(ctx context.Context, id int32) (GetUserRow, error) {
 		&i.Email,
 		&i.LoggingConsent,
 		&i.AvatarUrl,
+		&i.HasGdriveAccess,
 		&i.LanguageID,
 	)
 	return i, err
@@ -876,6 +891,22 @@ type SetPatientStatusParams struct {
 
 func (q *Queries) SetPatientStatus(ctx context.Context, arg SetPatientStatusParams) error {
 	_, err := q.db.Exec(ctx, setPatientStatus, arg.ID, arg.Status)
+	return err
+}
+
+const setUserGDriveAccess = `-- name: SetUserGDriveAccess :exec
+UPDATE appuser
+SET has_gdrive_access = $2
+WHERE id = $1
+`
+
+type SetUserGDriveAccessParams struct {
+	ID              int32
+	HasGdriveAccess bool
+}
+
+func (q *Queries) SetUserGDriveAccess(ctx context.Context, arg SetUserGDriveAccessParams) error {
+	_, err := q.db.Exec(ctx, setUserGDriveAccess, arg.ID, arg.HasGdriveAccess)
 	return err
 }
 

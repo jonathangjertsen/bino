@@ -86,6 +86,9 @@ type Language struct {
 	GDriveBaseDirUpdated                   string
 	GDriveTemplateUpdated                  string
 	GDriveUserInvited                      string
+	GDriveCreateJournalForPatient          string
+	GDriveSelectExistingJournalForPatient  string
+	GDriveNoJournalForPatient              string
 
 	GenericAdd      string
 	GenericAge      string
@@ -238,6 +241,9 @@ var NO = &Language{
 	GDriveBaseDirUpdated:                   "Journalmappen ble oppdatert. Husk å også velge mal.",
 	GDriveTemplateUpdated:                  "Malen ble oppdatert.",
 	GDriveUserInvited:                      "Brukeren ble invitert til mappen",
+	GDriveCreateJournalForPatient:          "Opprett pasientjournal",
+	GDriveSelectExistingJournalForPatient:  "Koble en eksisterende journal til pasienten",
+	GDriveNoJournalForPatient:              "Det er ikke koblet noen journal til pasienten.",
 
 	GenericAdd:      "Legg til",
 	GenericAge:      "Alder",
@@ -411,6 +417,9 @@ var EN = &Language{
 	GDriveBaseDirUpdated:                   "Google Drive journal folder was updated. Remember to also update the template.",
 	GDriveTemplateUpdated:                  "Template journal was updated",
 	GDriveUserInvited:                      "The user was invited to the journal folder",
+	GDriveCreateJournalForPatient:          "Create a new journal for the patient",
+	GDriveSelectExistingJournalForPatient:  "Connect an existing journal to the patient",
+	GDriveNoJournalForPatient:              "No journal found",
 
 	GenericAdd:      "Add",
 	GenericAge:      "Age",
