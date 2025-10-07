@@ -11755,16 +11755,34 @@ body {
   flex: 1;
 }
 
-.brand-badge {
-  background-color: rgb(0, 140, 95);
-  padding: 0.5rem 1rem;
-  border-radius: 2rem;
+.brand-color {
+  color: rgb(245, 245, 250);
+  background: rgb(0, 140, 95);
+  background: linear-gradient(160deg, #0c7c5c 0%, rgb(84, 67, 120.5) 100%);
+  background-size: 200% 200%;
+  transition: background-position 0.5s ease;
+}
+
+.brand-color:hover {
+  background-position: 100% 0;
+}
+.brand-color:hover .brand {
+  color: rgb(122.5, 192.5, 172.5);
 }
 
 .brand {
+  transition: color 0.5s ease;
   color: rgb(245, 245, 250);
-  text-decoration: none;
-  font-size: large;
+  text-decoration: none !important;
+  font-size: x-large;
+  font-weight: 100;
+  font-family: "Hammersmith One";
+}
+
+.brand-badge {
+  border: 2px solid rgb(30, 100, 87.5);
+  padding: 0.2rem 0.85rem 0 0.7rem;
+  border-radius: 2rem;
 }
 
 .display-name {
@@ -11973,9 +11991,10 @@ input[data-field=latin] {
 
 .editable::after {
   content: "✏️";
-  margin-left: 0.4em;
-  font-size: 0.5em;
-  opacity: 0.6;
+  transform: scaleX(-1);
+  margin-left: 0.5em;
+  font-size: 0.75em;
+  opacity: 0.8;
 }
 
 pre {

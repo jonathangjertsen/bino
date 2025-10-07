@@ -15,7 +15,7 @@ templ Layout(data *CommonData, classes ...string) {
         @Footer(&data.User)
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Hammersmith+One&family=Roboto:wght@100..900&display=swap" rel="stylesheet">
         <script
 			  src="https://code.jquery.com/jquery-3.7.1.min.js"
 			  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
@@ -38,15 +38,15 @@ templ Card(classes ...string) {
 templ Head(data *CommonData) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>bino</title>
+    <title>🕊️ bino</title>
     <link href={data.StaticFile("gen.css")} rel="stylesheet">
 }
 
 templ Navbar(data *CommonData) {
     <nav class="b-navbar navbar navbar-expand-lg">
         <div class="container">
-            <div class="brand-badge shadow-lg">
-                <a class="brand" href="/">Bino</a>
+            <div class="brand-badge brand-color shadow-lg">
+                <a class="brand" href="/">🕊️ bino</a>
             </div>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
