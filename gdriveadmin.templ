@@ -33,17 +33,6 @@ templ GDriveSelectBaseFolder(
     @Card() {
         <h2>{data.User.Language.GDriveBaseDir}</h2>
         <p>{data.User.Language.GDriveSelectFolderInstruction}</p>
-        <form
-            action="/gdrive/reload-folders"
-            method="POST"
-            class="d-flex justify-content-between"
-        >
-            <button
-                id="reload-google-folders"
-                type="submit"
-                class="btn btn-outline-primary"
-            >{data.User.Language.GDriveReloadFolders} 🔄</button>
-        </form>
         for _, folder := range folders.Folders {
             <div
                 class="card b-card gdrive-doc-select"
@@ -113,7 +102,7 @@ templ (server *Server) GDrivePermissionOverview(
                         @Avatar(p.BinoUser)
                     } else {
                         <p>{data.User.Language.GenericNotFound}</p>
-                        @SingleButtonForm(fmt.Sprintf("/invite/%s", p.Email), data.User.Language.AdminInviteToBino, "POST", "disabled")
+                        @SingleButtonForm(fmt.Sprintf("/invite/%s", p.Email), data.User.Language.AdminInviteToBino, "POST", "btn-primary")
                     }
                 </td>
             </tr>
@@ -138,8 +127,11 @@ templ (server *Server) GDrivePermissionOverview(
                     @Avatar(user)
                     </td>
                     <td>{user.Email}</td>
+                    
                     <td>
-                        @SingleButtonForm(fmt.Sprintf("/gdrive/invite/%s", user.Email), data.User.Language.GDriveGiveAccess, "POST", "disabled")
+                    if selectedDir.LoggedInUserCanShare(ctx) {
+                        @SingleButtonForm(fmt.Sprintf("/gdrive/invite/%s", user.Email), data.User.Language.GDriveGiveAccess, "POST", "btn-primary")
+                    }
                     </td>
                 </tr>
             }

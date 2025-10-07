@@ -142,10 +142,10 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 	mux.Handle("GET /homes", chainf(server.getHomesHandler, loggedInChain...))
 	mux.Handle("GET /privacy", chainf(server.privacyHandler, loggedInChain...))
 	mux.Handle("GET /gdrive", chainf(server.getGDriveHandler, loggedInChain...))
-	mux.Handle("POST /gdrive/reload-folders", chainf(server.reloadGDriveFoldersHandler, loggedInChain...))
 	mux.Handle("POST /gdrive/set-base-folder/{id}", chainf(server.setGDriveBaseFolderHandler, loggedInChain...))
 	mux.Handle("POST /gdrive/find-template", chainf(server.gdriveFindTemplate, loggedInChain...))
 	mux.Handle("POST /gdrive/set-template/{id}", chainf(server.gdriveSetTemplate, loggedInChain...))
+	mux.Handle("POST /gdrive/invite/{email}", chainf(server.gdriveInviteUserHandler, loggedInChain...))
 	mux.Handle("GET /patient/{patient}", chainf(server.getPatientHandler, loggedInChain...))
 
 	// Admin AJAX

@@ -10,7 +10,6 @@ import (
 	"google.golang.org/api/option"
 )
 
-const cacheKeyGDriveDirs = "gdrive-dirs"
 const cacheKeyGDriveTemplate = "gdrive-template"
 const cacheKeyGDriveBaseDir = "gdrive-base-dir"
 
@@ -50,21 +49,37 @@ type GDriveFoldersResult struct {
 }
 
 type GDriveItem struct {
-	ID          string
-	Name        string
-	Permissions []GDrivePermission
-	Valid       bool
+	ID                         string
+	Name                       string
+	Permissions                []GDrivePermission
+	Valid                      bool
+	RequestingUser             int32
+	RequestingUserCapabilities drive.FileCapabilities
 }
 
-func GDriveItemFromFile(f *drive.File, p *drive.PermissionList, users map[string]UserView) GDriveItem {
+func (gdi GDriveItem) LoggedInUserCanShare(ctx context.Context) bool {
+	cd := MustLoadCommonData(ctx)
+	return (gdi.Valid &&
+		gdi.RequestingUser == cd.User.AppuserID &&
+		gdi.RequestingUserCapabilities.CanShare)
+}
+
+func GDriveItemFromFile(ctx context.Context, f *drive.File, p *drive.PermissionList, users map[string]UserView) GDriveItem {
+	cd := MustLoadCommonData(ctx)
 	if f == nil {
 		return GDriveItem{}
 	}
+	var capabilities drive.FileCapabilities
+	if f.Capabilities != nil {
+		capabilities = *f.Capabilities
+	}
 	return GDriveItem{
-		ID:          f.Id,
-		Name:        f.Name,
-		Permissions: GDrivePermissionFromPermissionList(p, users),
-		Valid:       true,
+		ID:                         f.Id,
+		Name:                       f.Name,
+		Permissions:                GDrivePermissionFromPermissionList(p, users),
+		RequestingUserCapabilities: capabilities,
+		RequestingUser:             cd.User.AppuserID,
+		Valid:                      true,
 	}
 }
 
@@ -111,7 +126,7 @@ func (server *Server) GetFolders(ctx context.Context, g *GDrive) ([]GDriveItem, 
 		Q("mimeType = 'application/vnd.google-apps.folder'").
 		PageSize(100).
 		OrderBy("createdTime desc").
-		Fields("files(id, name)")
+		Fields("files(id, name, capabilities)")
 
 	if g.DriveBase != "" {
 		call = call.
@@ -143,12 +158,12 @@ func (server *Server) fileToItem(ctx context.Context, g *GDrive, file *drive.Fil
 	if err != nil {
 		return GDriveItem{}, err
 	}
-	return GDriveItemFromFile(file, pl, server.getUserViews(ctx)), nil
+	return GDriveItemFromFile(ctx, file, pl, server.getUserViews(ctx)), nil
 }
 
 func (server *Server) GetFile(ctx context.Context, g *GDrive, id string) (GDriveItem, error) {
 	call := g.Service.Files.Get(id).
-		Fields("id, name")
+		Fields("id, name, capabilities")
 
 	if g.DriveBase != "" {
 		call = call.
@@ -168,7 +183,7 @@ func (server *Server) GetFiles(ctx context.Context, g *GDrive, folder string, fi
 		Q(fmt.Sprintf("mimeType = 'application/vnd.google-apps.document' and '%s' in parents and name contains '%s'", folder, filter)).
 		PageSize(100).
 		OrderBy("name desc").
-		Fields("files(id, name)")
+		Fields("files(id, name, capabilities)")
 
 	if g.DriveBase != "" {
 		call = call.
@@ -186,4 +201,28 @@ func (server *Server) GetFiles(ctx context.Context, g *GDrive, folder string, fi
 	return SliceToSliceErr(fl.Files, func(file *drive.File) (GDriveItem, error) {
 		return server.fileToItem(ctx, g, file)
 	})
+}
+
+func (server *Server) InviteUser(ctx context.Context, g *GDrive, file string, email string) error {
+	item, err := server.GetFile(ctx, g, file)
+	if err != nil {
+		return err
+	}
+	call := g.Service.Permissions.Create(item.ID, &drive.Permission{
+		Type:         "user",
+		EmailAddress: email,
+		Role:         "writer",
+	}).SendNotificationEmail(true)
+
+	if g.DriveBase != "" {
+		call = call.
+			SupportsAllDrives(true)
+	}
+
+	_, err = call.Do()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

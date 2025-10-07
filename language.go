@@ -85,6 +85,7 @@ type Language struct {
 	GDriveLoadFoldersFailed                string
 	GDriveBaseDirUpdated                   string
 	GDriveTemplateUpdated                  string
+	GDriveUserInvited                      string
 
 	GenericAdd      string
 	GenericAge      string
@@ -236,6 +237,7 @@ var NO = &Language{
 	GDriveLoadFoldersFailed:                "Kunne ikke laste inn mapper fra Google Drive",
 	GDriveBaseDirUpdated:                   "Journalmappen ble oppdatert. Husk å også velge mal.",
 	GDriveTemplateUpdated:                  "Malen ble oppdatert.",
+	GDriveUserInvited:                      "Brukeren ble invitert til mappen",
 
 	GenericAdd:      "Legg til",
 	GenericAge:      "Alder",
@@ -408,6 +410,7 @@ var EN = &Language{
 	GDriveLoadFoldersFailed:                "Failed to load folders from Google Drive",
 	GDriveBaseDirUpdated:                   "Google Drive journal folder was updated. Remember to also update the template.",
 	GDriveTemplateUpdated:                  "Template journal was updated",
+	GDriveUserInvited:                      "The user was invited to the journal folder",
 
 	GenericAdd:      "Add",
 	GenericAge:      "Age",
