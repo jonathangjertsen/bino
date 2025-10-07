@@ -17,12 +17,6 @@ func (hva *HomeViewAdmin) SetNameURL() string {
 	return fmt.Sprintf("/homes/%d/set-name", hva.ID)
 }
 
-type UserView struct {
-	ID          int32
-	DisplayName string
-	Email       string
-}
-
 func (server *Server) getHomesHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	commonData := MustLoadCommonData(ctx)
@@ -51,26 +45,19 @@ func (server *Server) getHomesHandler(w http.ResponseWriter, r *http.Request) {
 	// todo(perf): make it not O(N^2)
 	homeless := []UserView{}
 	for _, user := range usersDB {
+		view := user.ToUserView()
 		found := false
 		if user.HomeID.Valid {
 			for i, home := range homesDB {
 				if home.ID == user.HomeID.Int32 {
-					homes[i].Users = append(homes[i].Users, UserView{
-						ID:          user.ID,
-						DisplayName: user.DisplayName,
-						Email:       user.Email,
-					})
+					homes[i].Users = append(homes[i].Users, view)
 					found = true
 					break
 				}
 			}
 		}
 		if !found {
-			homeless = append(homeless, UserView{
-				ID:          user.ID,
-				DisplayName: user.DisplayName,
-				Email:       user.Email,
-			})
+			homeless = append(homeless, view)
 		}
 	}
 

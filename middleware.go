@@ -42,6 +42,13 @@ func withRecover(next http.Handler) http.Handler {
 	})
 }
 
+func (server *Server) withFeedbackFromRedirects(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		server.eatFeedbackCookie(w, r)
+		next.ServeHTTP(w, r)
+	})
+}
+
 func chain(h http.Handler, m ...func(http.Handler) http.Handler) http.Handler {
 	for i := len(m) - 1; i >= 0; i-- {
 		h = m[i](h)

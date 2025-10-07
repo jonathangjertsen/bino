@@ -45,35 +45,68 @@ type GDrive struct {
 
 type GDriveFoldersResult struct {
 	Time    time.Time
-	Folders []GDriveFolder
+	Folders []GDriveItem
+	Valid   bool
 }
 
-type GDriveFolder struct {
-	ID   string
-	Name string
+type GDriveItem struct {
+	ID          string
+	Name        string
+	Permissions []GDrivePermission
+	Valid       bool
 }
 
-func (gdf GDriveFolder) HTMLIDSelectBaseFolder(prefix string) string {
+func GDriveItemFromFile(f *drive.File, p *drive.PermissionList, users map[string]UserView) GDriveItem {
+	if f == nil {
+		return GDriveItem{}
+	}
+	return GDriveItem{
+		ID:          f.Id,
+		Name:        f.Name,
+		Permissions: GDrivePermissionFromPermissionList(p, users),
+		Valid:       true,
+	}
+}
+
+type GDrivePermission struct {
+	DisplayName string
+	Email       string
+	Role        string
+	BinoUser    UserView
+}
+
+func GDrivePermissionFromPermissionList(p *drive.PermissionList, users map[string]UserView) []GDrivePermission {
+	return SliceToSlice(p.Permissions, func(p *drive.Permission) GDrivePermission {
+		var binoUser UserView
+		if users != nil {
+			binoUser = users[p.EmailAddress]
+		}
+		return GDrivePermission{
+			DisplayName: p.DisplayName,
+			Email:       p.EmailAddress,
+			Role:        p.Role,
+			BinoUser:    binoUser,
+		}
+	})
+}
+
+func (gdf GDriveItem) HTMLIDSelectBaseFolder(prefix string) string {
 	return fmt.Sprintf("%sset-base-folder-%s", prefix, gdf.ID)
 }
 
-func (gdf GDriveFolder) URLSelectBaseFolder() string {
+func (gdf GDriveItem) URLSelectBaseFolder() string {
 	return fmt.Sprintf("/gdrive/set-base-folder/%s", gdf.ID)
 }
 
-type GDriveFile struct {
-	ID   string
-	Name string
-}
-
-func (gdf GDriveFile) HTMLIDSelectTemplate(prefix string) string {
+func (gdf GDriveItem) HTMLIDSelectTemplate(prefix string) string {
 	return fmt.Sprintf("%sset-template-%s", prefix, gdf.ID)
 }
 
-func (gdf GDriveFile) URLSelectTemplate() string {
+func (gdf GDriveItem) URLSelectTemplate() string {
 	return fmt.Sprintf("/gdrive/set-template/%s", gdf.ID)
 }
-func (g *GDrive) GetFolders(ctx context.Context) ([]GDriveFolder, error) {
+
+func (server *Server) GetFolders(ctx context.Context, g *GDrive) ([]GDriveItem, error) {
 	call := g.Service.Files.List().
 		Q("mimeType = 'application/vnd.google-apps.folder'").
 		PageSize(100).
@@ -93,23 +126,49 @@ func (g *GDrive) GetFolders(ctx context.Context) ([]GDriveFolder, error) {
 		return nil, err
 	}
 
-	var out []GDriveFolder
-	for _, f := range fl.Files {
-		out = append(out, GDriveFolder{
-			ID:   f.Id,
-			Name: f.Name,
-		})
-	}
-
-	return out, nil
+	return SliceToSliceErr(fl.Files, func(file *drive.File) (GDriveItem, error) {
+		return server.fileToItem(ctx, g, file)
+	})
 }
 
-func (g *GDrive) GetFiles(ctx context.Context, folder string, filter string) ([]GDriveFile, error) {
+func (server *Server) fileToItem(ctx context.Context, g *GDrive, file *drive.File) (GDriveItem, error) {
+	call := g.Service.Permissions.List(file.Id).Fields("permissions(displayName, emailAddress, role)")
+
+	if g.DriveBase != "" {
+		call = call.
+			SupportsAllDrives(true)
+	}
+
+	pl, err := call.Do()
+	if err != nil {
+		return GDriveItem{}, err
+	}
+	return GDriveItemFromFile(file, pl, server.getUserViews(ctx)), nil
+}
+
+func (server *Server) GetFile(ctx context.Context, g *GDrive, id string) (GDriveItem, error) {
+	call := g.Service.Files.Get(id).
+		Fields("id, name")
+
+	if g.DriveBase != "" {
+		call = call.
+			SupportsAllDrives(true)
+	}
+
+	f, err := call.Do()
+	if err != nil {
+		return GDriveItem{}, err
+	}
+
+	return server.fileToItem(ctx, g, f)
+}
+
+func (server *Server) GetFiles(ctx context.Context, g *GDrive, folder string, filter string) ([]GDriveItem, error) {
 	call := g.Service.Files.List().
 		Q(fmt.Sprintf("mimeType = 'application/vnd.google-apps.document' and '%s' in parents and name contains '%s'", folder, filter)).
 		PageSize(100).
 		OrderBy("name desc").
-		Fields("files(id, name, parents)")
+		Fields("files(id, name)")
 
 	if g.DriveBase != "" {
 		call = call.
@@ -124,13 +183,7 @@ func (g *GDrive) GetFiles(ctx context.Context, folder string, filter string) ([]
 		return nil, err
 	}
 
-	var out []GDriveFile
-	for _, f := range fl.Files {
-		out = append(out, GDriveFile{
-			ID:   f.Id,
-			Name: f.Name,
-		})
-	}
-
-	return out, nil
+	return SliceToSliceErr(fl.Files, func(file *drive.File) (GDriveItem, error) {
+		return server.fileToItem(ctx, g, file)
+	})
 }

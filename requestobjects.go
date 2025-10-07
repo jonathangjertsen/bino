@@ -32,8 +32,56 @@ func MustLoadCommonData(ctx context.Context) *CommonData {
 }
 
 type CommonData struct {
-	BuildKey string
-	User     UserData
+	BuildKey   string
+	User       UserData
+	QueryCache struct {
+		AllUsers map[string]UserView
+	}
+	Feedback Feedback
+}
+
+func (cd *CommonData) Error(msg string, err error) {
+	cd.Log("Showed user ERROR: err=%v, message to user=%s", err, msg)
+	cd.SetFeedback(FBError, msg)
+}
+
+func (cd *CommonData) Warning(msg string, err error) {
+	cd.Log("Showed user WARNING: err=%v, message to user=%s", err, msg)
+	cd.SetFeedback(FBWarning, msg)
+}
+
+func (cd *CommonData) Success(msg string) {
+	cd.SetFeedback(FBSuccess, msg)
+}
+
+func (cd *CommonData) Info(msg string) {
+	cd.SetFeedback(FBInfo, msg)
+}
+
+func (cd *CommonData) SetFeedback(fbt FeedbackType, msg string) {
+	if len(cd.Feedback.Items) < 10 {
+		cd.Feedback.Items = append(cd.Feedback.Items, FeedbackItem{
+			Message: msg,
+			Type:    fbt,
+		})
+	} else {
+		cd.Feedback.NSkipped++
+	}
+}
+
+func (server *Server) getUserViews(ctx context.Context) map[string]UserView {
+	commonData := MustLoadCommonData(ctx)
+	if commonData.QueryCache.AllUsers == nil {
+		users, err := server.Queries.GetAppusers(ctx)
+		if err == nil {
+			commonData.QueryCache.AllUsers = SliceToMap(users, func(user GetAppusersRow) (string, UserView) {
+				return user.Email, user.ToUserView()
+			})
+		} else {
+			LogCtx(ctx, "GetAppusers failed: %w", err)
+		}
+	}
+	return commonData.QueryCache.AllUsers
 }
 
 func (cd *CommonData) StaticFile(name string) string {

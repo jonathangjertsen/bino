@@ -18,7 +18,7 @@ type EventView struct {
 	TimeAbs string
 	TimeRel string
 	Home    HomeView
-	User    DashboardUserView
+	User    UserView
 }
 
 func (ev *EventView) SetNoteURL() string {
@@ -83,16 +83,17 @@ func (server *Server) getPatientHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	events := SliceToSlice(eventData, func(i int, r GetEventsForPatientRow) EventView {
+	events := SliceToSlice(eventData, func(r GetEventsForPatientRow) EventView {
 		return EventView{
 			Row:     r,
 			TimeRel: commonData.User.Language.FormatTimeRel(r.Time.Time),
 			TimeAbs: commonData.User.Language.FormatTimeAbs(r.Time.Time),
-			User: DashboardUserView{
+			User: UserView{
 				ID:           r.AppuserID,
 				Name:         r.UserName,
 				AvatarURL:    r.AvatarUrl.String,
 				HasAvatarURL: r.AvatarUrl.Valid,
+				Email:        "",
 			},
 			Home: HomeView{
 				Home: Home{
@@ -109,7 +110,7 @@ func (server *Server) getPatientHandler(w http.ResponseWriter, r *http.Request) 
 			Status:  patientData.Status,
 			Name:    patientData.Name,
 			Species: patientData.SpeciesName,
-			Tags: SliceToSlice(patientTags, func(_ int, in GetTagsForPatientRow) TagView {
+			Tags: SliceToSlice(patientTags, func(in GetTagsForPatientRow) TagView {
 				return TagView{
 					ID:        in.TagID,
 					Name:      in.Name,
@@ -118,7 +119,7 @@ func (server *Server) getPatientHandler(w http.ResponseWriter, r *http.Request) 
 			}),
 		},
 		Home: home,
-		Homes: SliceToSlice(homes, func(_ int, home Home) HomeView {
+		Homes: SliceToSlice(homes, func(home Home) HomeView {
 			return HomeView{Home: home}
 		}),
 		Tags:   availableTags,

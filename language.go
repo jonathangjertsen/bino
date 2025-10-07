@@ -18,15 +18,17 @@ import (
 type LanguageID int32
 
 type Language struct {
-	ID       LanguageID
-	Emoji    string
-	SelfName string
-	Weekdays map[time.Weekday]string
-	Months   map[time.Month]string
+	ID          LanguageID
+	Emoji       string
+	SelfName    string
+	Weekdays    map[time.Weekday]string
+	Months      map[time.Month]string
+	GDriveRoles map[string]string
 
 	AdminDefaultIncludeTag string
 	AdminDisplayName       string
 	AdminEmailAddress      string
+	AdminInviteToBino      string
 	AdminManageEvents      string
 	AdminManageGoogleDrive string
 	AdminManageHomes       string
@@ -44,6 +46,7 @@ type Language struct {
 
 	DashboardNoPatientsInHome string
 	DashboardGoToJournal      string
+	DashboardGoToPatientPage  string
 	DashboardCheckOut         string
 	DashboardSelectHome       string
 	DashboardSelectCheckout   string
@@ -52,40 +55,55 @@ type Language struct {
 
 	ErrorPageHead         string
 	ErrorPageInstructions string
+	ErrorSettingLanguage  string
 
 	FooterPrivacy    string
 	FooterSourceCode string
 
-	GDriveBaseDir                 string
-	GDriveSelectFolder            string
-	GDriveSelectFolderInstruction string
-	GDriveSelectedFolder          string
-	GDriveReloadFolders           string
-	GDriveTemplate                string
-	GDriveSelectTemplate          string
-	GDriveSelectedTemplate        string
-	GDriveTemplateInstruction     string
-	GDriveReloadDocs              string
-	GDriveReloadDocsFilter        string
-	GDriveNoBaseDirSelected       string
-	GDriveNoTemplateSelected      string
+	GDriveBaseDir                          string
+	GDriveSelectFolder                     string
+	GDriveSelectFolderInstruction          string
+	GDriveSelectedFolder                   string
+	GDriveReloadFolders                    string
+	GDriveTemplate                         string
+	GDriveSelectTemplate                   string
+	GDriveSelectedTemplate                 string
+	GDriveTemplateInstruction              string
+	GDriveReloadDocs                       string
+	GDriveReloadDocsFilter                 string
+	GDriveNoBaseDirSelected                string
+	GDriveNoTemplateSelected               string
+	GDrivePermissionsForBaseDir            string
+	GDrivePermissionsForBaseDirInstruction string
+	GDriveDisplayName                      string
+	GDriveEmail                            string
+	GDriveRole                             string
+	GDriveFoundBinoUser                    string
+	GDriveBinoUsersMissingWritePermission  string
+	GDriveEmailInBino                      string
+	GDriveGiveAccess                       string
+	GDriveLoadFoldersFailed                string
+	GDriveBaseDirUpdated                   string
+	GDriveTemplateUpdated                  string
 
-	GenericAdd     string
-	GenericAge     string
-	GenericDelete  string
-	GenericDetails string
-	GenericGoBack  string
-	GenericHome    string
-	GenericJournal string
-	GenericLatin   string
-	GenericMove    string
-	GenericMoveTo  string
-	GenericNone    string
-	GenericNote    string
-	GenericSpecies string
-	GenericStatus  string
-	GenericTags    string
-	GenericUpdate  string
+	GenericAdd      string
+	GenericAge      string
+	GenericDelete   string
+	GenericDetails  string
+	GenericGoBack   string
+	GenericHome     string
+	GenericJournal  string
+	GenericLatin    string
+	GenericMove     string
+	GenericMoveTo   string
+	GenericName     string
+	GenericNone     string
+	GenericNote     string
+	GenericNotFound string
+	GenericSpecies  string
+	GenericStatus   string
+	GenericTags     string
+	GenericUpdate   string
 
 	HomesArchiveHome       string
 	HomesAddToHome         string
@@ -97,6 +115,9 @@ type Language struct {
 	HomesRemoveFromCurrent string
 	HomesViewHomes         string
 	HomesUnassignedUsers   string
+
+	LanguageUpdateFailed string
+	LanguageUpdateOK     string
 
 	NotFoundPageHead         string
 	NotFoundPageInstructions string
@@ -114,6 +135,10 @@ type Language struct {
 
 	Status map[Status]string
 	Event  map[Event]string
+}
+
+func (l *Language) TODO(s string) string {
+	return fmt.Sprintf("TODO[%s]", s)
 }
 
 var NO = &Language{
@@ -143,9 +168,18 @@ var NO = &Language{
 		time.November:  "november",
 		time.December:  "desember",
 	},
+	GDriveRoles: map[string]string{
+		"owner":         "Full tilgang (eier)",
+		"organizer":     "Full tilgang, kan endre tilganger",
+		"fileOrganizer": "Full tilgang til innhold",
+		"writer":        "Kan opprette og redigere journaler",
+		"commenter":     "Kan kommentere på journaler",
+		"reader":        "Kan lese journaler",
+	},
 	AdminDefaultIncludeTag: "Vis ved innsjekk",
 	AdminDisplayName:       "Navn",
 	AdminEmailAddress:      "Epostaddresse",
+	AdminInviteToBino:      "Inviter til Bino",
 	AdminManageEvents:      "Konfigurer hendelsestyper",
 	AdminManageGoogleDrive: "Konfigurer Google Drive",
 	AdminManageHomes:       "Konfigurer rehabhjem",
@@ -162,7 +196,8 @@ var NO = &Language{
 	CheckinYouAreHomeless:  "Du kan ikke sjekke inn pasienter ennå fordi du ikke er koblet til et rehabhjem.",
 
 	DashboardNoPatientsInHome: "Ingen pasienter",
-	DashboardGoToJournal:      "Gå til pasientjournal",
+	DashboardGoToJournal:      "Gå til pasientjournal i Google Drive",
+	DashboardGoToPatientPage:  "Gå til pasientside",
 	DashboardCheckOut:         "Sjekk ut",
 	DashboardSelectHome:       "Velg rehabhjem",
 	DashboardSelectCheckout:   "Velg status",
@@ -171,40 +206,55 @@ var NO = &Language{
 
 	ErrorPageHead:         "Feilmelding",
 	ErrorPageInstructions: "Det skjedde noe feil under lasting av siden. Feilen har blitt logget og vil bli undersøkt. Send melding til administrator for hjelp. Den tekniske feilmeldingen følger under.",
+	ErrorSettingLanguage:  "Kunne ikke oppdatere språk",
 
 	FooterPrivacy:    "Personvern",
 	FooterSourceCode: "Kildekode",
 
-	GDriveBaseDir:                 "Velg journalmappe",
-	GDriveSelectFolder:            "Velg mappe",
-	GDriveSelectedFolder:          "Valgt",
-	GDriveSelectFolderInstruction: "Her kan du velge hvilken mappe nye journaler skal opprettes i.",
-	GDriveReloadFolders:           "Hent mapper fra Google Drive på nytt",
-	GDriveTemplate:                "Velg mal",
-	GDriveTemplateInstruction:     "Her kan du velge hvilket dokument som skal brukes som mal. Når du henter dokumenter bør du skrive et søkeord, f.eks 'Navn' hvis tittelen på malen inneholder det ordet. Ellers vil det komme opp veldig mange dokumenter.",
-	GDriveSelectTemplate:          "Velg som mal",
-	GDriveSelectedTemplate:        "Valgt",
-	GDriveReloadDocs:              "Hent dokumenter fra Google Drive",
-	GDriveReloadDocsFilter:        "Søkeord",
-	GDriveNoBaseDirSelected:       "Det er ikke valgt noen journalmappe",
-	GDriveNoTemplateSelected:      "Det er ikke valgt noen mal",
+	GDriveBaseDir:                          "Velg journalmappe",
+	GDriveSelectFolder:                     "Velg mappe",
+	GDriveSelectedFolder:                   "Valgt",
+	GDriveSelectFolderInstruction:          "Her kan du velge hvilken mappe nye journaler skal opprettes i.",
+	GDriveReloadFolders:                    "Hent mapper fra Google Drive på nytt",
+	GDriveTemplate:                         "Velg mal",
+	GDriveTemplateInstruction:              "Her kan du velge hvilket dokument som skal brukes som mal. Når du henter dokumenter bør du skrive et søkeord, f.eks 'Navn' hvis tittelen på malen inneholder det ordet. Ellers vil det komme opp veldig mange dokumenter.",
+	GDriveSelectTemplate:                   "Velg som mal",
+	GDriveSelectedTemplate:                 "Valgt",
+	GDriveReloadDocs:                       "Hent dokumenter fra Google Drive",
+	GDriveReloadDocsFilter:                 "Søkeord",
+	GDriveNoBaseDirSelected:                "Det er ikke valgt noen journalmappe",
+	GDriveNoTemplateSelected:               "Det er ikke valgt noen mal",
+	GDrivePermissionsForBaseDir:            "Tilganger til journalmappen",
+	GDrivePermissionsForBaseDirInstruction: "Her kan du se hvem som har tilgang til journalmappen, og sammenligne med tilganger i Bino.",
+	GDriveDisplayName:                      "Brukernavn i Google Drive",
+	GDriveEmail:                            "Email",
+	GDriveRole:                             "Tilganger",
+	GDriveFoundBinoUser:                    "Bino-konto",
+	GDriveBinoUsersMissingWritePermission:  "Disse brukerne mangler tilgang til å opprette journaler i den valgte mappen:",
+	GDriveEmailInBino:                      "Email i Bino",
+	GDriveGiveAccess:                       "Gi skrivetilgang",
+	GDriveLoadFoldersFailed:                "Kunne ikke laste inn mapper fra Google Drive",
+	GDriveBaseDirUpdated:                   "Journalmappen ble oppdatert. Husk å også velge mal.",
+	GDriveTemplateUpdated:                  "Malen ble oppdatert.",
 
-	GenericAdd:     "Legg til",
-	GenericAge:     "Alder",
-	GenericDelete:  "Slett",
-	GenericDetails: "Detaljer",
-	GenericGoBack:  "Tilbake",
-	GenericHome:    "Rehabhjem",
-	GenericJournal: "Journal",
-	GenericLatin:   "Latin",
-	GenericMove:    "Flytt",
-	GenericMoveTo:  "Flytt til",
-	GenericNone:    "Ingen",
-	GenericNote:    "Notis",
-	GenericSpecies: "Art",
-	GenericStatus:  "Status",
-	GenericTags:    "Tagger",
-	GenericUpdate:  "Oppdater",
+	GenericAdd:      "Legg til",
+	GenericAge:      "Alder",
+	GenericDelete:   "Slett",
+	GenericDetails:  "Detaljer",
+	GenericGoBack:   "Tilbake",
+	GenericHome:     "Rehabhjem",
+	GenericJournal:  "Journal",
+	GenericLatin:    "Latin",
+	GenericMove:     "Flytt",
+	GenericMoveTo:   "Flytt til",
+	GenericName:     "Navn",
+	GenericNone:     "Ingen",
+	GenericNote:     "Notis",
+	GenericNotFound: "Ikke funnet",
+	GenericSpecies:  "Art",
+	GenericStatus:   "Status",
+	GenericTags:     "Tagger",
+	GenericUpdate:   "Oppdater",
 
 	HomesAddToHome:         "Legg til",
 	HomesArchiveHome:       "Arkiver rehabhjem",
@@ -215,6 +265,9 @@ var NO = &Language{
 	HomesRemoveFromCurrent: "Fjern fra dette rehabhjemmet",
 	HomesUnassignedUsers:   "Brukere som ikke er koblet til noe rehabhjem",
 	HomesViewHomes:         "Rehabhjem",
+
+	LanguageUpdateOK:     "Oppdaterte språk",
+	LanguageUpdateFailed: "Kunne ikke oppdatere språk",
 
 	NotFoundPageHead:         "Ikke funnet",
 	NotFoundPageInstructions: "Siden ble ikke funnet. Se feilmelding:",
@@ -287,9 +340,18 @@ var EN = &Language{
 		time.November:  time.November.String(),
 		time.December:  time.December.String(),
 	},
+	GDriveRoles: map[string]string{
+		"owner":         "Owner",
+		"organizer":     "Admin, can set permissions",
+		"fileOrganizer": "Content administrator",
+		"writer":        "Can create and edit journals",
+		"commenter":     "Can comment on journals",
+		"reader":        "Can read journals",
+	},
 	AdminDefaultIncludeTag: "Show at check-in",
 	AdminDisplayName:       "Name",
 	AdminEmailAddress:      "Email address",
+	AdminInviteToBino:      "Invite to Bino",
 	AdminManageEvents:      "Manage event types",
 	AdminManageGoogleDrive: "Configure Google Drive",
 	AdminManageHomes:       "Manage rehab homes",
@@ -306,7 +368,8 @@ var EN = &Language{
 	CheckinYouAreHomeless:  "You can't check in patients yet because you're not connected to a rehab home.",
 
 	DashboardNoPatientsInHome: "No patients",
-	DashboardGoToJournal:      "Go to patient journal",
+	DashboardGoToJournal:      "Go to patient journal in Google Drive",
+	DashboardGoToPatientPage:  "Go to patient page",
 	DashboardCheckOut:         "Checkout",
 	DashboardSelectHome:       "Select home",
 	DashboardSelectCheckout:   "Select status",
@@ -315,40 +378,55 @@ var EN = &Language{
 
 	ErrorPageHead:         "Error",
 	ErrorPageInstructions: "An error occurred while loading the page. The error has been logged and will be investigated. Send a message to the site admin for help. The technical error message is as follows.",
+	ErrorSettingLanguage:  "Failed to update language",
 
 	FooterPrivacy:    "Privacy",
 	FooterSourceCode: "Source code",
 
-	GDriveBaseDir:                 "Select journal folder",
-	GDriveSelectFolder:            "Select folder",
-	GDriveSelectedFolder:          "Selected",
-	GDriveSelectFolderInstruction: "Select the folder in which new patient journals will be created.",
-	GDriveReloadFolders:           "Reload folders from Google Drive",
-	GDriveTemplate:                "Choose template",
-	GDriveTemplateInstruction:     "Select the document that will be used as a template. When reloading documents you should select a search filter, e.g., 'Name' if the template contains that word in the title. That way you don't need to look through all the documents.",
-	GDriveSelectTemplate:          "Select as template",
-	GDriveSelectedTemplate:        "Selected",
-	GDriveReloadDocs:              "Load documents",
-	GDriveReloadDocsFilter:        "Search filter",
-	GDriveNoBaseDirSelected:       "No base folder selected",
-	GDriveNoTemplateSelected:      "No template document selected",
+	GDriveBaseDir:                          "Select journal folder",
+	GDriveSelectFolder:                     "Select folder",
+	GDriveSelectedFolder:                   "Selected",
+	GDriveSelectFolderInstruction:          "Select the folder in which new patient journals will be created.",
+	GDriveReloadFolders:                    "Reload folders from Google Drive",
+	GDriveTemplate:                         "Choose template",
+	GDriveTemplateInstruction:              "Select the document that will be used as a template. When reloading documents you should select a search filter, e.g., 'Name' if the template contains that word in the title. That way you don't need to look through all the documents.",
+	GDriveSelectTemplate:                   "Select as template",
+	GDriveSelectedTemplate:                 "Selected",
+	GDriveReloadDocs:                       "Load documents",
+	GDriveReloadDocsFilter:                 "Search filter",
+	GDriveNoBaseDirSelected:                "No base folder selected",
+	GDriveNoTemplateSelected:               "No template document selected",
+	GDrivePermissionsForBaseDir:            "Journal folder permissions",
+	GDrivePermissionsForBaseDirInstruction: "Check who has permissions to the folder, and compare with the permissions in Bino.",
+	GDriveDisplayName:                      "Username in Google Drive",
+	GDriveEmail:                            "Email",
+	GDriveRole:                             "Role",
+	GDriveFoundBinoUser:                    "Bino account",
+	GDriveBinoUsersMissingWritePermission:  "These users do not have access to create new journals in the selected folder:",
+	GDriveEmailInBino:                      "Email address in Bino",
+	GDriveGiveAccess:                       "Give write-access",
+	GDriveLoadFoldersFailed:                "Failed to load folders from Google Drive",
+	GDriveBaseDirUpdated:                   "Google Drive journal folder was updated. Remember to also update the template.",
+	GDriveTemplateUpdated:                  "Template journal was updated",
 
-	GenericAdd:     "Add",
-	GenericAge:     "Age",
-	GenericDelete:  "Delete",
-	GenericDetails: "Details",
-	GenericGoBack:  "Go back",
-	GenericHome:    "Home",
-	GenericJournal: "Journal",
-	GenericLatin:   "Latin",
-	GenericMove:    "Move",
-	GenericMoveTo:  "Move to",
-	GenericNone:    "None",
-	GenericNote:    "Note",
-	GenericSpecies: "Species",
-	GenericStatus:  "Status",
-	GenericTags:    "Tags",
-	GenericUpdate:  "Update",
+	GenericAdd:      "Add",
+	GenericAge:      "Age",
+	GenericDelete:   "Delete",
+	GenericDetails:  "Details",
+	GenericGoBack:   "Go back",
+	GenericHome:     "Home",
+	GenericJournal:  "Journal",
+	GenericLatin:    "Latin",
+	GenericMove:     "Move",
+	GenericMoveTo:   "Move to",
+	GenericName:     "Name",
+	GenericNone:     "None",
+	GenericNote:     "Note",
+	GenericNotFound: "Not found",
+	GenericSpecies:  "Species",
+	GenericStatus:   "Status",
+	GenericTags:     "Tags",
+	GenericUpdate:   "Update",
 
 	HomesAddToHome:         "Add",
 	HomesArchiveHome:       "Archive rehab home",
@@ -359,6 +437,9 @@ var EN = &Language{
 	HomesRemoveFromCurrent: "Remove from this rehab home",
 	HomesUnassignedUsers:   "Users that are not associated with any rehab homes",
 	HomesViewHomes:         "Rehab homes",
+
+	LanguageUpdateFailed: "Failed to update language",
+	LanguageUpdateOK:     "Updated language",
 
 	NavbarCalendar:  "Calendar",
 	NavbarDashboard: "Dashboard",

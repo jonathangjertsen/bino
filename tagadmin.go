@@ -30,6 +30,7 @@ func (server *Server) postTagHandler(w http.ResponseWriter, r *http.Request) {
 				return err
 			}
 		}
+
 		return nil
 	})
 }

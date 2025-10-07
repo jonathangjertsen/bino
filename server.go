@@ -119,7 +119,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 
 	mux := http.NewServeMux()
 
-	loggedInChain := []func(http.Handler) http.Handler{server.requireLogin, withLogging}
+	loggedInChain := []func(http.Handler) http.Handler{server.requireLogin, withLogging, server.withFeedbackFromRedirects}
 
 	// Home page
 	mux.Handle("GET /{$}", chainf(server.dashboardHandler, loggedInChain...))

@@ -3,6 +3,29 @@ package main
 templ HomesPage(data *CommonData, homes []HomeViewAdmin, homeless []UserView) {
     @Layout(data) {
         <h1>{data.User.Language.HomesViewHomes}</h1>
+
+        // Unassigned users
+        if len(homeless) > 0 {
+            @Card() {
+                <h2>{data.User.Language.HomesUnassignedUsers}</h2>
+                for _, user := range homeless {
+                    @user.Component(data) {
+                        <form class="form-inline" action="/homes" method="POST">
+                            <label>{data.User.Language.HomesAddToHome}</label>
+                            <select class="form-control-color r-2 select-user" name="home-id">
+                                for _, home := range homes {
+                                    <option value={home.ID}>{home.Name}</option>
+                                }
+                            </select>
+                            <input type="hidden" name="form-id" value="add-user">
+                            <input type="hidden" name="user-id" value={user.ID}>
+                            <button type="submit" class="btn btn-primary mb-2">{data.User.Language.GenericAdd}</button>
+                        </form>
+                    }
+                }
+            }
+        }
+
         @Card() {
             // List of homes
             for _, home := range homes {
@@ -43,7 +66,7 @@ templ HomesPage(data *CommonData, homes []HomeViewAdmin, homeless []UserView) {
                             <select autocomplete="off" class="form-control-color r-2 select-user" name="user-id">
                                 <option value="" disabled selected>{data.User.Language.DashboardSelectHome}</option>
                                 for _, user := range homeless {
-                                    <option value={user.ID}>{user.DisplayName}</option>
+                                    <option value={user.ID}>{user.Name}</option>
                                 }
                             </select>
                             <input type="hidden" name="form-id" value="add-user">
@@ -72,28 +95,6 @@ templ HomesPage(data *CommonData, homes []HomeViewAdmin, homeless []UserView) {
                 <input type="hidden" name="form-id" value="create-home">
             </form>
         }
-
-        // Unassigned users
-        if len(homeless) > 0 {
-            @Card() {
-                <h2>{data.User.Language.HomesUnassignedUsers}</h2>
-                for _, user := range homeless {
-                    @user.Component(data) {
-                        <form class="form-inline" action="/homes" method="POST">
-                            <label>{data.User.Language.HomesAddToHome}</label>
-                            <select class="form-control-color r-2 select-user" name="home-id">
-                                for _, home := range homes {
-                                    <option value={home.ID}>{home.Name}</option>
-                                }
-                            </select>
-                            <input type="hidden" name="form-id" value="add-user">
-                            <input type="hidden" name="user-id" value={user.ID}>
-                            <button type="submit" class="btn btn-primary mb-2">{data.User.Language.GenericAdd}</button>
-                        </form>
-                    }
-                }
-            }
-        }
     }
     <script src={data.StaticFile("dashboard.js")}></script>
 }
@@ -104,7 +105,7 @@ templ (u *UserView) Component(data *CommonData) {
             <thead>
                 <tr>
                     <th colspan="100%" class="text-center">
-                        {u.DisplayName}
+                        {u.Name}
                     </th>
                 </tr>
             </thead>

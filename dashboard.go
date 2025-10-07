@@ -18,7 +18,7 @@ type DashboardData struct {
 type HomeView struct {
 	Home     Home
 	Patients []PatientView
-	Users    []DashboardUserView
+	Users    []UserView
 }
 
 func (hv HomeView) URL() string {
@@ -59,15 +59,30 @@ func (tv TagView) URL() string {
 	return fmt.Sprintf("/patient/%d/tag/%d", tv.PatientID, tv.ID)
 }
 
-type DashboardUserView struct {
+type UserView struct {
 	ID           int32
 	Name         string
+	Email        string
 	AvatarURL    string
 	HasAvatarURL bool
 }
 
-func (u DashboardUserView) URL() string {
+func (u UserView) Valid() bool {
+	return u.ID > 0
+}
+
+func (u UserView) URL() string {
 	return fmt.Sprintf("/user/%d", u.ID)
+}
+
+func (user GetAppusersRow) ToUserView() UserView {
+	return UserView{
+		ID:           user.ID,
+		Name:         user.DisplayName,
+		Email:        user.Email,
+		AvatarURL:    user.AvatarUrl.String,
+		HasAvatarURL: user.AvatarUrl.Valid,
+	}
 }
 
 func (r GetTagsWithLanguageCheckinRow) HTMLID() string {
@@ -138,8 +153,8 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 			}),
 			Users: MapToSlice(FilterSlice(users, func(u GetAppusersRow) bool {
 				return u.HomeID.Valid && u.HomeID.Int32 == h.ID
-			}), func(u GetAppusersRow) DashboardUserView {
-				return DashboardUserView{
+			}), func(u GetAppusersRow) UserView {
+				return UserView{
 					ID:           u.ID,
 					Name:         u.DisplayName,
 					AvatarURL:    u.AvatarUrl.String,

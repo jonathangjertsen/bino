@@ -1,6 +1,8 @@
 package main
 
-import "strconv"
+import (
+	"strconv"
+)
 
 func MapToMapErr[K comparable, VIn any, VOut any](in map[K]VIn, f func(VIn) (VOut, error)) (map[K]VOut, error) {
 	out := make(map[K]VOut)
@@ -34,21 +36,33 @@ func MapToSlice[TIn any, TOut any](in []TIn, f func(TIn) TOut) []TOut {
 	return out
 }
 
-func SliceToMap[TIn any, KOut comparable, VOut any](in []TIn, f func(int, TIn) (KOut, VOut)) map[KOut]VOut {
+func SliceToMap[TIn any, KOut comparable, VOut any](in []TIn, f func(TIn) (KOut, VOut)) map[KOut]VOut {
 	out := make(map[KOut]VOut)
-	for i, vin := range in {
-		k, vout := f(i, vin)
+	for _, vin := range in {
+		k, vout := f(vin)
 		out[k] = vout
 	}
 	return out
 }
 
-func SliceToSlice[TIn any, TOut any](in []TIn, f func(int, TIn) TOut) []TOut {
+func SliceToSlice[TIn any, TOut any](in []TIn, f func(TIn) TOut) []TOut {
 	out := make([]TOut, len(in))
 	for i, v := range in {
-		out[i] = f(i, v)
+		out[i] = f(v)
 	}
 	return out
+}
+
+func SliceToSliceErr[TIn any, TOut any](in []TIn, f func(TIn) (TOut, error)) ([]TOut, error) {
+	out := make([]TOut, len(in))
+	for i, v := range in {
+		vOut, err := f(v)
+		if err != nil {
+			return nil, err
+		}
+		out[i] = vOut
+	}
+	return out, nil
 }
 
 func SliceToMapErr[TIn any, KOut comparable, VOut any](in []TIn, f func(int, TIn) (KOut, VOut, error)) (map[KOut]VOut, error) {
@@ -86,4 +100,13 @@ func MoveToFront[T any](in []T, j int) {
 	for i := j; i > 0; i-- {
 		in[i], in[i-1] = in[i-1], in[i]
 	}
+}
+
+func Any[T any](in []T, f func(in T) bool) bool {
+	for _, x := range in {
+		if f(x) {
+			return true
+		}
+	}
+	return false
 }

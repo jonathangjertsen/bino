@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 )
 
 func (server *Server) adminRootHandler(w http.ResponseWriter, r *http.Request) {
@@ -26,10 +25,13 @@ func (server *Server) postLanguageHandler(w http.ResponseWriter, r *http.Request
 			AppuserID:  commonData.User.AppuserID,
 			LanguageID: int32(lang),
 		})
+		commonData.User.Language = Languages[int32(lang)]
 	}
 
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
+		commonData.Error(commonData.User.Language.LanguageUpdateFailed, err)
+	} else {
+		commonData.Success(commonData.User.Language.LanguageUpdateOK)
 	}
 
 	server.redirectToReferer(w, r)
@@ -40,6 +42,7 @@ func (server *Server) redirectToReferer(w http.ResponseWriter, r *http.Request) 
 }
 
 func (server *Server) redirect(w http.ResponseWriter, r *http.Request, url string) {
+	server.setFeedbackCookie(w, r)
 	http.Redirect(w, r, url, http.StatusFound)
 }
 

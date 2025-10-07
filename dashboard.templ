@@ -77,7 +77,7 @@ templ DashboardHomes(data *CommonData, dashboardData *DashboardData) {
     </div>
 }
 
-templ Avatar(u DashboardUserView) {
+templ Avatar(u UserView) {
     <a href={u.URL()}>
         if u.HasAvatarURL {
             <img src={u.AvatarURL} class="dashboard-head-profile" data-toggle="tooltip" data-placement="top" title={u.Name}>
@@ -139,7 +139,7 @@ templ DashboardPatientTable(
         <tbody>
             @DashboardMove(data, homes, home, patient)
             @DashboardCheckout(data, patient)
-            @DashboardHistory(data, patient)
+            @DashboardGoToPatientPage(data, patient)
 
             // This must be the last one.
             @DashboardTagRows(data, tags, patient)
@@ -199,12 +199,12 @@ templ DashboardCheckout(data *CommonData, patient PatientView) {
     </tr>
 }
 
-templ DashboardHistory(data *CommonData, patient PatientView) {
+templ DashboardGoToPatientPage(data *CommonData, patient PatientView) {
     <tr>
-        <th class="w-25">{data.User.Language.GenericJournal}</th>
+        <th class="w-25">{data.User.Language.GenericDetails}</th>
         <td>
             <a href={patient.URL()}>
-                {data.User.Language.DashboardGoToJournal}
+                {data.User.Language.DashboardGoToPatientPage}
             </a>
         </td>
     </tr>
@@ -234,9 +234,7 @@ templ DashboardTagLabel(data *CommonData) {
 templ DashboardTag(data *CommonData, tag TagView) {
     <td class="d-flex justify-content-between border-0">
         <span class="d-flex">{tag.Name}</span>
-        <form action={tag.URL()} method="DELETE" class="tag-delete">
-            <button type="submit" class="btn btn-warning btn-sm">{data.User.Language.GenericDelete}</button>
-        </form>
+        @SingleButtonForm(tag.URL(), data.User.Language.GenericDelete, "DELETE", "btn-warning", "tag-delete")
     </td>
 }
 

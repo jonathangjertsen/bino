@@ -125,6 +125,7 @@ func (server *Server) AuthLogOutHandler(w http.ResponseWriter, r *http.Request) 
 	sess, _ := server.Cookies.Get(r, "auth")
 	sess.Options.MaxAge = -1
 	_ = sess.Save(r, w)
+
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 

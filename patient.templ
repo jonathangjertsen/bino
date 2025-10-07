@@ -78,13 +78,3 @@ templ PatientPage(ctx context.Context, data *CommonData, view PatientPageView, s
     }
     <script src={data.StaticFile("patienttags.js")}></script>
 }
-
-templ UserTime(rel, abs string) {
-    <span class="reltime" data-toggle="tooltip" data-placement="top" title={abs}>
-        {rel}
-    </span>
-}
-
-templ UserTimeLong(rel, abs string) {
-    {abs} ({rel})
-}

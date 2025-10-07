@@ -45,12 +45,18 @@ func LogR(r *http.Request, format string, args ...any) {
 	LogCtx(r.Context(), format, args...)
 }
 
+// Log from context if the user has given explicit concent
 func LogCtx(ctx context.Context, format string, args ...any) {
 	commonData, err := LoadCommonData(ctx)
 	if err != nil {
 		return
 	}
-	if !commonData.User.LoggingConsent {
+	commonData.Log(format, args...)
+}
+
+// Log if the user has given explicit concent
+func (cd *CommonData) Log(format string, args ...any) {
+	if !cd.User.LoggingConsent {
 		return
 	}
 	log.Printf(format, args...)

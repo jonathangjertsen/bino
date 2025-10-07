@@ -7,8 +7,10 @@ $text: rgb(245, 245, 250);
 $warning: rgb(235, 140, 75);
 $midgray: mix($dark, $light, 25);
 $slightdark: mix($dark, $midgray, 50);
-$slightprimary: mix($primary, $light, 15);
-$slighaccent: mix($accent, $light, 15);
+$lightprimary: mix($primary, $light, 15);
+$lightaccent: mix($accent, $light, 15);
+$lightwarning: mix($warning, $light, 45);
+$lighterror: mix(red, $light, 45);
 
 $mobilethreshold: 1000px;
 
@@ -354,7 +356,7 @@ input[data-field="latin"] {
 }
 
 .card-header-patient {
-    background-color: $slightprimary;
+    background-color: $lightprimary;
 }
 
 .patient-page {
@@ -385,5 +387,68 @@ pre {
 }
 
 .gdrive-doc-select[selected]{
-    background-color: $slighaccent;
+    background-color: $lightaccent;
+}
+
+.feedback-list {
+    list-style-type: none;
+    padding-left: 0 !important;
+    margin-bottom: 0;
+    .feedback-item {
+        margin-bottom: 0.5rem;
+    }
+    .feedback-item:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.b-card.feedback-info {
+    background-color: $midgray;
+}
+
+.b-card.feedback-success {
+    background-color: $lightaccent;
+}
+
+.b-card.feedback-warning {
+    background-color: $lightwarning;
+}
+
+.b-card.feedback-error {
+    background-color: $lightwarning;
+}
+
+.feedback-item.feedback-info::before {
+    content: 'ℹ️';
+    margin-right: 0.5em;
+    font-size: 1em;
+}
+
+.feedback-item.feedback-success::before {
+    content: '✅';
+    margin-right: 0.5em;
+    font-size: 1em;
+}
+
+.feedback-item.feedback-warning::before {
+    content: '⚠️';
+    margin-right: 0.5em;
+    font-size: 1em;
+}
+
+.feedback-item.feedback-error::before {
+    content: '❌';
+    margin-right: 0.5em;
+    font-size: 1em;
+}
+
+.feedback-container {
+    position: relative;
+    padding-right: 4em !important;
+    .closer {
+        position: absolute;
+        top: 1em;
+        right: 1em;
+        cursor: pointer;
+    }
 }

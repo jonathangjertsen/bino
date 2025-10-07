@@ -8,6 +8,18 @@ templ Layout(data *CommonData, classes ...string) {
     </head>
     <body data-lang={templ.JSONString(data.User.Language)}>
         @Navbar(data)
+        if len(data.Feedback.Items) > 0 {
+            <div class="b-container">
+                @Card("feedback-container", data.Feedback.CSSClass()) {
+                    <ul class="feedback-list">
+                        for _, item := range data.Feedback.Items {
+                            <li class={"feedback-item", item.Type.CSSClass()}>{item.Message}</li>
+                        }
+                    </ul>
+                    <button class="btn btn-sm btn-success closer">OK</button>
+                }
+            </div>
+        }
         <div class={"main b-container", classes}>
             { children... }
         </div>
@@ -117,4 +129,20 @@ templ Footer(data *UserData) {
             </div>
         </div>
     </footer>
+}
+
+templ UserTime(rel, abs string) {
+    <span class="reltime" data-toggle="tooltip" data-placement="top" title={abs}>
+        {rel}
+    </span>
+}
+
+templ UserTimeLong(rel, abs string) {
+    {abs} ({rel})
+}
+
+templ SingleButtonForm(url string, buttonText string, method string, btnClass string, formClasses ...string) {
+    <form action={templ.URL(url)} method={method} class={formClasses}>
+        <button type="submit" class={"btn btn-sm", btnClass}>{buttonText}</button>
+    </form>
 }
