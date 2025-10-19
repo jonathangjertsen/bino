@@ -8,6 +8,7 @@ package main
 import (
 	"context"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -190,6 +191,19 @@ type DeletePatientTagParams struct {
 func (q *Queries) DeletePatientTag(ctx context.Context, arg DeletePatientTagParams) error {
 	_, err := q.db.Exec(ctx, deletePatientTag, arg.PatientID, arg.TagID)
 	return err
+}
+
+const deleteStaleSessions = `-- name: DeleteStaleSessions :execresult
+DELETE FROM session
+WHERE expires < NOW()
+  OR (
+    (expires < NOW() + INTERVAL '20 minutes')
+    AND last_seen < NOW() - INTERVAL '5 minutes'
+  )
+`
+
+func (q *Queries) DeleteStaleSessions(ctx context.Context) (pgconn.CommandTag, error) {
+	return q.db.Exec(ctx, deleteStaleSessions)
 }
 
 const getActivePatients = `-- name: GetActivePatients :many
@@ -453,6 +467,24 @@ func (q *Queries) GetPatientWithSpecies(ctx context.Context, arg GetPatientWithS
 		&i.Name,
 		&i.Status,
 		&i.SpeciesName,
+	)
+	return i, err
+}
+
+const getSession = `-- name: GetSession :one
+SELECT id, appuser_id, expires, last_seen
+FROM session
+WHERE id = $1
+`
+
+func (q *Queries) GetSession(ctx context.Context, id string) (Session, error) {
+	row := q.db.QueryRow(ctx, getSession, id)
+	var i Session
+	err := row.Scan(
+		&i.ID,
+		&i.AppuserID,
+		&i.Expires,
+		&i.LastSeen,
 	)
 	return i, err
 }
@@ -789,6 +821,22 @@ func (q *Queries) InsertHome(ctx context.Context, name string) error {
 	return err
 }
 
+const insertSession = `-- name: InsertSession :exec
+INSERT INTO session (id, appuser_id, expires, last_seen)
+VALUES ($1, $2, $3, NOW())
+`
+
+type InsertSessionParams struct {
+	ID        string
+	AppuserID int32
+	Expires   pgtype.Timestamptz
+}
+
+func (q *Queries) InsertSession(ctx context.Context, arg InsertSessionParams) error {
+	_, err := q.db.Exec(ctx, insertSession, arg.ID, arg.AppuserID, arg.Expires)
+	return err
+}
+
 const movePatient = `-- name: MovePatient :exec
 UPDATE patient
 SET curr_home_id = $2
@@ -821,6 +869,30 @@ func (q *Queries) RemoveUserFromHome(ctx context.Context, arg RemoveUserFromHome
 	return err
 }
 
+const revokeAllOtherSessionsForUser = `-- name: RevokeAllOtherSessionsForUser :execresult
+DELETE FROM session
+WHERE id != $1
+  AND appuser_id == $2
+`
+
+type RevokeAllOtherSessionsForUserParams struct {
+	ID        string
+	AppuserID int32
+}
+
+func (q *Queries) RevokeAllOtherSessionsForUser(ctx context.Context, arg RevokeAllOtherSessionsForUserParams) (pgconn.CommandTag, error) {
+	return q.db.Exec(ctx, revokeAllOtherSessionsForUser, arg.ID, arg.AppuserID)
+}
+
+const revokeAllSessionsForUser = `-- name: RevokeAllSessionsForUser :execresult
+DELETE FROM session
+WHERE appuser_id = $1
+`
+
+func (q *Queries) RevokeAllSessionsForUser(ctx context.Context, appuserID int32) (pgconn.CommandTag, error) {
+	return q.db.Exec(ctx, revokeAllSessionsForUser, appuserID)
+}
+
 const revokeLoggingConsent = `-- name: RevokeLoggingConsent :exec
 UPDATE appuser SET logging_consent = NULL
 WHERE id = $1
@@ -828,6 +900,16 @@ WHERE id = $1
 
 func (q *Queries) RevokeLoggingConsent(ctx context.Context, id int32) error {
 	_, err := q.db.Exec(ctx, revokeLoggingConsent, id)
+	return err
+}
+
+const revokeSession = `-- name: RevokeSession :exec
+DELETE FROM session
+WHERE id = $1
+`
+
+func (q *Queries) RevokeSession(ctx context.Context, id string) error {
+	_, err := q.db.Exec(ctx, revokeSession, id)
 	return err
 }
 
@@ -940,6 +1022,17 @@ type UpdateHomeNameParams struct {
 
 func (q *Queries) UpdateHomeName(ctx context.Context, arg UpdateHomeNameParams) error {
 	_, err := q.db.Exec(ctx, updateHomeName, arg.ID, arg.Name)
+	return err
+}
+
+const updateSessionLastSeen = `-- name: UpdateSessionLastSeen :exec
+UPDATE session
+SET last_seen = NOW()
+WHERE id = $1
+`
+
+func (q *Queries) UpdateSessionLastSeen(ctx context.Context, id string) error {
+	_, err := q.db.Exec(ctx, updateSessionLastSeen, id)
 	return err
 }
 

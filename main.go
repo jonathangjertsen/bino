@@ -7,6 +7,7 @@ import (
 
 func main() {
 	ctx := context.Background()
+	fmt.Println("Starting...")
 
 	config, err := loadConfig("config.json")
 	if err != nil {
@@ -25,11 +26,13 @@ func main() {
 
 	queries := New(conn)
 
+	go backgroundDeleteExpiredSessions(ctx, queries)
+
 	err = startServer(ctx, conn, queries, config, BuildKey)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("started...\n")
+	fmt.Println("Ready")
 	select {}
 }

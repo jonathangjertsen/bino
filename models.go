@@ -71,6 +71,13 @@ type PatientTag struct {
 	TagID     int32
 }
 
+type Session struct {
+	ID        string
+	AppuserID int32
+	Expires   pgtype.Timestamptz
+	LastSeen  pgtype.Timestamptz
+}
+
 // Each row is a species
 type Species struct {
 	ID int32

@@ -89,33 +89,44 @@ func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (Comm
 func (server *Server) getUser(r *http.Request) (GetUserRow, error) {
 	ctx := r.Context()
 
+	// Get the encrypted auth cookie
 	sess, _ := server.Cookies.Get(r, "auth")
 
+	// OAuth token data must be valid
 	tokenData, ok := sess.Values["oauth_token"].(string)
 	if !ok {
 		return GetUserRow{}, fmt.Errorf("no OAuth token in session")
 	}
-
 	var token oauth2.Token
 	if err := json.Unmarshal([]byte(tokenData), &token); err != nil {
 		return GetUserRow{}, fmt.Errorf("correpted OAuth token in session")
 	}
-
-	if token.Expiry.Before(time.Now().Add(-time.Minute)) {
-		return GetUserRow{}, fmt.Errorf("OAuth token has expired")
+	if !token.Valid() {
+		return GetUserRow{}, fmt.Errorf("invalid or expired OAuth token")
 	}
 
-	uidIF, ok := sess.Values["user_id"]
+	// Look up session
+	sessionIDIF, ok := sess.Values["session_id"]
 	if !ok {
 		return GetUserRow{}, ErrUnauthorized
 	}
-
-	uid, ok := uidIF.(int32)
+	sessionID, ok := sessionIDIF.(string)
 	if !ok {
-		return GetUserRow{}, fmt.Errorf("%w: uid is %T", ErrInternalServerError, uid)
+		return GetUserRow{}, fmt.Errorf("%w: session_id is %T", ErrInternalServerError, sessionID)
+	}
+	session, err := server.Queries.GetSession(ctx, sessionID)
+	if err != nil {
+		return GetUserRow{}, fmt.Errorf("%w: no such session %s", sessionID)
+	}
+	if time.Now().After(session.Expires.Time) {
+		return GetUserRow{}, fmt.Errorf("session expired")
+	}
+	if err := server.Queries.UpdateSessionLastSeen(ctx, sessionID); err != nil {
+		return GetUserRow{}, fmt.Errorf("updating session-last-seen failed")
 	}
 
-	user, err := server.Queries.GetUser(ctx, uid)
+	// Look up user
+	user, err := server.Queries.GetUser(ctx, session.AppuserID)
 	if err != nil {
 		return GetUserRow{}, fmt.Errorf("%w: database error", ErrInternalServerError)
 	}
@@ -152,6 +163,8 @@ func (server *Server) callbackHandler(
 	r *http.Request,
 ) {
 	ctx := r.Context()
+
+	// Get OAuth token
 	sess, _ := server.Cookies.Get(r, "auth")
 	if r.URL.Query().Get("state") != sess.Values["state"] {
 		http.Error(w, "invalid state", http.StatusBadRequest)
@@ -164,14 +177,24 @@ func (server *Server) callbackHandler(
 		return
 	}
 
+	// Invalid token
+	if !token.Valid() {
+		http.Error(w, "invalid token", http.StatusBadRequest)
+		return
+	}
+	if token.Expiry.IsZero() {
+		http.Error(w, "no expiry set for token", http.StatusBadRequest)
+		return
+	}
+
 	// Store the OAuth token for Drive API access
 	tokenJSON, err := json.Marshal(token)
 	if err != nil {
 		http.Error(w, "token serialization failed", http.StatusInternalServerError)
 		return
 	}
-	sess.Values["oauth_token"] = string(tokenJSON)
 
+	// Get the ID token
 	rawIDToken, ok := token.Extra("id_token").(string)
 	if !ok {
 		http.Error(w, "no id_token", http.StatusUnauthorized)
@@ -181,6 +204,8 @@ func (server *Server) callbackHandler(
 	if err != nil {
 		http.Error(w, "verify failed", http.StatusUnauthorized)
 	}
+
+	// Get stuff associated with the ID token
 	var claims struct {
 		Sub     string `json:"sub"`
 		Email   string `json:"email"`
@@ -191,6 +216,8 @@ func (server *Server) callbackHandler(
 		http.Error(w, "claims failed", http.StatusUnauthorized)
 		return
 	}
+
+	// Insert or update user
 	userID, err := server.Queries.UpsertUser(ctx, UpsertUserParams{
 		GoogleSub:   claims.Sub,
 		Email:       claims.Email,
@@ -198,12 +225,27 @@ func (server *Server) callbackHandler(
 		AvatarUrl:   pgtype.Text{String: claims.Picture, Valid: claims.Picture != ""},
 	})
 	if err != nil {
-		http.Error(w, "db error", http.StatusInternalServerError)
+		http.Error(w, "upserting user failed", http.StatusInternalServerError)
 		return
 	}
-	sess.Values["user_id"] = userID
+
+	// Create session
+	sessionID := rand.Text()
+	if err := server.Queries.InsertSession(ctx, InsertSessionParams{
+		ID:        sessionID,
+		AppuserID: userID,
+		Expires:   pgtype.Timestamptz{Time: token.Expiry, Valid: true},
+	}); err != nil {
+		http.Error(w, "creating session failed", http.StatusInternalServerError)
+		return
+	}
+
+	// Store to cookie
+	sess.Values["oauth_token"] = string(tokenJSON)
+	sess.Values["session_id"] = sessionID
 	sess.Values["email"] = claims.Email
 	_ = sess.Save(r, w)
+
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
