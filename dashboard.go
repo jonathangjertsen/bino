@@ -15,77 +15,6 @@ type DashboardData struct {
 	Homes   []HomeView
 }
 
-type HomeView struct {
-	Home     Home
-	Patients []PatientView
-	Users    []UserView
-}
-
-func (hv HomeView) URL() string {
-	return fmt.Sprintf("/home/%d", hv.Home.ID)
-}
-
-type PatientView struct {
-	ID         int32
-	Status     int32
-	Name       string
-	Species    string
-	Tags       []TagView
-	JournalURL string
-}
-
-func (pv PatientView) CollapseID(prefix string) string {
-	return fmt.Sprintf("%spatient-collapsible-%d", prefix, pv.ID)
-}
-
-func (pv PatientView) CheckoutNoteID(prefix string) string {
-	return fmt.Sprintf("%spatient-checkout-note-%d", prefix, pv.ID)
-}
-
-func (pv PatientView) URL() string {
-	return fmt.Sprintf("/patient/%d", pv.ID)
-}
-
-func (pv PatientView) URLSuffix(suffix string) string {
-	return fmt.Sprintf("/patient/%d/%s", pv.ID, suffix)
-}
-
-type TagView struct {
-	ID        int32
-	PatientID int32
-	Name      string
-}
-
-func (tv TagView) URL() string {
-	return fmt.Sprintf("/patient/%d/tag/%d", tv.PatientID, tv.ID)
-}
-
-type UserView struct {
-	ID           int32
-	Name         string
-	Email        string
-	AvatarURL    string
-	HasAvatarURL bool
-}
-
-func (u UserView) Valid() bool {
-	return u.ID > 0
-}
-
-func (u UserView) URL() string {
-	return fmt.Sprintf("/user/%d", u.ID)
-}
-
-func (user GetAppusersRow) ToUserView() UserView {
-	return UserView{
-		ID:           user.ID,
-		Name:         user.DisplayName,
-		Email:        user.Email,
-		AvatarURL:    user.AvatarUrl.String,
-		HasAvatarURL: user.AvatarUrl.Valid,
-	}
-}
-
 func (r GetTagsWithLanguageCheckinRow) HTMLID() string {
 	return fmt.Sprintf("patient-label-%d", r.TagID)
 }
@@ -130,10 +59,10 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	homeViews := MapToSlice(homes, func(h Home) HomeView {
+	homeViews := SliceToSlice(homes, func(h Home) HomeView {
 		return HomeView{
 			Home: h,
-			Patients: MapToSlice(FilterSlice(patients, func(p GetActivePatientsRow) bool {
+			Patients: SliceToSlice(FilterSlice(patients, func(p GetActivePatientsRow) bool {
 				return p.CurrHomeID.Valid && p.CurrHomeID.Int32 == h.ID
 			}), func(p GetActivePatientsRow) PatientView {
 				return PatientView{
@@ -141,26 +70,17 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 					Species: p.Species,
 					Name:    p.Name,
 					Status:  p.Status,
-					Tags: MapToSlice(FilterSlice(patientTags, func(t GetTagsForActivePatientsRow) bool {
+					Tags: SliceToSlice(FilterSlice(patientTags, func(t GetTagsForActivePatientsRow) bool {
 						return t.PatientID == p.ID
 					}), func(t GetTagsForActivePatientsRow) TagView {
-						return TagView{
-							ID:        t.TagID,
-							PatientID: p.ID,
-							Name:      t.Name,
-						}
+						return t.ToTagView()
 					}),
 				}
 			}),
-			Users: MapToSlice(FilterSlice(users, func(u GetAppusersRow) bool {
+			Users: SliceToSlice(FilterSlice(users, func(u GetAppusersRow) bool {
 				return u.HomeID.Valid && u.HomeID.Int32 == h.ID
 			}), func(u GetAppusersRow) UserView {
-				return UserView{
-					ID:           u.ID,
-					Name:         u.DisplayName,
-					AvatarURL:    u.AvatarUrl.String,
-					HasAvatarURL: u.AvatarUrl.Valid,
-				}
+				return u.ToUserView()
 			}),
 		}
 	})

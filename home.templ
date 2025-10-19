@@ -1,0 +1,15 @@
+package main
+
+import (
+    "context"
+)
+
+templ HomePage(ctx context.Context, data *CommonData, view HomeView) {
+    @Layout(data, "home-page") {
+        @Card() {
+            <h1>{view.Home.Name}</h1>
+            <h2>{data.User.Language.HomesUsers}</h2>
+            <h2>{data.User.Language.HomesPatients}</h2>
+        }
+    }
+}

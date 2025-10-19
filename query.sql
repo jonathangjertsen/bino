@@ -209,6 +209,25 @@ WHERE p.id = $1
   AND sl.language_id = $2
 ;
 
+-- name: GetCurrentPatientsForHome :many
+SELECT p.*, sl.name AS species_name FROM patient AS p
+JOIN species_language AS sl
+  ON sl.species_id = p.species_id
+WHERE p.curr_home_id = $1
+  AND sl.language_id = $2
+;
+
+-- name: GetTagsForCurrentPatientsForHome :many
+SELECT pt.patient_id, pt.tag_id, COALESCE(tl.name, '???') AS name
+FROM patient_tag AS pt
+LEFT JOIN tag_language as tl
+  ON tl.tag_id = pt.tag_id
+LEFT JOIN patient as p
+  ON p.id = pt.patient_id
+WHERE p.curr_home_id = $1
+  AND tl.language_id = $2
+;
+
 -- name: SetPatientStatus :exec
 UPDATE patient
 SET status = $2

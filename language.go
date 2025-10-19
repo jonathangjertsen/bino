@@ -119,6 +119,8 @@ type Language struct {
 	HomesRemoveFromCurrent string
 	HomesViewHomes         string
 	HomesUnassignedUsers   string
+	HomesPatients          string
+	HomesUsers             string
 
 	LanguageUpdateFailed string
 	LanguageUpdateOK     string
@@ -273,6 +275,8 @@ var NO = &Language{
 	HomesRemoveFromCurrent: "Fjern fra dette rehabhjemmet",
 	HomesUnassignedUsers:   "Brukere som ikke er koblet til noe rehabhjem",
 	HomesViewHomes:         "Rehabhjem",
+	HomesPatients:          "Pasienter",
+	HomesUsers:             "Brukere",
 
 	LanguageUpdateOK:     "Oppdaterte språk",
 	LanguageUpdateFailed: "Kunne ikke oppdatere språk",
@@ -449,6 +453,8 @@ var EN = &Language{
 	HomesRemoveFromCurrent: "Remove from this rehab home",
 	HomesUnassignedUsers:   "Users that are not associated with any rehab homes",
 	HomesViewHomes:         "Rehab homes",
+	HomesPatients:          "Patients",
+	HomesUsers:             "Users",
 
 	LanguageUpdateFailed: "Failed to update language",
 	LanguageUpdateOK:     "Updated language",

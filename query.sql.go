@@ -196,6 +196,7 @@ func (q *Queries) DeletePatientTag(ctx context.Context, arg DeletePatientTagPara
 const deleteStaleSessions = `-- name: DeleteStaleSessions :execresult
 DELETE FROM session
 WHERE expires < NOW()
+  -- Try to make sure users log in at the start of a session rather than the middle of it 
   OR (
     (expires < NOW() + INTERVAL '20 minutes')
     AND last_seen < NOW() - INTERVAL '5 minutes'
@@ -283,6 +284,55 @@ func (q *Queries) GetAppusers(ctx context.Context) ([]GetAppusersRow, error) {
 			&i.AvatarUrl,
 			&i.HasGdriveAccess,
 			&i.HomeID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCurrentPatientsForHome = `-- name: GetCurrentPatientsForHome :many
+SELECT p.id, p.species_id, p.curr_home_id, p.name, p.status, sl.name AS species_name FROM patient AS p
+JOIN species_language AS sl
+  ON sl.species_id = p.species_id
+WHERE p.curr_home_id = $1
+  AND sl.language_id = $2
+`
+
+type GetCurrentPatientsForHomeParams struct {
+	CurrHomeID pgtype.Int4
+	LanguageID int32
+}
+
+type GetCurrentPatientsForHomeRow struct {
+	ID          int32
+	SpeciesID   int32
+	CurrHomeID  pgtype.Int4
+	Name        string
+	Status      int32
+	SpeciesName string
+}
+
+func (q *Queries) GetCurrentPatientsForHome(ctx context.Context, arg GetCurrentPatientsForHomeParams) ([]GetCurrentPatientsForHomeRow, error) {
+	rows, err := q.db.Query(ctx, getCurrentPatientsForHome, arg.CurrHomeID, arg.LanguageID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetCurrentPatientsForHomeRow
+	for rows.Next() {
+		var i GetCurrentPatientsForHomeRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.SpeciesID,
+			&i.CurrHomeID,
+			&i.Name,
+			&i.Status,
+			&i.SpeciesName,
 		); err != nil {
 			return nil, err
 		}
@@ -638,6 +688,48 @@ func (q *Queries) GetTagsForActivePatients(ctx context.Context, languageID int32
 	var items []GetTagsForActivePatientsRow
 	for rows.Next() {
 		var i GetTagsForActivePatientsRow
+		if err := rows.Scan(&i.PatientID, &i.TagID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTagsForCurrentPatientsForHome = `-- name: GetTagsForCurrentPatientsForHome :many
+SELECT pt.patient_id, pt.tag_id, COALESCE(tl.name, '???') AS name
+FROM patient_tag AS pt
+LEFT JOIN tag_language as tl
+  ON tl.tag_id = pt.tag_id
+LEFT JOIN patient as p
+  ON p.id = pt.patient_id
+WHERE p.curr_home_id = $1
+  AND tl.language_id = $2
+`
+
+type GetTagsForCurrentPatientsForHomeParams struct {
+	CurrHomeID pgtype.Int4
+	LanguageID int32
+}
+
+type GetTagsForCurrentPatientsForHomeRow struct {
+	PatientID int32
+	TagID     int32
+	Name      string
+}
+
+func (q *Queries) GetTagsForCurrentPatientsForHome(ctx context.Context, arg GetTagsForCurrentPatientsForHomeParams) ([]GetTagsForCurrentPatientsForHomeRow, error) {
+	rows, err := q.db.Query(ctx, getTagsForCurrentPatientsForHome, arg.CurrHomeID, arg.LanguageID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTagsForCurrentPatientsForHomeRow
+	for rows.Next() {
+		var i GetTagsForCurrentPatientsForHomeRow
 		if err := rows.Scan(&i.PatientID, &i.TagID, &i.Name); err != nil {
 			return nil, err
 		}

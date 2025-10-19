@@ -28,14 +28,6 @@ func IDSlice(in []string) ([]int32, error) {
 	return out, nil
 }
 
-func MapToSlice[TIn any, TOut any](in []TIn, f func(TIn) TOut) []TOut {
-	out := make([]TOut, len(in))
-	for i, v := range in {
-		out[i] = f(v)
-	}
-	return out
-}
-
 func SliceToMap[TIn any, KOut comparable, VOut any](in []TIn, f func(TIn) (KOut, VOut)) map[KOut]VOut {
 	out := make(map[KOut]VOut)
 	for _, vin := range in {
