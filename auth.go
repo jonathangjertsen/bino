@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gorilla/sessions"
 	"github.com/jackc/pgx/v5/pgtype"
 	"golang.org/x/oauth2"
 )
@@ -89,10 +90,26 @@ func (server *Server) getUser(r *http.Request) (GetUserRow, error) {
 	ctx := r.Context()
 
 	sess, _ := server.Cookies.Get(r, "auth")
+
+	tokenData, ok := sess.Values["oauth_token"].(string)
+	if !ok {
+		return GetUserRow{}, fmt.Errorf("no OAuth token in session")
+	}
+
+	var token oauth2.Token
+	if err := json.Unmarshal([]byte(tokenData), &token); err != nil {
+		return GetUserRow{}, fmt.Errorf("correpted OAuth token in session")
+	}
+
+	if token.Expiry.Before(time.Now().Add(-time.Minute)) {
+		return GetUserRow{}, fmt.Errorf("OAuth token has expired")
+	}
+
 	uidIF, ok := sess.Values["user_id"]
 	if !ok {
 		return GetUserRow{}, ErrUnauthorized
 	}
+
 	uid, ok := uidIF.(int32)
 	if !ok {
 		return GetUserRow{}, fmt.Errorf("%w: uid is %T", ErrInternalServerError, uid)
@@ -190,8 +207,7 @@ func (server *Server) callbackHandler(
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func (server *Server) getTokenFromSession(r *http.Request) (*oauth2.Token, error) {
-	sess, _ := server.Cookies.Get(r, "auth")
+func (server *Server) getTokenFromSession(sess *sessions.Session) (*oauth2.Token, error) {
 	tokenData, ok := sess.Values["oauth_token"].(string)
 	if !ok {
 		return nil, fmt.Errorf("no oauth token in session")
@@ -203,4 +219,9 @@ func (server *Server) getTokenFromSession(r *http.Request) (*oauth2.Token, error
 	}
 
 	return &token, nil
+}
+
+func (server *Server) getTokenFromRequest(r *http.Request) (*oauth2.Token, error) {
+	sess, _ := server.Cookies.Get(r, "auth")
+	return server.getTokenFromSession(sess)
 }

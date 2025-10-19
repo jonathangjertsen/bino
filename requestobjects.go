@@ -60,7 +60,15 @@ func (cd *CommonData) Info(msg string) {
 }
 
 func (cd *CommonData) SetFeedback(fbt FeedbackType, msg string) {
-	if len(cd.Feedback.Items) < 10 {
+	if n := len(cd.Feedback.Items); n < 10 {
+		// Filter dupes
+		for i := range n {
+			if cd.Feedback.Items[i].Message == msg {
+				cd.Feedback.NSkipped++
+				return
+			}
+		}
+
 		cd.Feedback.Items = append(cd.Feedback.Items, FeedbackItem{
 			Message: msg,
 			Type:    fbt,

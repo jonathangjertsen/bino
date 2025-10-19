@@ -18,7 +18,7 @@ var GoogleDriveScopes = []string{
 }
 
 func (server *Server) getDriveService(r *http.Request) (*GDrive, error) {
-	token, err := server.getTokenFromSession(r)
+	token, err := server.getTokenFromRequest(r)
 	if err != nil {
 		return nil, err
 	}
