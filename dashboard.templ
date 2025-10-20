@@ -11,6 +11,7 @@ templ DashboardPage(data *CommonData, dashboardData *DashboardData) {
         @DashboardHomes(data, dashboardData)
     }
     <script src={data.StaticFile("dashboard.js")}></script>
+    <script src={data.StaticFile("dashboard-search.js")}></script>
     <script src={data.StaticFile("patienttags.js")}></script>
 }
 
@@ -18,14 +19,14 @@ templ DashboardSearch(data *CommonData, dashboardData *DashboardData) {
     @Card("dashboard-search", "shadow-m") {
         <div class="form-group">
             <label for="dashboard-search">{data.User.Language.DashboardSearch}</label>
-            <input class="form-control search" id="dashboard-search"></input>
+            <input autocomplete="off" class="form-control search" id="dashboard-search"></input>
         </div>
     }
 }
 
 templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
     @Card("dashboard-form", "shadow-m") {
-        <form action="/checkin" method="POST">
+        @Form("/checkin", "POST") {
             <div class="form-group">
                 <label>{data.User.Language.CheckinPatientName}</label>
                 <input class="form-control" name="name">
@@ -77,7 +78,7 @@ templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
             if data.User.PreferredHomeID == 0 {
                 <p class="small m-0">{data.User.Language.CheckinYouAreHomeless}</p>
             }
-        </form>
+        }
     }
 }
 
@@ -86,6 +87,7 @@ templ DashboardHomes(data *CommonData, dashboardData *DashboardData) {
         for _, home := range dashboardData.Homes {
             @DashboardHomeCard(data, dashboardData, &home)
         }
+        <div id="filter-none" hidden>No results found</div>
     </div>
 }
 
@@ -104,9 +106,9 @@ templ Avatar(u UserView) {
 }
 
 templ DashboardHomeCard(data *CommonData, dashboardData *DashboardData, home *HomeView) {
-    <div class="dashboard-home card"> 
+    <div class="dashboard-home card filter-box"> 
         <div class="card-header d-flex justify-content-between">
-            <a href={home.URL()}>{home.Home.Name}</a>
+            <a href={home.URL()} class="filter-content">{home.Home.Name}</a>
             <div>
                 for _, u := range home.Users {
                     @Avatar(u)
@@ -126,11 +128,11 @@ templ DashboardHomeCard(data *CommonData, dashboardData *DashboardData, home *Ho
 }
 
 templ DashboardPatientCard(data *CommonData, dashboardData *DashboardData, home *HomeView, patient PatientView) {
-    @Card("dashboard-patient-card", "m-2") {
+    @Card("dashboard-patient-card", "m-2", "filter-box") {
         <div class="card-header card-header-patient d-flex justify-content-between">
-            <a href={patient.URL()}>{patient.Name}</a>
+            <a href={patient.URL()} class="filter-content">{patient.Name}</a>
             <div>
-                <span class="patient-species-header">{patient.Species}</span>    
+                <span class="patient-species-header filter-content">{patient.Species}</span>    
                 <button class="expander btn btn-sm btn-outline-success" data-bs-toggle="collapse" data-bs-target={patient.CollapseID("#")}>{data.User.Language.GenericDetails}</button>
             </div>
         </div>
@@ -189,11 +191,11 @@ templ DashboardCheckout(data *CommonData, patient PatientView) {
     <tr>
         <th class="w-25">{data.User.Language.DashboardCheckOut}</th>
         <td>
-            <form
-                action={patient.URLSuffix("checkout")}
-                method="POST"
-                class="form-control-sm form-control-plaintext"
-            >
+            @Form(
+                patient.URLSuffix("checkout"),
+                "POST",
+                "form-control-sm", "form-control-plaintext",
+            ) {
                 <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext">
                     <label for={patient.CheckoutNoteID("#")} class="input-group-text">{data.User.Language.GenericNote}</label>
                     <input autocomplete="off" type="text" class="form-control" id={patient.CheckoutNoteID("")} name="note"></input>
@@ -209,7 +211,7 @@ templ DashboardCheckout(data *CommonData, patient PatientView) {
                     </select>
                     <button type="submit" class="btn btn-primary btn-sm w-50">{data.User.Language.DashboardCheckOut}</button>
                 </form-group>
-            </form>
+            }
         </td>
     </tr>
 }
@@ -271,7 +273,7 @@ templ DashboardTagLabel(data *CommonData) {
 
 templ DashboardTag(data *CommonData, tag TagView) {
     <td class="d-flex justify-content-between border-0">
-        <span class="d-flex">{tag.Name}</span>
+        <span class="d-flex filter-content">{tag.Name}</span>
         @SingleButtonForm(tag.URL(), data.User.Language.GenericDelete, "DELETE", "btn-warning", "tag-delete")
     </td>
 }

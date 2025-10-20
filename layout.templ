@@ -50,6 +50,7 @@ templ Card(classes ...string) {
 templ Head(data *CommonData) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="autocomplete" content="off">
     <title>🕊️ bino</title>
     <link href={data.StaticFile("gen.css")} rel="stylesheet">
 }
@@ -142,7 +143,13 @@ templ UserTimeLong(rel, abs string) {
 }
 
 templ SingleButtonForm(url string, buttonText string, method string, btnClass string, formClasses ...string) {
-    <form action={templ.URL(url)} method={method} class={formClasses}>
+    @Form(url, method, formClasses...) {
         <button type="submit" class={"btn btn-sm", btnClass}>{buttonText}</button>
+    }
+}
+
+templ Form(url string, method string, formClasses ...string) {
+    <form action={templ.URL(url)} method={method} class={formClasses} autocomplete="off">
+        {children...}
     </form>
 }

@@ -14,6 +14,8 @@ $lighterror: mix(red, $light, 45);
 
 $mobilethreshold: 1000px;
 
+$dashboard-home-column: 350px;
+
 @use "node_modules/bootstrap/scss/bootstrap" with (
     $enable-shadows: true,
     $enable-rounded: false,
@@ -38,6 +40,7 @@ a:hover{
     touch-action: default !important;
     cursor: pointer;
 }
+
 .pending-deletion {
   opacity: 0.5;
   background-color: mix($warning, $light, 75);
@@ -96,6 +99,7 @@ body {
 }
 
 .dashboard {
+    min-width: min(100%, $dashboard-home-column * 2);
     @media (min-width: $mobilethreshold) {
         display: flex;
         user-select: none;
@@ -316,12 +320,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .dashboard-search {
+    background-color: rgb(193.5, 194.25, 203.75);
     border: 1px solid $slightdark;
     margin: 0 !important;
 }
 
+.active-search {
+    border: 2px solid $warning !important;
+}
+
 .dashboard-home {
-    min-width: min(100%, 350px);
+    min-width: min(100%, $dashboard-home-column);
 }
 
 .b-create-patient {
@@ -464,4 +473,9 @@ pre {
         right: 1em;
         cursor: pointer;
     }
+}
+
+#filter-none {
+    color: $dark;
+    margin: auto;
 }

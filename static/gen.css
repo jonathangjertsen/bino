@@ -11693,6 +11693,9 @@ body {
   width: 5em;
 }
 
+.dashboard {
+  min-width: min(100%, 700px);
+}
 @media (min-width: 1000px) {
   .dashboard {
     display: flex;
@@ -11935,8 +11938,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .dashboard-search {
+  background-color: rgb(193.5, 194.25, 203.75);
   border: 1px solid rgb(126.75, 127.125, 141.875);
   margin: 0 !important;
+}
+
+.active-search {
+  border: 2px solid rgb(235, 140, 75) !important;
 }
 
 .dashboard-home {
@@ -12083,6 +12091,11 @@ pre {
   top: 1em;
   right: 1em;
   cursor: pointer;
+}
+
+#filter-none {
+  color: rgb(60, 60, 80);
+  margin: auto;
 }
 
 /*# sourceMappingURL=gen.css.map */
