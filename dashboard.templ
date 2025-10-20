@@ -126,7 +126,7 @@ templ DashboardHomeCard(data *CommonData, dashboardData *DashboardData, home *Ho
 }
 
 templ DashboardPatientCard(data *CommonData, dashboardData *DashboardData, home *HomeView, patient PatientView) {
-    @Card("dashboard-patient-card") {
+    @Card("dashboard-patient-card", "m-2") {
         <div class="card-header card-header-patient d-flex justify-content-between">
             <a href={patient.URL()}>{patient.Name}</a>
             <div>
