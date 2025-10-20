@@ -5,7 +5,9 @@ import "fmt"
 // ---- Home
 
 type HomeView struct {
-	Home     Home
+	Home Home
+
+	// Optional
 	Patients []PatientView
 	Users    []UserView
 }
@@ -83,6 +85,9 @@ type UserView struct {
 	Email        string
 	AvatarURL    string
 	HasAvatarURL bool
+
+	// Optional
+	Homes []HomeView
 }
 
 func (u UserView) Valid() bool {
@@ -104,6 +109,16 @@ func (user GetAppusersRow) ToUserView() UserView {
 }
 
 func (user Appuser) ToUserView() UserView {
+	return UserView{
+		ID:           user.ID,
+		Name:         user.DisplayName,
+		Email:        user.Email,
+		AvatarURL:    user.AvatarUrl.String,
+		HasAvatarURL: user.AvatarUrl.Valid,
+	}
+}
+
+func (user GetUserRow) ToUserView() UserView {
 	return UserView{
 		ID:           user.ID,
 		Name:         user.DisplayName,

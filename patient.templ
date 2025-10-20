@@ -6,8 +6,8 @@ import (
 
 templ PatientPage(ctx context.Context, data *CommonData, view PatientPageView, server *Server) {
 	@Layout(data, "patient-page") {
+        <h1 class="editable" data-action={view.Patient.URLSuffix("set-name")}>{view.Patient.Name}</h1>
         @Card() {
-            <h1 class="editable" data-action={view.Patient.URLSuffix("set-name")}>{view.Patient.Name}</h1>
             <h2>Personalia</h2>
             <table class="table table-bordered mb-2">
             <tbody>

@@ -347,3 +347,11 @@ INNER JOIN appuser AS au
   ON hau.appuser_id = au.id
 WHERE home_id = $1
 ;
+
+-- name: GetHomesWithDataForUser :many
+SELECT h.*
+FROM home AS h
+INNER JOIN home_appuser AS hau
+  ON hau.home_id = h.id
+WHERE appuser_id = $1
+;

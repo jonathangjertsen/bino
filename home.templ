@@ -6,9 +6,9 @@ import (
 
 templ HomePage(ctx context.Context, data *CommonData, dashboardData *DashboardData, view *HomeView) {
     @Layout(data, "home-page") {
+        <h1>{view.Home.Name}</h1>
         @Card() {
-            <h1>{view.Home.Name}</h1>
-            <h2>{data.User.Language.HomesPatients}</h2>
+            <h2>{data.User.Language.HomesPatients} ({len(view.Patients)})</h2>
             for _, patient := range view.Patients {
                 @DashboardPatientCard(data, dashboardData, view, patient)
             }

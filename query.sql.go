@@ -503,6 +503,34 @@ func (q *Queries) GetHomesForUser(ctx context.Context, appuserID int32) ([]int32
 	return items, nil
 }
 
+const getHomesWithDataForUser = `-- name: GetHomesWithDataForUser :many
+SELECT h.id, h.name
+FROM home AS h
+INNER JOIN home_appuser AS hau
+  ON hau.home_id = h.id
+WHERE appuser_id = $1
+`
+
+func (q *Queries) GetHomesWithDataForUser(ctx context.Context, appuserID int32) ([]Home, error) {
+	rows, err := q.db.Query(ctx, getHomesWithDataForUser, appuserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Home
+	for rows.Next() {
+		var i Home
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getPatient = `-- name: GetPatient :one
 SELECT id, species_id, curr_home_id, name, status FROM patient
 WHERE id = $1

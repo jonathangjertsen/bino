@@ -136,6 +136,9 @@ type Language struct {
 	PatientEventUser      string
 	PatientEventHome      string
 
+	UserHomes      string
+	UserIsHomeless string
+
 	NavbarCalendar  string
 	NavbarDashboard string
 
@@ -294,6 +297,9 @@ var NO = &Language{
 	PatientEventNote:      "Notis",
 	PatientEventUser:      "Endret av",
 	PatientEventHome:      "Rehabhjem",
+
+	UserHomes:      "Tilkoblede rehabhjem",
+	UserIsHomeless: "Ingen tilkoblede rehabhjem",
 
 	Status: map[Status]string{
 		StatusUnknown:                        "Ukjent",
@@ -469,6 +475,9 @@ var EN = &Language{
 	PatientEventNote:      "Note",
 	PatientEventUser:      "User",
 	PatientEventHome:      "Home",
+
+	UserHomes:      "Associated rehab homes",
+	UserIsHomeless: "No associated rehab homes",
 
 	Status: map[Status]string{
 		StatusUnknown:                        "Unknown",

@@ -1,0 +1,24 @@
+package main
+
+import (
+    "context"
+)
+
+templ UserPage(ctx context.Context, data *CommonData, user UserView) {
+    @Layout(data, "user-page") {
+        <h1>{user.Name}</h1>
+        @Card() {
+            <h2>{data.User.Language.UserHomes}</h2>
+            <ul>
+                for _, home := range user.Homes {
+                    <li><a href={home.URL()}>{home.Home.Name}</a></li>
+                }
+            </ul>
+            if len(user.Homes) == 0 {
+                <p class="small">{data.User.Language.UserIsHomeless}</p>
+            }
+
+        }
+    }
+    <script src={data.StaticFile("patienttags.js")}></script>
+}
