@@ -145,6 +145,7 @@ WHERE pt.patient_id = $1
 SELECT au.*, ha.home_id FROM appuser AS au
 LEFT JOIN home_appuser AS ha
     ON ha.appuser_id = au.id
+ORDER BY au.id
 ;
 
 -- name: InsertHome :exec
@@ -371,5 +372,46 @@ SELECT h.*
 FROM home AS h
 INNER JOIN home_appuser AS hau
   ON hau.home_id = h.id
+WHERE appuser_id = $1
+;
+
+-- name: RemoveHomesForAppuser :exec
+DELETE
+FROM home_appuser
+WHERE appuser_id = $1
+;
+
+-- name: DeleteSessionsForUser :exec
+DELETE
+FROM session
+WHERE appuser_id = $1
+;
+
+-- name: ScrubAppuser :exec
+UPDATE appuser SET
+  display_name = 'Deleted user (id = ' || id || ')',
+  google_sub = '',
+  email = '',
+  logging_consent = NULL,
+  avatar_url = '',
+  has_gdrive_access = FALSE 
+WHERE id = $1
+;
+
+-- name: DeleteAppuser :exec
+DELETE
+FROM appuser
+WHERE id = $1
+;
+
+-- name: DeleteAppuserLanguage :exec
+DELETE
+FROM appuser_language
+WHERE appuser_id = $1
+;
+
+-- name: DeleteEventsCreatedByUser :exec
+DELETE
+FROM patient_event
 WHERE appuser_id = $1
 ;

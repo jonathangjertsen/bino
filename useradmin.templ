@@ -1,0 +1,58 @@
+package main
+
+templ UserAdmin(data *CommonData, users []UserView) {
+	@Layout(data) {
+        <h1>{data.User.Language.AdminManageUsers}</h1>
+        <div class="card">
+            <table class="table table-striped table-bordered m-0">
+                <thead>
+                    <tr>
+                        <th>{data.User.Language.GenericAvatar}</th>
+                        <th>{data.User.Language.AdminDisplayName}</th>
+                        <th>{data.User.Language.AdminEmailAddress}</th>
+                        <th colspan="2">{data.User.Language.GenericDelete}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    for _, u := range users {
+                        <tr class="filter-box">
+                            <td class="center">@Avatar(u)</td>
+                            <td><a href={templ.URL(u.URL())}>{u.Name}</a></td>
+                            <td>{u.Email}</td>
+                            <td>
+                                if u.ID != data.User.AppuserID {
+                                    <a class="btn btn-danger" href={templ.URL(u.URLSuffix("confirm-scrub"))}>
+                                        {data.User.Language.AdminScrubUserData}
+                                    </a>
+                                }
+                            </td>
+                            <td>
+                                if u.ID != data.User.AppuserID {
+                                    <a class="btn btn-danger"href={templ.URL(u.URLSuffix("confirm-nuke"))}>
+                                        {data.User.Language.AdminNukeUser}
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+templ UserConfirmScrubOrNuke(data *CommonData, user UserView, header, confirmMsg, dest, referer string) {
+    @Layout(data) {
+        <a href={referer}>{data.User.Language.GenericGoBack}</a>
+        <h1>{header}</h1>
+        @Card() {
+            <p>{confirmMsg} ({user.Email})</p>
+            @Form(user.URLSuffix(dest), "POST", "form-control", "d-flex", "p-0") {
+                <div class="input-group">
+                    <input class="input w-75" name="confirm-email" value={data.User.Language.GenericEmail} autocomplete="off" data-1p-ignore data-lpignore="true" data-bwignore="true" data-protonpass-ignore="true"></input>
+                    <button type="submit" class="btn btn-danger w-25">{data.User.Language.GenericConfirm}</button>
+                </div>
+            }
+        }
+    }
+}

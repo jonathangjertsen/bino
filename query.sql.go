@@ -177,6 +177,39 @@ func (q *Queries) ClearAllUserGDriveAccess(ctx context.Context) error {
 	return err
 }
 
+const deleteAppuser = `-- name: DeleteAppuser :exec
+DELETE
+FROM appuser
+WHERE id = $1
+`
+
+func (q *Queries) DeleteAppuser(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteAppuser, id)
+	return err
+}
+
+const deleteAppuserLanguage = `-- name: DeleteAppuserLanguage :exec
+DELETE
+FROM appuser_language
+WHERE appuser_id = $1
+`
+
+func (q *Queries) DeleteAppuserLanguage(ctx context.Context, appuserID int32) error {
+	_, err := q.db.Exec(ctx, deleteAppuserLanguage, appuserID)
+	return err
+}
+
+const deleteEventsCreatedByUser = `-- name: DeleteEventsCreatedByUser :exec
+DELETE
+FROM patient_event
+WHERE appuser_id = $1
+`
+
+func (q *Queries) DeleteEventsCreatedByUser(ctx context.Context, appuserID int32) error {
+	_, err := q.db.Exec(ctx, deleteEventsCreatedByUser, appuserID)
+	return err
+}
+
 const deletePatientTag = `-- name: DeletePatientTag :exec
 DELETE FROM patient_tag
 WHERE patient_id = $1
@@ -190,6 +223,17 @@ type DeletePatientTagParams struct {
 
 func (q *Queries) DeletePatientTag(ctx context.Context, arg DeletePatientTagParams) error {
 	_, err := q.db.Exec(ctx, deletePatientTag, arg.PatientID, arg.TagID)
+	return err
+}
+
+const deleteSessionsForUser = `-- name: DeleteSessionsForUser :exec
+DELETE
+FROM session
+WHERE appuser_id = $1
+`
+
+func (q *Queries) DeleteSessionsForUser(ctx context.Context, appuserID int32) error {
+	_, err := q.db.Exec(ctx, deleteSessionsForUser, appuserID)
 	return err
 }
 
@@ -253,6 +297,7 @@ const getAppusers = `-- name: GetAppusers :many
 SELECT au.id, au.display_name, au.google_sub, au.email, au.logging_consent, au.avatar_url, au.has_gdrive_access, ha.home_id FROM appuser AS au
 LEFT JOIN home_appuser AS ha
     ON ha.appuser_id = au.id
+ORDER BY au.id
 `
 
 type GetAppusersRow struct {
@@ -1088,6 +1133,17 @@ func (q *Queries) MovePatient(ctx context.Context, arg MovePatientParams) error 
 	return err
 }
 
+const removeHomesForAppuser = `-- name: RemoveHomesForAppuser :exec
+DELETE
+FROM home_appuser
+WHERE appuser_id = $1
+`
+
+func (q *Queries) RemoveHomesForAppuser(ctx context.Context, appuserID int32) error {
+	_, err := q.db.Exec(ctx, removeHomesForAppuser, appuserID)
+	return err
+}
+
 const removeUserFromHome = `-- name: RemoveUserFromHome :exec
 DELETE FROM home_appuser
 WHERE home_id = $1
@@ -1145,6 +1201,22 @@ WHERE id = $1
 
 func (q *Queries) RevokeSession(ctx context.Context, id string) error {
 	_, err := q.db.Exec(ctx, revokeSession, id)
+	return err
+}
+
+const scrubAppuser = `-- name: ScrubAppuser :exec
+UPDATE appuser SET
+  display_name = 'Deleted user (id = ' || id || ')',
+  google_sub = '',
+  email = '',
+  logging_consent = NULL,
+  avatar_url = '',
+  has_gdrive_access = FALSE 
+WHERE id = $1
+`
+
+func (q *Queries) ScrubAppuser(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, scrubAppuser, id)
 	return err
 }
 

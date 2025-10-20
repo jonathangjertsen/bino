@@ -149,7 +149,12 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 	mux.Handle("GET /patient/{patient}", chainf(server.getPatientHandler, loggedInChain...))
 	mux.Handle("GET /home/{home}", chainf(server.getHomeHandler, loggedInChain...))
 	mux.Handle("GET /user/{user}", chainf(server.getUserHandler, loggedInChain...))
+	mux.Handle("GET /user/{user}/confirm-scrub", chainf(server.userConfirmScrubHandler, loggedInChain...))
+	mux.Handle("GET /user/{user}/confirm-nuke", chainf(server.userConfirmNukeHandler, loggedInChain...))
+	mux.Handle("POST /user/{user}/scrub", chainf(server.userDoScrubHandler, loggedInChain...))
+	mux.Handle("POST /user/{user}/nuke", chainf(server.userDoNukeHandler, loggedInChain...))
 	mux.Handle("GET /former-patients", chainf(server.formerPatientsHandler, loggedInChain...))
+	mux.Handle("GET /users", chainf(server.userAdminHandler, loggedInChain...))
 
 	// Admin AJAX
 	mux.Handle("POST /species", chainf(server.postSpeciesHandler, loggedInChain...))

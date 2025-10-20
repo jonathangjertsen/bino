@@ -25,18 +25,26 @@ type Language struct {
 	Months      map[time.Month]string
 	GDriveRoles map[string]string
 
-	AdminDefaultIncludeTag string
-	AdminDisplayName       string
-	AdminEmailAddress      string
-	AdminInviteToBino      string
-	AdminManageEvents      string
-	AdminManageGoogleDrive string
-	AdminManageHomes       string
-	AdminManageSpecies     string
-	AdminManageStatuses    string
-	AdminManageTags        string
-	AdminManageInvites     string
-	AdminRoot              string
+	AdminDefaultIncludeTag      string
+	AdminDisplayName            string
+	AdminEmailAddress           string
+	AdminInviteToBino           string
+	AdminManageEvents           string
+	AdminManageGoogleDrive      string
+	AdminManageHomes            string
+	AdminManageSpecies          string
+	AdminManageStatuses         string
+	AdminManageTags             string
+	AdminManageInvites          string
+	AdminManageUsers            string
+	AdminScrubUserData          string
+	AdminScrubUserDataConfirm   string
+	AdminNukeUser               string
+	AdminNukeUserConfirm        string
+	AdminAbortedDueToWrongEmail string
+	AdminUserDeletionFailed     string
+	AdminUserWasDeleted         string
+	AdminRoot                   string
 
 	AuthLogOut string
 
@@ -96,8 +104,12 @@ type Language struct {
 
 	GenericAdd      string
 	GenericAge      string
+	GenericAvatar   string
+	GenericCancel   string
+	GenericConfirm  string
 	GenericDelete   string
 	GenericDetails  string
+	GenericEmail    string
 	GenericGoBack   string
 	GenericHome     string
 	GenericJournal  string
@@ -189,18 +201,26 @@ var NO = &Language{
 		"commenter":     "Kan kommentere på journaler",
 		"reader":        "Kan lese journaler",
 	},
-	AdminDefaultIncludeTag: "Vis ved innsjekk",
-	AdminDisplayName:       "Navn",
-	AdminEmailAddress:      "Epostaddresse",
-	AdminInviteToBino:      "Inviter til Bino",
-	AdminManageEvents:      "Konfigurer hendelsestyper",
-	AdminManageGoogleDrive: "Konfigurer Google Drive",
-	AdminManageHomes:       "Konfigurer rehabhjem",
-	AdminManageSpecies:     "Konfigurer arter",
-	AdminManageStatuses:    "Konfigurer statuser",
-	AdminManageTags:        "Konfigurer tagger",
-	AdminManageInvites:     "Invitasjoner",
-	AdminRoot:              "Admin",
+	AdminDefaultIncludeTag:      "Vis ved innsjekk",
+	AdminDisplayName:            "Navn",
+	AdminEmailAddress:           "Epostaddresse",
+	AdminInviteToBino:           "Inviter til Bino",
+	AdminManageEvents:           "Konfigurer hendelsestyper",
+	AdminManageGoogleDrive:      "Konfigurer Google Drive",
+	AdminManageHomes:            "Konfigurer rehabhjem",
+	AdminManageSpecies:          "Konfigurer arter",
+	AdminManageStatuses:         "Konfigurer statuser",
+	AdminManageTags:             "Konfigurer tagger",
+	AdminManageInvites:          "Administrer invitasjoner",
+	AdminManageUsers:            "Administrer brukere",
+	AdminScrubUserData:          "Slett brukerdata",
+	AdminScrubUserDataConfirm:   "Skriv inn brukerens email-addresse for å bekrefte at du vil slette brukerdataen",
+	AdminNukeUser:               "Tilintetgjør bruker",
+	AdminNukeUserConfirm:        "Skriv inn brukerens email-addresse for å bekrefte at du vil tilintetgjøre brukeren (dette sletter også alt innhold brukeren har opprettet)",
+	AdminAbortedDueToWrongEmail: "Feil email-addresse innskrevet. Handlingen ble avbrutt.",
+	AdminUserDeletionFailed:     "Kunne ikke slette brukeren. Kontakt administrator.",
+	AdminUserWasDeleted:         "Brukeren ble slettet.",
+	AdminRoot:                   "Admin",
 
 	AuthLogOut: "Logg ut",
 
@@ -260,8 +280,12 @@ var NO = &Language{
 
 	GenericAdd:      "Legg til",
 	GenericAge:      "Alder",
+	GenericAvatar:   "Profilbilde",
+	GenericCancel:   "Avbryt",
+	GenericConfirm:  "Bekreft",
 	GenericDelete:   "Slett",
 	GenericDetails:  "Detaljer",
+	GenericEmail:    "Email",
 	GenericGoBack:   "Tilbake",
 	GenericHome:     "Rehabhjem",
 	GenericJournal:  "Journal",
@@ -374,18 +398,26 @@ var EN = &Language{
 		"commenter":     "Can comment on journals",
 		"reader":        "Can read journals",
 	},
-	AdminDefaultIncludeTag: "Show at check-in",
-	AdminDisplayName:       "Name",
-	AdminEmailAddress:      "Email address",
-	AdminInviteToBino:      "Invite to Bino",
-	AdminManageEvents:      "Manage event types",
-	AdminManageGoogleDrive: "Configure Google Drive",
-	AdminManageHomes:       "Manage rehab homes",
-	AdminManageSpecies:     "Manage species",
-	AdminManageStatuses:    "Manage statuses",
-	AdminManageTags:        "Manage tags",
-	AdminManageInvites:     "Invitations",
-	AdminRoot:              "Admin",
+	AdminDefaultIncludeTag:      "Show at check-in",
+	AdminDisplayName:            "Name",
+	AdminEmailAddress:           "Email address",
+	AdminInviteToBino:           "Invite to Bino",
+	AdminManageEvents:           "Manage event types",
+	AdminManageGoogleDrive:      "Configure Google Drive",
+	AdminManageHomes:            "Manage rehab homes",
+	AdminManageSpecies:          "Manage species",
+	AdminManageStatuses:         "Manage statuses",
+	AdminManageTags:             "Manage tags",
+	AdminManageInvites:          "Invitations",
+	AdminManageUsers:            "Manage users",
+	AdminScrubUserData:          "Delete user data",
+	AdminScrubUserDataConfirm:   "Write the user's email address to confirm that you want to scrub all user data for this user",
+	AdminNukeUser:               "Destroy user",
+	AdminNukeUserConfirm:        "Write the user's email address to confirm that you want to destroy the user record (this also removes all content created by the user)",
+	AdminAbortedDueToWrongEmail: "Wrong email address. The action was cancelled.",
+	AdminUserDeletionFailed:     "Failed to delete the user. Contact site administrator.",
+	AdminUserWasDeleted:         "The user was deleted.",
+	AdminRoot:                   "Admin",
 
 	AuthLogOut: "Log out",
 
@@ -445,8 +477,12 @@ var EN = &Language{
 
 	GenericAdd:      "Add",
 	GenericAge:      "Age",
+	GenericAvatar:   "Avatar",
+	GenericCancel:   "Cancel",
+	GenericConfirm:  "Confirm",
 	GenericDelete:   "Delete",
 	GenericDetails:  "Details",
+	GenericEmail:    "Email",
 	GenericGoBack:   "Go back",
 	GenericHome:     "Home",
 	GenericJournal:  "Journal",

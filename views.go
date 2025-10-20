@@ -107,6 +107,10 @@ func (u UserView) URL() string {
 	return fmt.Sprintf("/user/%d", u.ID)
 }
 
+func (u UserView) URLSuffix(suffix string) string {
+	return fmt.Sprintf("/user/%d/%s", u.ID, suffix)
+}
+
 func (user GetAppusersRow) ToUserView() UserView {
 	return UserView{
 		ID:           user.ID,
