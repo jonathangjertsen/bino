@@ -441,6 +441,49 @@ func (q *Queries) GetEventsForPatient(ctx context.Context, patientID int32) ([]G
 	return items, nil
 }
 
+const getFormerPatients = `-- name: GetFormerPatients :many
+SELECT p.id, p.name, p.curr_home_id, p.status, COALESCE(sl.name, '???') AS species FROM patient AS p
+LEFT JOIN species_language AS sl
+  ON sl.species_id = p.species_id
+WHERE curr_home_id IS NULL
+  AND sl.language_id = $1
+ORDER BY p.id DESC
+`
+
+type GetFormerPatientsRow struct {
+	ID         int32
+	Name       string
+	CurrHomeID pgtype.Int4
+	Status     int32
+	Species    string
+}
+
+func (q *Queries) GetFormerPatients(ctx context.Context, languageID int32) ([]GetFormerPatientsRow, error) {
+	rows, err := q.db.Query(ctx, getFormerPatients, languageID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetFormerPatientsRow
+	for rows.Next() {
+		var i GetFormerPatientsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.CurrHomeID,
+			&i.Status,
+			&i.Species,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getHome = `-- name: GetHome :one
 SELECT id, name FROM home
 WHERE id = $1
@@ -794,6 +837,42 @@ func (q *Queries) GetTagsForCurrentPatientsForHome(ctx context.Context, arg GetT
 	var items []GetTagsForCurrentPatientsForHomeRow
 	for rows.Next() {
 		var i GetTagsForCurrentPatientsForHomeRow
+		if err := rows.Scan(&i.PatientID, &i.TagID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTagsForFormerPatients = `-- name: GetTagsForFormerPatients :many
+SELECT pt.patient_id, pt.tag_id, COALESCE(tl.name, '???') AS name from patient_tag AS pt
+LEFT JOIN tag_language AS tl
+    ON tl.tag_id = pt.tag_id
+LEFT JOIN patient AS p
+    ON p.id = pt.patient_id
+WHERE p.curr_home_id IS NULL
+AND tl.language_id = $1
+`
+
+type GetTagsForFormerPatientsRow struct {
+	PatientID int32
+	TagID     int32
+	Name      string
+}
+
+func (q *Queries) GetTagsForFormerPatients(ctx context.Context, languageID int32) ([]GetTagsForFormerPatientsRow, error) {
+	rows, err := q.db.Query(ctx, getTagsForFormerPatients, languageID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTagsForFormerPatientsRow
+	for rows.Next() {
+		var i GetTagsForFormerPatientsRow
 		if err := rows.Scan(&i.PatientID, &i.TagID, &i.Name); err != nil {
 			return nil, err
 		}

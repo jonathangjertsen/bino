@@ -37,6 +37,10 @@ templ PatientPage(ctx context.Context, data *CommonData, view PatientPageView, s
             <h2>Oppdater</h2>
             <table class="patient-table table table-bordered mb-2">
                 <tbody>
+                    if data.User.HasGDriveAccess {
+                        @DashboardJournalUpdate(data, view.Patient)
+                    }
+
                     if !IsCheckoutStatus[Status(view.Patient.Status)] {
                         @DashboardMove(data, view.Homes, view.Home, view.Patient)
                         @DashboardCheckout(data, view.Patient)

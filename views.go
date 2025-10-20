@@ -49,6 +49,15 @@ func (pv PatientView) URLSuffix(suffix string) string {
 	return fmt.Sprintf("/patient/%d/%s", pv.ID, suffix)
 }
 
+func (in GetFormerPatientsRow) ToPatientView() PatientView {
+	return PatientView{
+		ID:      in.ID,
+		Status:  in.Status,
+		Name:    in.Name,
+		Species: in.Species,
+	}
+}
+
 // ---- Tag
 
 type TagView struct {

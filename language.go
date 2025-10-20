@@ -35,6 +35,7 @@ type Language struct {
 	AdminManageSpecies     string
 	AdminManageStatuses    string
 	AdminManageTags        string
+	AdminManageInvites     string
 	AdminRoot              string
 
 	AuthLogOut string
@@ -60,6 +61,8 @@ type Language struct {
 
 	FooterPrivacy    string
 	FooterSourceCode string
+
+	FormerPatients string
 
 	GDriveBaseDir                          string
 	GDriveSelectFolder                     string
@@ -196,7 +199,8 @@ var NO = &Language{
 	AdminManageSpecies:     "Konfigurer arter",
 	AdminManageStatuses:    "Konfigurer statuser",
 	AdminManageTags:        "Konfigurer tagger",
-	AdminRoot:              "Konfigurering",
+	AdminManageInvites:     "Invitasjoner",
+	AdminRoot:              "Admin",
 
 	AuthLogOut: "Logg ut",
 
@@ -221,6 +225,8 @@ var NO = &Language{
 
 	FooterPrivacy:    "Personvern",
 	FooterSourceCode: "Kildekode",
+
+	FormerPatients: "Tidligere pasienter",
 
 	GDriveBaseDir:                          "Velg journalmappe",
 	GDriveSelectFolder:                     "Velg mappe",
@@ -378,6 +384,7 @@ var EN = &Language{
 	AdminManageSpecies:     "Manage species",
 	AdminManageStatuses:    "Manage statuses",
 	AdminManageTags:        "Manage tags",
+	AdminManageInvites:     "Invitations",
 	AdminRoot:              "Admin",
 
 	AuthLogOut: "Log out",
@@ -403,6 +410,8 @@ var EN = &Language{
 
 	FooterPrivacy:    "Privacy",
 	FooterSourceCode: "Source code",
+
+	FormerPatients: "Former patients",
 
 	GDriveBaseDir:                          "Select journal folder",
 	GDriveSelectFolder:                     "Select folder",

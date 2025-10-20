@@ -1,0 +1,41 @@
+package main
+
+
+templ FormerPatients(data *CommonData, patients []PatientView) {
+	@Layout(data) {
+        <h1>{data.User.Language.FormerPatients}</h1>
+        <div class="former-patients-container">
+            <div class="former-patients-search m-2">
+                @DashboardSearch(data)
+            </div>
+            <div class="card search-container">
+                <table class="table table-striped table-bordered m-0">
+                    <thead>
+                        <tr>
+                            <th>{data.User.Language.GenericName}</th>
+                            <th>{data.User.Language.GenericSpecies}</th>
+                            <th>{data.User.Language.GenericStatus}</th>
+                            <th>{data.User.Language.PatientRegisteredTime}</th>
+                            <th>{data.User.Language.PatientCheckedOutTime}</th>                
+                        </tr>
+                    </thead>
+                    <tbody>
+                        for _, p := range patients {
+                            <tr class="filter-box">
+                                <td><a href={templ.URL(p.URL())} class="filter-content">{p.Name}</a></td>
+                                <td class="filter-content">{p.Species}</td>
+                                <td class="filter-content">{data.User.Language.Status[Status(p.Status)]}</td>
+                                <td class="filter-content">{data.User.Language.TODO("checkin")}</td>
+                                <td class="filter-content">{data.User.Language.TODO("checkout")}</td>
+                            </tr>
+                        }
+                        <tr id="filter-none" hidden>
+                            <td class="center" colspan="5">{data.User.Language.GenericNotFound}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    <script src={data.StaticFile("dashboard-search.js")}></script>
+}

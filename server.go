@@ -149,6 +149,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 	mux.Handle("GET /patient/{patient}", chainf(server.getPatientHandler, loggedInChain...))
 	mux.Handle("GET /home/{home}", chainf(server.getHomeHandler, loggedInChain...))
 	mux.Handle("GET /user/{user}", chainf(server.getUserHandler, loggedInChain...))
+	mux.Handle("GET /former-patients", chainf(server.formerPatientsHandler, loggedInChain...))
 
 	// Admin AJAX
 	mux.Handle("POST /species", chainf(server.postSpeciesHandler, loggedInChain...))

@@ -115,6 +115,24 @@ WHERE p.curr_home_id IS NOT NULL
 AND tl.language_id = $1
 ;
 
+-- name: GetFormerPatients :many
+SELECT p.id, p.name, p.curr_home_id, p.status, COALESCE(sl.name, '???') AS species FROM patient AS p
+LEFT JOIN species_language AS sl
+  ON sl.species_id = p.species_id
+WHERE curr_home_id IS NULL
+  AND sl.language_id = $1
+ORDER BY p.id DESC
+;
+
+-- name: GetTagsForFormerPatients :many
+SELECT pt.patient_id, pt.tag_id, COALESCE(tl.name, '???') AS name from patient_tag AS pt
+LEFT JOIN tag_language AS tl
+    ON tl.tag_id = pt.tag_id
+LEFT JOIN patient AS p
+    ON p.id = pt.patient_id
+WHERE p.curr_home_id IS NULL
+AND tl.language_id = $1
+;
 -- name: GetTagsForPatient :many
 SELECT pt.tag_id, COALESCE(tl.name, '???') AS name from patient_tag AS pt
 LEFT JOIN tag_language AS tl

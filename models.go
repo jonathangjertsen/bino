@@ -44,6 +44,12 @@ type HomeAppuser struct {
 	HomeID    int32
 }
 
+type Invitation struct {
+	ID      string
+	Email   pgtype.Text
+	Expires pgtype.Timestamptz
+}
+
 // Each row represents a patient
 type Patient struct {
 	ID         int32

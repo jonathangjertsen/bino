@@ -69,6 +69,7 @@ templ Navbar(data *CommonData) {
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 @NavbarPageLink(data.User.Language.NavbarDashboard, "/")
                 //@NavbarPageLink(data.User.Language.Calendar, "/calendar")
+                @NavbarPageLink(data.User.Language.FormerPatients, "/former-patients")
                 @NavbarPageLink(data.User.Language.AdminRoot, "/admin")
                 @LanguageSelect(data)
                 @SelfInfo(&data.User)

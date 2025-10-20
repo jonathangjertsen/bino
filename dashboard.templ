@@ -6,7 +6,7 @@ templ DashboardPage(data *CommonData, dashboardData *DashboardData) {
 	@Layout(data, "dashboard-container") {
         <div class="dashboard-left-sidebar m-2">
             @DashboardForm(data, dashboardData)
-            @DashboardSearch(data, dashboardData)
+            @DashboardSearch(data)
         </div>
         @DashboardHomes(data, dashboardData)
     }
@@ -15,7 +15,7 @@ templ DashboardPage(data *CommonData, dashboardData *DashboardData) {
     <script src={data.StaticFile("patienttags.js")}></script>
 }
 
-templ DashboardSearch(data *CommonData, dashboardData *DashboardData) {
+templ DashboardSearch(data *CommonData) {
     @Card("dashboard-search", "shadow-m") {
         <div class="form-group">
             <label for="dashboard-search">{data.User.Language.DashboardSearch}</label>
@@ -83,7 +83,7 @@ templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
 }
 
 templ DashboardHomes(data *CommonData, dashboardData *DashboardData) {
-    <div class="dashboard">
+    <div class="dashboard search-container">
         for _, home := range dashboardData.Homes {
             @DashboardHomeCard(data, dashboardData, &home)
         }

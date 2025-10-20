@@ -1,11 +1,11 @@
 function filterDashboard() {
   const q = document.getElementById('dashboard-search').value.trim().toLowerCase();
   const boxes = document.querySelectorAll('.filter-box');
-  const dashboard = document.querySelector('.dashboard');
+  const container = document.querySelector('.search-container');
   const searchBox = document.getElementById('dashboard-search');
   const noneMsg = document.getElementById('filter-none');
   const active = q.length > 0;
-  [dashboard, searchBox].forEach(el => el.classList.toggle('active-search', active));
+  [container, searchBox].forEach(el => el.classList.toggle('active-search', active));
   if (!active) {
     boxes.forEach(b => b.hidden = false);
     noneMsg.hidden = true;

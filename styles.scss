@@ -141,6 +141,10 @@ body {
     max-width: 96%;
 }
 
+.former-patients-container {
+    display: flex;
+    max-width: 96%;
+}
 
 .main {
     flex: 1;
@@ -312,6 +316,15 @@ h1, h2, h3, h4, h5, h6 {
 
 .dashboard-left-sidebar {
     min-width: min(100%, 450px);
+    margin-top: 0 !important;
+    margin-left: 0 !important;
+    margin-bottom: 1rem !important;
+    flex: 1;  
+    align-self: flex-start;  
+}
+
+.former-patients-search-container {
+    min-width: min(100%, 150px);
     margin-top: 0 !important;
     margin-left: 0 !important;
     margin-bottom: 1rem !important;
