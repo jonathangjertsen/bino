@@ -4,12 +4,22 @@ import (
     "context"
 )
 
-templ HomePage(ctx context.Context, data *CommonData, view HomeView) {
+templ HomePage(ctx context.Context, data *CommonData, dashboardData *DashboardData, view *HomeView) {
     @Layout(data, "home-page") {
         @Card() {
             <h1>{view.Home.Name}</h1>
-            <h2>{data.User.Language.HomesUsers}</h2>
             <h2>{data.User.Language.HomesPatients}</h2>
+            for _, patient := range view.Patients {
+                @DashboardPatientCard(data, dashboardData, view, patient)
+            }
+            <h2>{data.User.Language.HomesUsers}</h2>
+            for _, user := range view.Users {
+                @user.Component(data) {}
+            }
+            if len(view.Users) == 0 {
+                <p class="small">{data.User.Language.HomesEmptyHome}</p>
+            }
         }
     }
+    <script src={data.StaticFile("patienttags.js")}></script>
 }

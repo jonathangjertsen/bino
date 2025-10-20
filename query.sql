@@ -340,3 +340,10 @@ WHERE expires < NOW()
   )
 ;
 
+-- name: GetAppusersForHome :many
+SELECT au.*
+FROM home_appuser AS hau
+INNER JOIN appuser AS au
+  ON hau.appuser_id = au.id
+WHERE home_id = $1
+;

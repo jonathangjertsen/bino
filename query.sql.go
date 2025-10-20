@@ -295,6 +295,42 @@ func (q *Queries) GetAppusers(ctx context.Context) ([]GetAppusersRow, error) {
 	return items, nil
 }
 
+const getAppusersForHome = `-- name: GetAppusersForHome :many
+SELECT au.id, au.display_name, au.google_sub, au.email, au.logging_consent, au.avatar_url, au.has_gdrive_access
+FROM home_appuser AS hau
+INNER JOIN appuser AS au
+  ON hau.appuser_id = au.id
+WHERE home_id = $1
+`
+
+func (q *Queries) GetAppusersForHome(ctx context.Context, homeID int32) ([]Appuser, error) {
+	rows, err := q.db.Query(ctx, getAppusersForHome, homeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Appuser
+	for rows.Next() {
+		var i Appuser
+		if err := rows.Scan(
+			&i.ID,
+			&i.DisplayName,
+			&i.GoogleSub,
+			&i.Email,
+			&i.LoggingConsent,
+			&i.AvatarUrl,
+			&i.HasGdriveAccess,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getCurrentPatientsForHome = `-- name: GetCurrentPatientsForHome :many
 SELECT p.id, p.species_id, p.curr_home_id, p.name, p.status, sl.name AS species_name FROM patient AS p
 JOIN species_language AS sl

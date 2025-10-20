@@ -32,29 +32,32 @@ templ HomesPage(data *CommonData, homes []HomeViewAdmin, homeless []UserView) {
                 @Card() {
                     <h2 class="editable" data-action={home.SetNameURL()}>{home.Name}</h2>
                     for _, user := range home.Users {
-                        @user.Component(data) {
-                            // Move user to different home
-                            <form class="form-inline" action="/homes" method="POST">
-                                <label>{data.User.Language.GenericMoveTo}</label>
-                                <select class="form-control-color r-2 select-user" name="home-id">
-                                    for _, newHome := range homes {
-                                        if home.ID != newHome.ID {
-                                            <option value={newHome.ID}>{newHome.Name}</option>
+                        @Card() {
+                            @user.Component(data) {
+                                // Move user to different home
+                                <form class="form-inline" action="/homes" method="POST">
+                                    <label>{data.User.Language.GenericMoveTo}</label>
+                                    <select class="form-control-color r-2 select-user" name="home-id">
+                                        for _, newHome := range homes {
+                                            if home.ID != newHome.ID {
+                                                <option value={newHome.ID}>{newHome.Name}</option>
+                                            }
                                         }
-                                    }
-                                    <option value="0">{data.User.Language.GenericNone}</option>
-                                </select>
+                                        <option value="0">{data.User.Language.GenericNone}</option>
+                                    </select>
 
-                                <input type="hidden" name="form-id" value="add-user">
-                                <input type="hidden" name="user-id" value={user.ID}>
-                                <input type="hidden" name="curr-home-id" value={home.ID}>
-                                <button type="submit" class="btn btn-primary btn-sm mb-2">{data.User.Language.GenericMove}</button>
-                                <br/>
-                                <label for="remove-from-current">{data.User.Language.HomesRemoveFromCurrent}</label>
-                                <input type="checkbox" name="remove-from-current" checked>
-                            </form>
+                                    <input type="hidden" name="form-id" value="add-user">
+                                    <input type="hidden" name="user-id" value={user.ID}>
+                                    <input type="hidden" name="curr-home-id" value={home.ID}>
+                                    <button type="submit" class="btn btn-primary btn-sm mb-2">{data.User.Language.GenericMove}</button>
+                                    <br/>
+                                    <label for="remove-from-current">{data.User.Language.HomesRemoveFromCurrent}</label>
+                                    <input type="checkbox" name="remove-from-current" checked>
+                                </form>
+                            }
                         }
                     }
+                        
                     if len(home.Users) == 0 {
                         <p class="small">{data.User.Language.HomesEmptyHome}</p>
                     }
@@ -100,22 +103,20 @@ templ HomesPage(data *CommonData, homes []HomeViewAdmin, homeless []UserView) {
 }
 
 templ (u *UserView) Component(data *CommonData) {
-    @Card() {
-        <table class="table tbl">
-            <thead>
-                <tr>
-                    <th colspan="100%" class="text-center">
-                        {u.Name}
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>{data.User.Language.AdminEmailAddress}</th>
-                    <td>{u.Email}</td>
-                </tr>
-            </tbody>
-        </table>
-        { children... }
-    }
+    <table class="table tbl">
+        <thead>
+            <tr>
+                <th colspan="100%" class="text-center">
+                    {u.Name}
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th>{data.User.Language.AdminEmailAddress}</th>
+                <td>{u.Email}</td>
+            </tr>
+        </tbody>
+    </table>
+    { children... }
 }

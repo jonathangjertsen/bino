@@ -14,6 +14,12 @@ func (hv HomeView) URL() string {
 	return fmt.Sprintf("/home/%d", hv.Home.ID)
 }
 
+func (h Home) ToHomeView() HomeView {
+	return HomeView{
+		Home: h,
+	}
+}
+
 // ---- Patient
 
 type PatientView struct {
@@ -88,6 +94,16 @@ func (u UserView) URL() string {
 }
 
 func (user GetAppusersRow) ToUserView() UserView {
+	return UserView{
+		ID:           user.ID,
+		Name:         user.DisplayName,
+		Email:        user.Email,
+		AvatarURL:    user.AvatarUrl.String,
+		HasAvatarURL: user.AvatarUrl.Valid,
+	}
+}
+
+func (user Appuser) ToUserView() UserView {
 	return UserView{
 		ID:           user.ID,
 		Name:         user.DisplayName,
