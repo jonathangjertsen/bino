@@ -48,6 +48,7 @@ type Language struct {
 	DashboardGoToJournal      string
 	DashboardGoToPatientPage  string
 	DashboardCheckOut         string
+	DashboardSearch           string
 	DashboardSelectHome       string
 	DashboardSelectCheckout   string
 	DashboardSelectTag        string
@@ -208,6 +209,7 @@ var NO = &Language{
 	DashboardGoToJournal:      "Gå til pasientjournal i Google Drive",
 	DashboardGoToPatientPage:  "Gå til pasientside",
 	DashboardCheckOut:         "Sjekk ut",
+	DashboardSearch:           "Søk",
 	DashboardSelectHome:       "Velg rehabhjem",
 	DashboardSelectCheckout:   "Velg status",
 	DashboardSelectTag:        "Velg tagg",
@@ -389,6 +391,7 @@ var EN = &Language{
 	DashboardGoToJournal:      "Go to patient journal in Google Drive",
 	DashboardGoToPatientPage:  "Go to patient page",
 	DashboardCheckOut:         "Checkout",
+	DashboardSearch:           "Search",
 	DashboardSelectHome:       "Select home",
 	DashboardSelectCheckout:   "Select status",
 	DashboardSelectTag:        "Select tag",

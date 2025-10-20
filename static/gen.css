@@ -11917,13 +11917,26 @@ h1, h2, h3, h4, h5, h6 {
   cursor: default !important;
 }
 .dashboard-form {
+  border: 1px solid rgb(126.75, 127.125, 141.875);
+  flex: 1;
+  align-self: flex-start;
+  margin-top: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 1rem !important;
+}
+
+.dashboard-left-sidebar {
+  min-width: min(100%, 450px);
   margin-top: 0 !important;
   margin-left: 0 !important;
   margin-bottom: 1rem !important;
-  margin-right: 1rem !important;
   flex: 1;
   align-self: flex-start;
+}
+
+.dashboard-search {
   border: 1px solid rgb(126.75, 127.125, 141.875);
+  margin: 0 !important;
 }
 
 .dashboard-home {

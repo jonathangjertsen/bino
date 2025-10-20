@@ -4,11 +4,23 @@ import "slices"
 
 templ DashboardPage(data *CommonData, dashboardData *DashboardData) {
 	@Layout(data, "dashboard-container") {
-        @DashboardForm(data, dashboardData)
+        <div class="dashboard-left-sidebar m-2">
+            @DashboardForm(data, dashboardData)
+            @DashboardSearch(data, dashboardData)
+        </div>
         @DashboardHomes(data, dashboardData)
     }
     <script src={data.StaticFile("dashboard.js")}></script>
     <script src={data.StaticFile("patienttags.js")}></script>
+}
+
+templ DashboardSearch(data *CommonData, dashboardData *DashboardData) {
+    @Card("dashboard-search", "shadow-m") {
+        <div class="form-group">
+            <label for="dashboard-search">{data.User.Language.DashboardSearch}</label>
+            <input class="form-control search" id="dashboard-search"></input>
+        </div>
+    }
 }
 
 templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
