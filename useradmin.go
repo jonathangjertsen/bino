@@ -2,8 +2,13 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"net/http"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func (server *Server) userAdminHandler(w http.ResponseWriter, r *http.Request) {
@@ -16,8 +21,16 @@ func (server *Server) userAdminHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	invitations, err := server.Queries.GetInvitations(ctx)
+	if err != nil {
+		server.renderError(w, r, data, err)
+		return
+	}
+
 	UserAdmin(data, SliceToSlice(users, func(in GetAppusersRow) UserView {
 		return in.ToUserView()
+	}), SliceToSlice(invitations, func(in Invitation) InvitationView {
+		return in.ToInvitationView()
 	})).Render(ctx, w)
 }
 
@@ -142,4 +155,69 @@ func (server *Server) NukeUser(ctx context.Context, id int32) error {
 		}
 		return nil
 	})
+}
+
+func (server *Server) inviteHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	data := MustLoadCommonData(ctx)
+
+	email, err := server.getFormValue(r, "email")
+	if err != nil {
+		server.renderError(w, r, data, err)
+		return
+	}
+
+	now := time.Now()
+	expires := now.AddDate(0, 0, 7)
+
+	// Generate 8-char invite code, handle collision
+	inviteCodes := rand.Text()
+	nInviteCodes := len(inviteCodes) / 8
+	for i := range nInviteCodes {
+		// Select next 8-char chunk
+		code := inviteCodes[i*8 : (i+1)*8]
+
+		// Try to insert
+		if err := server.Queries.InsertInvitation(ctx, InsertInvitationParams{
+			ID:      code,
+			Email:   pgtype.Text{String: email, Valid: true},
+			Created: pgtype.Timestamptz{Time: now, Valid: true},
+			Expires: pgtype.Timestamptz{Time: expires, Valid: true},
+		}); err != nil {
+			if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == "23505" {
+				// Conflicting invite key
+				continue
+			} else {
+				data.Error(data.User.Language.AdminInvitationFailed, err)
+				return
+			}
+		} else {
+			data.Info(data.User.Language.AdminInvitationOKNoEmail)
+			server.redirect(w, r, "/users")
+			return
+		}
+	}
+
+	data.Error(data.User.Language.AdminInvitationFailed, fmt.Errorf("couldn't create code"))
+	server.redirect(w, r, "/users")
+}
+
+func (server *Server) inviteDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	data := MustLoadCommonData(ctx)
+
+	id, err := server.getPathValue(r, "id")
+	if err != nil {
+		server.renderError(w, r, data, err)
+		return
+	}
+
+	if err := server.Queries.DeleteInvitation(ctx, id); err != nil {
+		data.Error(data.User.Language.GenericFailed, err)
+	} else {
+		data.Success(data.User.Language.GenericSuccess)
+	}
+
+	server.redirect(w, r, "/users")
+	return
 }

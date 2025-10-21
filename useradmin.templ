@@ -1,43 +1,88 @@
 package main
 
-templ UserAdmin(data *CommonData, users []UserView) {
+templ UserAdmin(data *CommonData, users []UserView, invitations []InvitationView) {
 	@Layout(data) {
         <h1>{data.User.Language.AdminManageUsers}</h1>
-        <div class="card">
-            <table class="table table-striped table-bordered m-0">
-                <thead>
-                    <tr>
-                        <th>{data.User.Language.GenericAvatar}</th>
-                        <th>{data.User.Language.AdminDisplayName}</th>
-                        <th>{data.User.Language.AdminEmailAddress}</th>
-                        <th colspan="2">{data.User.Language.GenericDelete}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    for _, u := range users {
-                        <tr class="filter-box">
-                            <td class="center">@Avatar(u)</td>
-                            <td><a href={templ.URL(u.URL())}>{u.Name}</a></td>
-                            <td>{u.Email}</td>
-                            <td>
-                                if u.ID != data.User.AppuserID {
-                                    <a class="btn btn-danger" href={templ.URL(u.URLSuffix("confirm-scrub"))}>
-                                        {data.User.Language.AdminScrubUserData}
-                                    </a>
-                                }
-                            </td>
-                            <td>
-                                if u.ID != data.User.AppuserID {
-                                    <a class="btn btn-danger"href={templ.URL(u.URLSuffix("confirm-nuke"))}>
-                                        {data.User.Language.AdminNukeUser}
-                                    </a>
+        @Card() {
+            <h2>{data.User.Language.AdminInviteUsers}</h2>
+            <div class="card">
+                <table class="table table-striped table-bordered m-0">
+                    <tbody>
+                        <tr>
+                            <td colspan="2">
+                                @Form("/invite", "POST") {
+                                    <label for="email">{data.User.Language.GenericEmail}</label>
+                                    <div class="input-group">
+                                        <input id="email" class="form-control" name="email" placeholder={data.User.Language.AdminEmailAddress} autocomplete="off" data-1p-ignore data-lpignore="true" data-bwignore="true" data-protonpass-ignore="true"></input>
+                                        <button class="btn btn-primary" type="submit">{data.User.Language.AdminInviteToBino}</button>
+                                    </div>
                                 }
                             </td>
                         </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                    </tbody>
+                </table>
+            </div>
+            if len(invitations) > 0 {
+                <h2>{data.User.Language.AdminPendingInvitations}</h2>
+                <div class="card">
+                    <table class="table table-striped table-bordered m-0">
+                        <thead>
+                            <tr>
+                                <th>{data.User.Language.AdminEmailAddress}</th>
+                                <th>{data.User.Language.AdminInviteExpires}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            for _, inv := range invitations {
+                                <tr>
+                                    <td>{inv.Email}</td>
+                                    <td>{data.User.Language.FormatTimeAbsWithRelParen(inv.Expires)}</td>
+                                    <td>@SingleButtonForm(inv.DeleteURL(), data.User.Language.GenericDelete, "POST", "btn-danger")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            <h2>{data.User.Language.AdminExistingUsers}</h2>
+            <div class="card">
+                <table class="table table-striped table-bordered m-0">
+                    <thead>
+                        <tr>
+                            <th>{data.User.Language.GenericAvatar}</th>
+                            <th>{data.User.Language.AdminDisplayName}</th>
+                            <th>{data.User.Language.AdminEmailAddress}</th>
+                            <th colspan="2">{data.User.Language.GenericDelete}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        for _, u := range users {
+                            <tr class="filter-box">
+                                <td class="center">@Avatar(u)</td>
+                                <td><a href={templ.URL(u.URL())}>{u.Name}</a></td>
+                                <td>{u.Email}</td>
+                                <td>
+                                    if u.ID != data.User.AppuserID {
+                                        <a class="btn btn-danger" href={templ.URL(u.URLSuffix("confirm-scrub"))}>
+                                            {data.User.Language.AdminScrubUserData}
+                                        </a>
+                                    }
+                                </td>
+                                <td>
+                                    if u.ID != data.User.AppuserID {
+                                        <a class="btn btn-danger"href={templ.URL(u.URLSuffix("confirm-nuke"))}>
+                                            {data.User.Language.AdminNukeUser}
+                                        </a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
     }
 }
 

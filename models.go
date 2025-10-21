@@ -48,6 +48,7 @@ type Invitation struct {
 	ID      string
 	Email   pgtype.Text
 	Expires pgtype.Timestamptz
+	Created pgtype.Timestamptz
 }
 
 // Each row represents a patient

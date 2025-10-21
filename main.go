@@ -26,7 +26,7 @@ func main() {
 
 	queries := New(conn)
 
-	go backgroundDeleteExpiredSessions(ctx, queries)
+	go backgroundDeleteExpiredItems(ctx, queries)
 
 	err = startServer(ctx, conn, queries, config, BuildKey)
 	if err != nil {

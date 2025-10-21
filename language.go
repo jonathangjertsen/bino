@@ -44,6 +44,13 @@ type Language struct {
 	AdminAbortedDueToWrongEmail string
 	AdminUserDeletionFailed     string
 	AdminUserWasDeleted         string
+	AdminExistingUsers          string
+	AdminInviteUsers            string
+	AdminInviteExpires          string
+	AdminPendingInvitations     string
+	AdminInvitationFailed       string
+	AdminInvitationOKNoEmail    string
+	AdminInviteCode             string
 	AdminRoot                   string
 
 	AuthLogOut string
@@ -124,6 +131,9 @@ type Language struct {
 	GenericStatus   string
 	GenericTags     string
 	GenericUpdate   string
+	GenericFailed   string
+	GenericSuccess  string
+	GenericMessage  string
 
 	HomesArchiveHome       string
 	HomesAddToHome         string
@@ -220,6 +230,13 @@ var NO = &Language{
 	AdminAbortedDueToWrongEmail: "Feil email-addresse innskrevet. Handlingen ble avbrutt.",
 	AdminUserDeletionFailed:     "Kunne ikke slette brukeren. Kontakt administrator.",
 	AdminUserWasDeleted:         "Brukeren ble slettet.",
+	AdminExistingUsers:          "Brukere i Bino",
+	AdminInviteUsers:            "Inviter brukere",
+	AdminInviteExpires:          "Utløper",
+	AdminPendingInvitations:     "Utsendte invitasjoner",
+	AdminInvitationFailed:       "Kunne ikke invitere brukeren. Kontakt administrator.",
+	AdminInvitationOKNoEmail:    "Eposten ble lagt til i listen, men det er ikke sendt ut en epost. Send personen en lenke til forsiden og be dem om å opprette en bruker.",
+	AdminInviteCode:             "Kode",
 	AdminRoot:                   "Admin",
 
 	AuthLogOut: "Logg ut",
@@ -300,6 +317,9 @@ var NO = &Language{
 	GenericStatus:   "Status",
 	GenericTags:     "Tagger",
 	GenericUpdate:   "Oppdater",
+	GenericFailed:   "Noe gikk galt. Kontakt administrator.",
+	GenericSuccess:  "Handlingen ble utført.",
+	GenericMessage:  "Melding",
 
 	HomesAddToHome:         "Legg til",
 	HomesArchiveHome:       "Arkiver rehabhjem",
@@ -417,6 +437,13 @@ var EN = &Language{
 	AdminAbortedDueToWrongEmail: "Wrong email address. The action was cancelled.",
 	AdminUserDeletionFailed:     "Failed to delete the user. Contact site administrator.",
 	AdminUserWasDeleted:         "The user was deleted.",
+	AdminExistingUsers:          "Bino users",
+	AdminInviteUsers:            "Invite new users",
+	AdminInviteExpires:          "Expires",
+	AdminPendingInvitations:     "Pending invitations",
+	AdminInvitationFailed:       "Failed to invite user. Contact site administrator.",
+	AdminInvitationOKNoEmail:    "The user was added to the list of invited user. No email was sent; send them a link to the main page and ask them to log in.",
+	AdminInviteCode:             "Code",
 	AdminRoot:                   "Admin",
 
 	AuthLogOut: "Log out",
@@ -497,6 +524,9 @@ var EN = &Language{
 	GenericStatus:   "Status",
 	GenericTags:     "Tags",
 	GenericUpdate:   "Update",
+	GenericFailed:   "Something went wrong. Contact the site administrator.",
+	GenericSuccess:  "Success.",
+	GenericMessage:  "Message",
 
 	HomesAddToHome:         "Add",
 	HomesArchiveHome:       "Archive rehab home",
@@ -618,6 +648,23 @@ func (l *Language) formatStatusChanged(status Status) string {
 	}
 }
 
+func (l *Language) FormatTimeRelWithAbsFallback(t time.Time) string {
+	rel := l.FormatTimeRel(t)
+	if rel != "" {
+		return rel
+	}
+	return l.FormatTimeAbs(t)
+}
+
+func (l *Language) FormatTimeAbsWithRelParen(t time.Time) string {
+	abs := l.FormatTimeAbs(t)
+	rel := l.FormatTimeRel(t)
+	if rel == "" {
+		return abs
+	}
+	return fmt.Sprintf("%s (%s)", abs, rel)
+}
+
 func (l *Language) FormatTimeAbs(t time.Time) string {
 	switch l.ID {
 	case LanguageIDNO:
@@ -641,29 +688,128 @@ func (l *Language) FormatTimeRel(t time.Time) string {
 
 	switch l.ID {
 	case LanguageIDNO:
+		if diff < -356*24*time.Hour {
+			return ""
+		}
+		if diff < 2*24*time.Hour {
+			return fmt.Sprintf("om %d dager", -int(diff.Hours()/24))
+		}
+		if diff < 24*time.Hour {
+			return fmt.Sprintf("om 1 dag")
+		}
+		if diff < -2*time.Hour {
+			return fmt.Sprintf("om %d timer", -int(diff.Hours()))
+		}
+		if diff < -time.Hour {
+			return fmt.Sprintf("om 1 time")
+		}
+		if diff < -2*time.Minute {
+			return fmt.Sprintf("om %d minutter", -int(diff.Minutes()))
+		}
+		if diff < -time.Minute {
+			return fmt.Sprintf("om 1 minutt")
+		}
+		if diff < -2*time.Second {
+			return fmt.Sprintf("om %d sekunder", -int(diff.Seconds()))
+		}
+		if diff < -time.Second {
+			return fmt.Sprintf("om 1 sekund")
+		}
+		if diff < time.Second {
+			return fmt.Sprintf("akkurat nå")
+		}
+		if diff < 2*time.Second {
+			return fmt.Sprintf("for 1 sekund siden")
+		}
 		if diff < time.Minute {
-			return "akkurat nå"
-		} else if diff < time.Hour {
+			return fmt.Sprintf("for %d sekunder siden", int(diff.Seconds()))
+		}
+		if diff < 2*time.Minute {
+			return fmt.Sprintf("for 1 minutt siden")
+		}
+		if diff < time.Hour {
 			return fmt.Sprintf("for %d minutter siden", int(diff.Minutes()))
-		} else if diff < 24*time.Hour {
+		}
+		if diff < 2*time.Hour {
+			return fmt.Sprintf("for 1 time siden")
+		}
+		if diff < 24*time.Hour {
 			return fmt.Sprintf("for %d timer siden", int(diff.Hours()))
 		}
-		if now.Year() == t.Year() && now.YearDay()-t.YearDay() < 7 {
-			return fmt.Sprintf("%s kl. %02d:%02d", l.Weekdays[t.Weekday()], t.Hour(), t.Minute())
+		if diff < 2*24*time.Hour {
+			return fmt.Sprintf("for 1 dag siden")
+		}
+		if diff < 356*24*time.Hour {
+			return fmt.Sprintf("for %d dager siden", int(diff.Hours()/24))
 		}
 	case LanguageIDEN:
+		if diff < -356*24*time.Hour {
+			return ""
+		}
+		if diff < -2*24*time.Hour {
+			return fmt.Sprintf("in %d days", -int(diff.Hours()/24))
+		}
+		if diff < -24*time.Hour {
+			return fmt.Sprintf("in 1 day")
+		}
+		if diff < -2*time.Hour {
+			return fmt.Sprintf("in %d hours", -int(diff.Hours()))
+		}
+		if diff < -time.Hour {
+			return fmt.Sprintf("in 1 hour")
+		}
+		if diff < -2*time.Minute {
+			return fmt.Sprintf("in %d minutes", -int(diff.Minutes()))
+		}
+		if diff < -time.Minute {
+			return fmt.Sprintf("in 1 minute")
+		}
+		if diff < -2*time.Second {
+			return fmt.Sprintf("in %d seconds", -int(diff.Seconds()))
+		}
+		if diff < -time.Second {
+			return fmt.Sprintf("in 1 second")
+		}
+		if diff < time.Second {
+			return fmt.Sprintf("just now")
+		}
+		if diff < 2*time.Second {
+			return fmt.Sprintf("1 second ago")
+		}
 		if diff < time.Minute {
-			return "just now"
-		} else if diff < time.Hour {
+			return fmt.Sprintf("%d seconds ago", int(diff.Seconds()))
+		}
+		if diff < 2*time.Minute {
+			return fmt.Sprintf("1 minute ago")
+		}
+		if diff < time.Hour {
 			return fmt.Sprintf("%d minutes ago", int(diff.Minutes()))
-		} else if diff < 24*time.Hour {
+		}
+		if diff < 2*time.Hour {
+			return fmt.Sprintf("1 hour ago")
+		}
+		if diff < 24*time.Hour {
 			return fmt.Sprintf("%d hours ago", int(diff.Hours()))
 		}
-		if now.Year() == t.Year() && now.YearDay()-t.YearDay() < 7 {
-			return t.Format("Monday at 3:04 PM")
+		if diff < 2*24*time.Hour {
+			return fmt.Sprintf("1 day ago")
+		}
+		if diff < 356*24*time.Hour {
+			return fmt.Sprintf("%d days ago", int(diff.Hours()/24))
 		}
 	}
-	return l.FormatTimeAbs(t)
+	return ""
+}
+
+func (l *Language) AdminDefaultInviteMessage(inviter string) string {
+	switch l.ID {
+	case LanguageIDNO:
+		return fmt.Sprintf("%s har invitert deg til å opprette en bruker i Bino.", inviter)
+	case LanguageIDEN:
+		fallthrough
+	default:
+		return fmt.Sprintf("%s has invited you to create a user in Bino.", inviter)
+	}
 }
 
 var Languages = map[int32]*Language{

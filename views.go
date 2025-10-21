@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 // ---- Home
 
@@ -138,5 +141,27 @@ func (user GetUserRow) ToUserView() UserView {
 		Email:        user.Email,
 		AvatarURL:    user.AvatarUrl.String,
 		HasAvatarURL: user.AvatarUrl.Valid,
+	}
+}
+
+// ---- User
+
+type InvitationView struct {
+	ID      string
+	Email   string
+	Created time.Time
+	Expires time.Time
+}
+
+func (inv InvitationView) DeleteURL() string {
+	return fmt.Sprintf("/invite/%s/delete", inv.ID)
+}
+
+func (inv Invitation) ToInvitationView() InvitationView {
+	return InvitationView{
+		ID:      inv.ID,
+		Email:   inv.Email.String,
+		Expires: inv.Expires.Time,
+		Created: inv.Created.Time,
 	}
 }

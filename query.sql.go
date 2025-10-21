@@ -210,6 +210,35 @@ func (q *Queries) DeleteEventsCreatedByUser(ctx context.Context, appuserID int32
 	return err
 }
 
+const deleteExpiredInvitations = `-- name: DeleteExpiredInvitations :execresult
+DELETE FROM invitation
+WHERE expires < NOW()
+`
+
+func (q *Queries) DeleteExpiredInvitations(ctx context.Context) (pgconn.CommandTag, error) {
+	return q.db.Exec(ctx, deleteExpiredInvitations)
+}
+
+const deleteInvitation = `-- name: DeleteInvitation :exec
+DELETE FROM invitation
+WHERE id = $1
+`
+
+func (q *Queries) DeleteInvitation(ctx context.Context, id string) error {
+	_, err := q.db.Exec(ctx, deleteInvitation, id)
+	return err
+}
+
+const deleteInvitationByEmail = `-- name: DeleteInvitationByEmail :exec
+DELETE FROM invitation
+WHERE email = $1
+`
+
+func (q *Queries) DeleteInvitationByEmail(ctx context.Context, email pgtype.Text) error {
+	_, err := q.db.Exec(ctx, deleteInvitationByEmail, email)
+	return err
+}
+
 const deletePatientTag = `-- name: DeletePatientTag :exec
 DELETE FROM patient_tag
 WHERE patient_id = $1
@@ -609,6 +638,38 @@ func (q *Queries) GetHomesWithDataForUser(ctx context.Context, appuserID int32) 
 	for rows.Next() {
 		var i Home
 		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getInvitations = `-- name: GetInvitations :many
+SELECT id, email, expires, created
+FROM invitation
+WHERE expires > NOW()
+ORDER BY created DESC
+`
+
+func (q *Queries) GetInvitations(ctx context.Context) ([]Invitation, error) {
+	rows, err := q.db.Query(ctx, getInvitations)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Invitation
+	for rows.Next() {
+		var i Invitation
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.Expires,
+			&i.Created,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -1098,6 +1159,37 @@ VALUES ($1)
 
 func (q *Queries) InsertHome(ctx context.Context, name string) error {
 	_, err := q.db.Exec(ctx, insertHome, name)
+	return err
+}
+
+const insertInvitation = `-- name: InsertInvitation :exec
+INSERT INTO invitation (
+  id,
+  email,
+  expires,
+  created
+) VALUES (
+  $1,
+  $2,
+  $3,
+  $4
+)
+`
+
+type InsertInvitationParams struct {
+	ID      string
+	Email   pgtype.Text
+	Expires pgtype.Timestamptz
+	Created pgtype.Timestamptz
+}
+
+func (q *Queries) InsertInvitation(ctx context.Context, arg InsertInvitationParams) error {
+	_, err := q.db.Exec(ctx, insertInvitation,
+		arg.ID,
+		arg.Email,
+		arg.Expires,
+		arg.Created,
+	)
 	return err
 }
 

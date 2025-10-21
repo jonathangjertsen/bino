@@ -46,17 +46,22 @@ func (server *Server) redirect(w http.ResponseWriter, r *http.Request, url strin
 	http.Redirect(w, r, url, http.StatusFound)
 }
 
+func (server *Server) lastGoodURL(r *http.Request) string {
+	// TODO: not this. Store last good URL in the cookie or something
+	return r.Referer()
+}
+
 func (server *Server) renderError(w http.ResponseWriter, r *http.Request, commonData *CommonData, err error) {
 	ctx := r.Context()
 	w.WriteHeader(http.StatusInternalServerError)
-	_ = ErrorPage(commonData, err, r.Referer()).Render(ctx, w)
+	_ = ErrorPage(commonData, err, server.lastGoodURL(r)).Render(ctx, w)
 	logError(r, err)
 }
 
 func (server *Server) render404(w http.ResponseWriter, r *http.Request, commonData *CommonData, err error) {
 	ctx := r.Context()
 	w.WriteHeader(http.StatusNotFound)
-	_ = NotFoundPage(commonData, err.Error(), r.Referer()).Render(ctx, w)
+	_ = NotFoundPage(commonData, err.Error(), server.lastGoodURL(r)).Render(ctx, w)
 	logError(r, err)
 }
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
 	"time"
 
@@ -119,12 +120,19 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 
 	mux := http.NewServeMux()
 
-	loggedInChain := []func(http.Handler) http.Handler{server.requireLogin, withLogging, server.withFeedbackFromRedirects}
+	requiresLogin := []func(http.Handler) http.Handler{server.requireLogin, withLogging, server.withFeedbackFromRedirects}
+	requiresContentManagerRole := slices.Clone(requiresLogin) // TODO
+	requiresAdminRole := slices.Clone(requiresLogin)          // TODO
 
-	// Home page
-	mux.Handle("GET /{$}", chainf(server.dashboardHandler, loggedInChain...))
+	//// PUBLIC
+	// Pages
+	mux.Handle("GET /{$}", chainf(server.dashboardHandler, requiresLogin...))   // TODO should show something public for logged-out
+	mux.Handle("GET /privacy", chainf(server.privacyHandler, requiresLogin...)) // TODO should be public
+	// Static content
+	staticDir := fmt.Sprintf("/static/%s/", buildKey)
+	mux.Handle("GET "+staticDir, http.StripPrefix(staticDir, http.FileServer(http.Dir("static"))))
 
-	// Auth
+	//// LOGIN
 	mux.Handle("GET /login", chainf(server.loginHandler))
 	mux.Handle("POST /login", chainf(server.loginHandler))
 	mux.Handle("GET /AuthLogOut", chainf(server.AuthLogOutHandler))
@@ -132,59 +140,59 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 	mux.Handle("GET /oauth2/callback", chainf(server.callbackHandler))
 	mux.Handle("POST /oauth2/callback", chainf(server.callbackHandler))
 
-	// User ajax
-	mux.Handle("POST /language", chainf(server.postLanguageHandler, loggedInChain...))
-
+	//// LOGGED-IN USER / REHABBER
 	// Pages
-	mux.Handle("GET /species", chainf(server.getSpeciesHandler, loggedInChain...))
-	mux.Handle("GET /tag", chainf(server.getTagHandler, loggedInChain...))
-	mux.Handle("GET /admin", chainf(server.adminRootHandler, loggedInChain...))
-	mux.Handle("GET /homes", chainf(server.getHomesHandler, loggedInChain...))
-	mux.Handle("GET /privacy", chainf(server.privacyHandler, loggedInChain...))
-	mux.Handle("GET /gdrive", chainf(server.getGDriveHandler, loggedInChain...))
-	mux.Handle("POST /gdrive/set-base-folder/{id}", chainf(server.setGDriveBaseFolderHandler, loggedInChain...))
-	mux.Handle("POST /gdrive/find-template", chainf(server.gdriveFindTemplate, loggedInChain...))
-	mux.Handle("POST /gdrive/set-template/{id}", chainf(server.gdriveSetTemplate, loggedInChain...))
-	mux.Handle("POST /gdrive/invite/{email}", chainf(server.gdriveInviteUserHandler, loggedInChain...))
-	mux.Handle("GET /patient/{patient}", chainf(server.getPatientHandler, loggedInChain...))
-	mux.Handle("GET /home/{home}", chainf(server.getHomeHandler, loggedInChain...))
-	mux.Handle("GET /user/{user}", chainf(server.getUserHandler, loggedInChain...))
-	mux.Handle("GET /user/{user}/confirm-scrub", chainf(server.userConfirmScrubHandler, loggedInChain...))
-	mux.Handle("GET /user/{user}/confirm-nuke", chainf(server.userConfirmNukeHandler, loggedInChain...))
-	mux.Handle("POST /user/{user}/scrub", chainf(server.userDoScrubHandler, loggedInChain...))
-	mux.Handle("POST /user/{user}/nuke", chainf(server.userDoNukeHandler, loggedInChain...))
-	mux.Handle("GET /former-patients", chainf(server.formerPatientsHandler, loggedInChain...))
-	mux.Handle("GET /users", chainf(server.userAdminHandler, loggedInChain...))
-
-	// Admin AJAX
-	mux.Handle("POST /species", chainf(server.postSpeciesHandler, loggedInChain...))
-	mux.Handle("PUT /species", chainf(server.putSpeciesHandler, loggedInChain...))
-	mux.Handle("POST /tag", chainf(server.postTagHandler, loggedInChain...))
-	mux.Handle("PUT /tag", chainf(server.putTagHandler, loggedInChain...))
-
-	// Dashboard ajax
-	mux.Handle("DELETE /patient/{patient}/tag/{tag}", chainf(server.deletePatientTagHandler, loggedInChain...))
-	mux.Handle("POST /patient/{patient}/tag/{tag}", chainf(server.createPatientTagHandler, loggedInChain...))
-
+	mux.Handle("GET /patient/{patient}", chainf(server.getPatientHandler, requiresLogin...))
+	mux.Handle("GET /home/{home}", chainf(server.getHomeHandler, requiresLogin...))
+	mux.Handle("GET /user/{user}", chainf(server.getUserHandler, requiresLogin...))
+	mux.Handle("GET /former-patients", chainf(server.formerPatientsHandler, requiresLogin...))
 	// Forms
-	mux.Handle("POST /checkin", chainf(server.postCheckinHandler, loggedInChain...))
-	mux.Handle("POST /homes", chainf(server.postHomeHandler, loggedInChain...))
-	mux.Handle("POST /homes/{home}/set-name", chainf(server.postHomeSetName, loggedInChain...))
-	mux.Handle("POST /privacy", chainf(server.postPrivacyHandler, loggedInChain...))
-	mux.Handle("POST /patient/{patient}/move", chainf(server.movePatientHandler, loggedInChain...))
-	mux.Handle("POST /patient/{patient}/checkout", chainf(server.postCheckoutHandler, loggedInChain...))
-	mux.Handle("POST /patient/{patient}/set-name", chainf(server.postSetNameHandler, loggedInChain...))
-	mux.Handle("POST /event/{event}/set-note", chainf(server.postEventSetNoteHandler, loggedInChain...))
+	mux.Handle("POST /checkin", chainf(server.postCheckinHandler, requiresLogin...))
+	mux.Handle("POST /privacy", chainf(server.postPrivacyHandler, requiresLogin...))
+	mux.Handle("POST /patient/{patient}/move", chainf(server.movePatientHandler, requiresLogin...))
+	mux.Handle("POST /patient/{patient}/checkout", chainf(server.postCheckoutHandler, requiresLogin...))
+	mux.Handle("POST /patient/{patient}/set-name", chainf(server.postSetNameHandler, requiresLogin...))
+	mux.Handle("POST /event/{event}/set-note", chainf(server.postEventSetNoteHandler, requiresLogin...))
+	// Ajax
+	mux.Handle("POST /language", chainf(server.postLanguageHandler, requiresLogin...))
+	mux.Handle("DELETE /patient/{patient}/tag/{tag}", chainf(server.deletePatientTagHandler, requiresLogin...))
+	mux.Handle("POST /patient/{patient}/tag/{tag}", chainf(server.createPatientTagHandler, requiresLogin...))
 
-	// Available to all
-	staticDir := fmt.Sprintf("/static/%s/", buildKey)
-	mux.Handle(
-		"GET "+staticDir,
-		http.StripPrefix(staticDir, http.FileServer(http.Dir("static"))),
-	)
+	//// CONTENT MANAGEMENT
+	// Pages
+	mux.Handle("GET /species", chainf(server.getSpeciesHandler, requiresContentManagerRole...))
+	mux.Handle("GET /tag", chainf(server.getTagHandler, requiresContentManagerRole...))
+	mux.Handle("GET /admin", chainf(server.adminRootHandler, requiresContentManagerRole...))
+	mux.Handle("GET /homes", chainf(server.getHomesHandler, requiresContentManagerRole...))
+	mux.Handle("GET /users", chainf(server.userAdminHandler, requiresContentManagerRole...))
+	// Forms
+	mux.Handle("POST /homes", chainf(server.postHomeHandler, requiresLogin...))
+	mux.Handle("POST /homes/{home}/set-name", chainf(server.postHomeSetName, requiresLogin...))
+	// Ajax
+	mux.Handle("POST /species", chainf(server.postSpeciesHandler, requiresLogin...))
+	mux.Handle("PUT /species", chainf(server.putSpeciesHandler, requiresLogin...))
+	mux.Handle("POST /tag", chainf(server.postTagHandler, requiresLogin...))
+	mux.Handle("PUT /tag", chainf(server.putTagHandler, requiresLogin...))
 
-	mux.Handle("GET /", chainf(server.fourOhFourHandler, loggedInChain...))
-	mux.Handle("POST /", chainf(server.fourOhFourHandler, loggedInChain...))
+	//// ADMIN
+	// Pages
+	mux.Handle("GET /gdrive", chainf(server.getGDriveHandler, requiresAdminRole...))
+	mux.Handle("GET /user/{user}/confirm-scrub", chainf(server.userConfirmScrubHandler, requiresAdminRole...))
+	mux.Handle("GET /user/{user}/confirm-nuke", chainf(server.userConfirmNukeHandler, requiresAdminRole...))
+	// Forms
+	mux.Handle("POST /user/{user}/scrub", chainf(server.userDoScrubHandler, requiresLogin...))
+	mux.Handle("POST /user/{user}/nuke", chainf(server.userDoNukeHandler, requiresLogin...))
+	mux.Handle("POST /gdrive/set-base-folder/{id}", chainf(server.setGDriveBaseFolderHandler, requiresLogin...))
+	mux.Handle("POST /gdrive/find-template", chainf(server.gdriveFindTemplate, requiresLogin...))
+	mux.Handle("POST /gdrive/set-template/{id}", chainf(server.gdriveSetTemplate, requiresLogin...))
+	mux.Handle("POST /gdrive/invite/{email}", chainf(server.gdriveInviteUserHandler, requiresLogin...))
+	mux.Handle("POST /invite", chainf(server.inviteHandler, requiresLogin...))
+	mux.Handle("POST /invite/{id}/delete", chainf(server.inviteDeleteHandler, requiresLogin...))
+
+	//// FALLBACK
+	// Pages
+	mux.Handle("GET /", chainf(server.fourOhFourHandler, requiresLogin...))  // TODO: should be public
+	mux.Handle("POST /", chainf(server.fourOhFourHandler, requiresLogin...)) // TODO: should be public
 
 	go func() {
 		handler := chain(mux, withRecover)
