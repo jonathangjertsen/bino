@@ -10,11 +10,21 @@
         "SessionKeyLocation": "secret/session_key",
         "GooglePickerKeyLocation": "secret/google_picker_key",
         "OAuthCredentialsLocation": "secret/oauth.json",
-        "ClientID": "YOUR-CLIENT-ID.apps.googleusercontent.com",
-        "DriveBase": "ID of the shared drive in which to search for a journal folder"
+        "ClientID": "YOUR-CLIENT-ID.apps.googleusercontent.com"
     },
     "Privacy": {
         "LogDeletionPolicy": 3,
         "RevokeConsentPolicy": 3
+    },
+    "GoogleDrive": {
+        "ServiceAccountKeyLocation": "secret/serviceaccount.json",
+        "DriveBase": "ID of the shared drive in which to search for a journal folder",
+        "JournalFolder": "ID of the folder where the journals live",
+        "TemplateFile": "ID of the template file"
+    },
+    "DB": {
+        "URL": "localhost",
+        "Port": "5432",
+        "CacheFile": "cache.db"
     }
 }

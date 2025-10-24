@@ -3,9 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 )
 
 func main() {
+	if BuildKey == "" {
+		panic("missing build key")
+	}
+
 	ctx := context.Background()
 	fmt.Println("Starting...")
 
@@ -14,11 +19,14 @@ func main() {
 		panic(err)
 	}
 
-	if BuildKey == "" {
-		panic("missing build key")
+	cache, err := NewCache(config.DB.CacheFile, func(action, key string, err error) {
+		fmt.Fprintf(os.Stderr, "Cache%s(%s): %v\n", action, key, err)
+	})
+	if err != nil {
+		panic(err)
 	}
 
-	conn, err := dbSetup(ctx)
+	conn, err := dbSetup(ctx, config.DB)
 	if err != nil {
 		panic(err)
 	}
@@ -26,9 +34,15 @@ func main() {
 
 	queries := New(conn)
 
+	gdriveWorker, err := NewGDriveWithServiceAccount(ctx, config.GoogleDrive, queries)
+	if err != nil {
+		panic(err)
+	}
+	_ = gdriveWorker
+
 	go backgroundDeleteExpiredItems(ctx, queries)
 
-	err = startServer(ctx, conn, queries, config, BuildKey)
+	err = startServer(ctx, conn, queries, cache, config, BuildKey)
 	if err != nil {
 		panic(err)
 	}

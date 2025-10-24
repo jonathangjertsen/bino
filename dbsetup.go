@@ -11,12 +11,12 @@ import (
 	"golang.org/x/term"
 )
 
-func dbSetup(ctx context.Context) (*pgxpool.Pool, error) {
-	url := os.Getenv("BINO_DB_URL")
-	if url == "" {
-		url = "localhost"
-	}
+type ConfigDB struct {
+	URL       string
+	CacheFile string
+}
 
+func dbSetup(ctx context.Context, cfg ConfigDB) (*pgxpool.Pool, error) {
 	pass := os.Getenv("BINO_DB_PASSWORD")
 	if pass == "" {
 		fmt.Print("Password for user bino: ")
@@ -25,7 +25,7 @@ func dbSetup(ctx context.Context) (*pgxpool.Pool, error) {
 		pass = string(b)
 	}
 
-	connStr := fmt.Sprintf("postgres://bino:%s@%s:5432/bino", pass, url)
+	connStr := fmt.Sprintf("postgres://bino:%s@%s:5432/bino", pass, cfg.URL)
 
 	conn, err := pgxpool.New(ctx, connStr)
 	if err != nil {

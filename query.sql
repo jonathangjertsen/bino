@@ -285,25 +285,6 @@ SET note = $2
 WHERE id = $1
 ;
 
--- name: CacheGet :one
-SELECT value
-FROM cache
-WHERE key = $1
-;
-
--- name: CacheDelete :exec
-DELETE
-FROM cache
-WHERE key = $1
-;
-
--- name: CacheSet :exec
-INSERT INTO cache (key, value)
-VALUES ($1, $2)
-ON CONFLICT (key) DO UPDATE
-  SET value = EXCLUDED.value
-;
-
 -- name: SetUserGDriveAccess :exec
 UPDATE appuser
 SET has_gdrive_access = $2

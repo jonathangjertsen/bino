@@ -9,9 +9,11 @@ import (
 var BuildKey string
 
 type Config struct {
-	Privacy PrivacyConfig
-	Auth    AuthConfig
-	HTTP    HTTPConfig
+	Privacy     PrivacyConfig
+	Auth        AuthConfig
+	HTTP        HTTPConfig
+	GoogleDrive GDriveWorkerConfig
+	DB          ConfigDB
 }
 
 func loadConfig(file string) (Config, error) {

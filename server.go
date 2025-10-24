@@ -32,6 +32,7 @@ type Server struct {
 	Cookies       *sessions.CookieStore
 	OAuthConfig   *oauth2.Config
 	TokenVerifier *oidc.IDTokenVerifier
+	Cache         *Cache
 	BuildKey      string
 	Config        Config
 }
@@ -40,7 +41,6 @@ type AuthConfig struct {
 	SessionKeyLocation       string
 	OAuthCredentialsLocation string
 	ClientID                 string
-	DriveBase                string
 }
 
 type HTTPConfig struct {
@@ -79,7 +79,7 @@ func getStatusCode(err error) int {
 	return http.StatusInternalServerError
 }
 
-func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, config Config, buildKey string) error {
+func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cache *Cache, config Config, buildKey string) error {
 	sessionKey, err := os.ReadFile(config.Auth.SessionKeyLocation)
 	if err != nil {
 		return err
@@ -104,6 +104,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 		Conn:    conn,
 		Queries: queries,
 		Cookies: cookies,
+		Cache:   cache,
 		OAuthConfig: &oauth2.Config{
 			ClientID:     c.Web.ClientID,
 			ClientSecret: c.Web.ClientSecret,
@@ -182,9 +183,6 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, conf
 	// Forms
 	mux.Handle("POST /user/{user}/scrub", chainf(server.userDoScrubHandler, requiresLogin...))
 	mux.Handle("POST /user/{user}/nuke", chainf(server.userDoNukeHandler, requiresLogin...))
-	mux.Handle("POST /gdrive/set-base-folder/{id}", chainf(server.setGDriveBaseFolderHandler, requiresLogin...))
-	mux.Handle("POST /gdrive/find-template", chainf(server.gdriveFindTemplate, requiresLogin...))
-	mux.Handle("POST /gdrive/set-template/{id}", chainf(server.gdriveSetTemplate, requiresLogin...))
 	mux.Handle("POST /gdrive/invite/{email}", chainf(server.gdriveInviteUserHandler, requiresLogin...))
 	mux.Handle("POST /invite", chainf(server.inviteHandler, requiresLogin...))
 	mux.Handle("POST /invite/{id}/delete", chainf(server.inviteDeleteHandler, requiresLogin...))

@@ -32,8 +32,9 @@ func MustLoadCommonData(ctx context.Context) *CommonData {
 }
 
 type CommonData struct {
-	BuildKey   string
-	User       UserData
+	BuildKey string
+	User     UserData
+	// Cached result of queries that might be called more than once
 	QueryCache struct {
 		AllUsers         map[string]UserView
 		CanCreateJournal bool

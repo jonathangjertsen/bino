@@ -8,62 +8,14 @@ import (
 templ (server *Server) GDrivePage(
     ctx context.Context,
     data *CommonData,
-    folders GDriveFoldersResult,
-    selectedDir GDriveItem,
-    templateCandidates []GDriveItem,
-    selectedTemplate GDriveItem,
+    selectedDir GDriveItemView,
+    templateCandidates []GDriveItemView,
+    selectedTemplate GDriveItemView,
 ) {
     @Layout(data) {
         <h1>{data.User.Language.AdminManageGoogleDrive}</h1>
-        if folders.Valid {
-            @GDriveSelectBaseFolder(data, folders, selectedDir)
-        }
-        if selectedDir.Valid {
-            @GDriveSelectTemplate(data, templateCandidates, selectedTemplate)
+        if selectedDir.Item.Valid {
             @server.GDrivePermissionOverview(ctx, data, selectedDir)
-        }
-    }
-}
-
-templ GDriveSelectBaseFolder(
-    data *CommonData,
-    folders GDriveFoldersResult,
-    selectedDir GDriveItem,
-) {
-    @Card() {
-        <h2>{data.User.Language.GDriveBaseDir}</h2>
-        <p>{data.User.Language.GDriveSelectFolderInstruction}</p>
-        for _, folder := range folders.Folders {
-            <div
-                class="card b-card gdrive-doc-select"
-                selected?={selectedDir.ID==folder.ID}
-            >
-                <form
-                    action={folder.URLSelectBaseFolder()}
-                    method="POST"
-                    class="d-flex justify-content-between"
-                >
-                    <label for={folder.HTMLIDSelectBaseFolder("#")}>
-                        <a href={"https://drive.google.com/drive/folders/" + folder.ID}>📂 {folder.Name}</a>
-                    </label>
-                    <button
-                        id={folder.HTMLIDSelectBaseFolder("#")}
-                        type="submit"
-                        if selectedDir.ID == folder.ID {
-                            disabled
-                            class="btn"
-                        } else {
-                            class="btn btn-outline-primary"
-                        }
-                    >
-                    if selectedDir.ID==folder.ID {
-                        {data.User.Language.GDriveSelectedFolder}
-                    } else {
-                        {data.User.Language.GDriveSelectFolder}
-                    }
-                    </button>
-                </form>                
-            </div>
         }
     }
 }
@@ -71,7 +23,7 @@ templ GDriveSelectBaseFolder(
 templ (server *Server) GDrivePermissionOverview(
     ctx context.Context,
     data *CommonData,
-    selectedDir GDriveItem,
+    selectedDir GDriveItemView,
 ) {
     @Card() {
         <h2>{data.User.Language.GDrivePermissionsForBaseDir}</h2>
@@ -89,20 +41,20 @@ templ (server *Server) GDrivePermissionOverview(
         for _, p := range selectedDir.Permissions {
             <tr>
                 <td>
-                    {p.DisplayName}
+                    {p.Permission.DisplayName}
                 </td>
                 <td>
-                    {p.Email}
+                    {p.Permission.Email}
                 </td>
                 <td>
-                    {p.Role} ({data.User.Language.GDriveRoles[p.Role]})
+                    {p.Permission.Role} ({data.User.Language.GDriveRoles[p.Permission.Role]})
                 </td>
                 <td>
                     if p.BinoUser.Valid() {
                         @Avatar(p.BinoUser)
                     } else {
                         <p>{data.User.Language.GenericNotFound}</p>
-                        @SingleButtonForm(fmt.Sprintf("/invite/%s", p.Email), data.User.Language.AdminInviteToBino, "POST", "btn-primary")
+                        @SingleButtonForm(fmt.Sprintf("/invite/%s", p.Permission.Email), data.User.Language.AdminInviteToBino, "POST", "btn-primary")
                     }
                 </td>
             </tr>
@@ -141,7 +93,7 @@ templ (server *Server) GDrivePermissionOverview(
     }
 }
 
-templ GDriveSelectTemplate(data *CommonData, templateCandidates []GDriveItem, selectedTemplate GDriveItem) {
+templ GDriveSelectTemplate(data *CommonData, templateCandidates []GDriveItemView, selectedTemplate GDriveItemView) {
     @Card() {
         <h2>{data.User.Language.GDriveTemplate}</h2>
         <p>{data.User.Language.GDriveTemplateInstruction}</p>
@@ -167,26 +119,26 @@ templ GDriveSelectTemplate(data *CommonData, templateCandidates []GDriveItem, se
             for _, file := range templateCandidates {
                 <div
                     class="card b-card gdrive-doc-select"
-                    selected?={selectedTemplate.ID==file.ID}
+                    selected?={selectedTemplate.Item.ID==file.Item.ID}
                 >
                     <form
                         action={file.URLSelectTemplate()}
                         method="POST"
                         class="d-flex justify-content-between"
                     >
-                        <a href={"https://docs.google.com/document/d/" + file.ID}>📄 {file.Name}</a>
-                        <input type="hidden" name="name" value={file.Name}></input>
+                        <a href={"https://docs.google.com/document/d/" + file.Item.ID}>📄 {file.Item.Name}</a>
+                        <input type="hidden" name="name" value={file.Item.Name}></input>
                         <button
                             id={file.HTMLIDSelectTemplate("#")}
                             type="submit"
-                            if selectedTemplate.ID == file.ID {
+                            if selectedTemplate.Item.ID == file.Item.ID {
                                 disabled
                                 class="btn"
                             } else {
                                 class="btn btn-outline-primary"
                             }
                         >
-                        if selectedTemplate.ID==file.ID {
+                        if selectedTemplate.Item.ID==file.Item.ID {
                             {data.User.Language.GDriveSelectedTemplate}
                         } else {
                             {data.User.Language.GDriveSelectTemplate}
@@ -195,14 +147,14 @@ templ GDriveSelectTemplate(data *CommonData, templateCandidates []GDriveItem, se
                     </form>                
                 </div>
             }
-        } else if selectedTemplate.ID != "" {
+        } else if selectedTemplate.Item.ID != "" {
             <div
                 class="card b-card gdrive-doc-select"
                 selected
             >
                 <div class="d-flex justify-content-between">
                     <label>
-                        <a href={"https://docs.google.com/document/d/" + selectedTemplate.ID}>📄 {selectedTemplate.Name}</a>
+                        <a href={"https://docs.google.com/document/d/" + selectedTemplate.Item.ID}>📄 {selectedTemplate.Item.Name}</a>
                     </label>
                     <button
                         type="submit"
