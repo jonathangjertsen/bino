@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
@@ -17,6 +18,26 @@ type GDrive struct {
 	Service   *drive.Service
 	Queries   *Queries
 	DriveBase string
+}
+
+type GDriveConfig struct {
+	ServiceAccountKeyLocation string
+	DriveBase                 string
+	JournalFolder             string
+	TemplateFile              string
+}
+
+func NewGDriveWithServiceAccount(ctx context.Context, config GDriveConfig, queries *Queries) (*GDrive, error) {
+	srv, err := drive.NewService(ctx, option.WithCredentialsFile(config.ServiceAccountKeyLocation))
+	if err != nil {
+		return nil, fmt.Errorf("creating Drive service: %w", err)
+	}
+
+	return &GDrive{
+		Service:   srv,
+		Queries:   queries,
+		DriveBase: config.DriveBase,
+	}, nil
 }
 
 func (server *Server) getDriveService(r *http.Request) (*GDrive, error) {
@@ -43,15 +64,18 @@ type GDriveItem struct {
 	Name        string
 	Valid       bool
 	Permissions []GDrivePermission
-
-	file *drive.File
 }
 
-func (gdi GDriveItemView) LoggedInUserCanShare(ctx context.Context) bool {
+func (server *Server) LoggedInUserCanShare(ctx context.Context, item GDriveItem) bool {
 	cd := MustLoadCommonData(ctx)
-	return (gdi.Item.Valid &&
-		gdi.RequestingUser == cd.User.AppuserID &&
-		gdi.RequestingUserCapabilities.CanShare)
+
+	for _, p := range item.Permissions {
+		if p.Email == cd.User.Email {
+			return p.CanWrite()
+		}
+	}
+
+	return false
 }
 
 func GDriveItemFromFile(f *drive.File, p *drive.PermissionList) GDriveItem {
@@ -69,7 +93,6 @@ func GDriveItemFromFile(f *drive.File, p *drive.PermissionList) GDriveItem {
 				Role:        p.Role,
 			}
 		}),
-		file: f,
 	}
 
 }
@@ -78,6 +101,10 @@ type GDrivePermission struct {
 	DisplayName string
 	Email       string
 	Role        string
+}
+
+func (gdp GDrivePermission) CanWrite() bool {
+	return slices.Contains([]string{"owner", "organizer", "fileOrganizer", "writer"}, gdp.Role)
 }
 
 func (g *GDrive) fileToItem(file *drive.File) (GDriveItem, error) {
@@ -93,6 +120,7 @@ func (g *GDrive) fileToItem(file *drive.File) (GDriveItem, error) {
 		return GDriveItem{}, err
 	}
 	item := GDriveItemFromFile(file, pl)
+
 	return item, nil
 }
 

@@ -85,13 +85,6 @@ type Language struct {
 	GDriveSelectedFolder                   string
 	GDriveReloadFolders                    string
 	GDriveTemplate                         string
-	GDriveSelectTemplate                   string
-	GDriveSelectedTemplate                 string
-	GDriveTemplateInstruction              string
-	GDriveReloadDocs                       string
-	GDriveReloadDocsFilter                 string
-	GDriveNoBaseDirSelected                string
-	GDriveNoTemplateSelected               string
 	GDrivePermissionsForBaseDir            string
 	GDrivePermissionsForBaseDirInstruction string
 	GDriveDisplayName                      string
@@ -265,19 +258,12 @@ var NO = &Language{
 
 	FormerPatients: "Tidligere pasienter",
 
-	GDriveBaseDir:                          "Velg journalmappe",
+	GDriveBaseDir:                          "Journalmappe",
 	GDriveSelectFolder:                     "Velg mappe",
 	GDriveSelectedFolder:                   "Valgt",
 	GDriveSelectFolderInstruction:          "Her kan du velge hvilken mappe nye journaler skal opprettes i.",
 	GDriveReloadFolders:                    "Hent mapper fra Google Drive på nytt",
-	GDriveTemplate:                         "Velg mal",
-	GDriveTemplateInstruction:              "Her kan du velge hvilket dokument som skal brukes som mal. Når du henter dokumenter bør du skrive et søkeord, f.eks 'Navn' hvis tittelen på malen inneholder det ordet. Ellers vil det komme opp veldig mange dokumenter.",
-	GDriveSelectTemplate:                   "Velg som mal",
-	GDriveSelectedTemplate:                 "Valgt",
-	GDriveReloadDocs:                       "Hent dokumenter fra Google Drive",
-	GDriveReloadDocsFilter:                 "Søkeord",
-	GDriveNoBaseDirSelected:                "Det er ikke valgt noen journalmappe",
-	GDriveNoTemplateSelected:               "Det er ikke valgt noen mal",
+	GDriveTemplate:                         "Mal",
 	GDrivePermissionsForBaseDir:            "Tilganger til journalmappen",
 	GDrivePermissionsForBaseDirInstruction: "Her kan du se hvem som har tilgang til journalmappen, og sammenligne med tilganger i Bino.",
 	GDriveDisplayName:                      "Brukernavn i Google Drive",
@@ -288,8 +274,6 @@ var NO = &Language{
 	GDriveEmailInBino:                      "Email i Bino",
 	GDriveGiveAccess:                       "Gi skrivetilgang",
 	GDriveLoadFoldersFailed:                "Kunne ikke laste inn mapper fra Google Drive",
-	GDriveBaseDirUpdated:                   "Journalmappen ble oppdatert. Husk å også velge mal.",
-	GDriveTemplateUpdated:                  "Malen ble oppdatert.",
 	GDriveUserInvited:                      "Brukeren ble invitert til mappen",
 	GDriveCreateJournalForPatient:          "Opprett pasientjournal",
 	GDriveSelectExistingJournalForPatient:  "Koble en eksisterende journal til pasienten",
@@ -478,13 +462,6 @@ var EN = &Language{
 	GDriveSelectFolderInstruction:          "Select the folder in which new patient journals will be created.",
 	GDriveReloadFolders:                    "Reload folders from Google Drive",
 	GDriveTemplate:                         "Choose template",
-	GDriveTemplateInstruction:              "Select the document that will be used as a template. When reloading documents you should select a search filter, e.g., 'Name' if the template contains that word in the title. That way you don't need to look through all the documents.",
-	GDriveSelectTemplate:                   "Select as template",
-	GDriveSelectedTemplate:                 "Selected",
-	GDriveReloadDocs:                       "Load documents",
-	GDriveReloadDocsFilter:                 "Search filter",
-	GDriveNoBaseDirSelected:                "No base folder selected",
-	GDriveNoTemplateSelected:               "No template document selected",
 	GDrivePermissionsForBaseDir:            "Journal folder permissions",
 	GDrivePermissionsForBaseDirInstruction: "Check who has permissions to the folder, and compare with the permissions in Bino.",
 	GDriveDisplayName:                      "Username in Google Drive",

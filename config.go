@@ -12,7 +12,7 @@ type Config struct {
 	Privacy     PrivacyConfig
 	Auth        AuthConfig
 	HTTP        HTTPConfig
-	GoogleDrive GDriveWorkerConfig
+	GoogleDrive GDriveConfig
 	DB          ConfigDB
 }
 

@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"time"
-
-	"google.golang.org/api/drive/v3"
 )
 
 // ---- Home
@@ -171,26 +169,7 @@ func (inv Invitation) ToInvitationView() InvitationView {
 // ---- Google Drive Item
 
 type GDriveItemView struct {
-	Item                       GDriveItem
-	RequestingUser             int32
-	RequestingUserCapabilities drive.FileCapabilities
-	Permissions                []GDrivePermissionView
-}
-
-func (gdf GDriveItemView) HTMLIDSelectBaseFolder(prefix string) string {
-	return fmt.Sprintf("%sset-base-folder-%s", prefix, gdf.Item.ID)
-}
-
-func (gdf GDriveItemView) URLSelectBaseFolder() string {
-	return fmt.Sprintf("/gdrive/set-base-folder/%s", gdf.Item.ID)
-}
-
-func (gdf GDriveItemView) HTMLIDSelectTemplate(prefix string) string {
-	return fmt.Sprintf("%sset-template-%s", prefix, gdf.Item.ID)
-}
-
-func (gdf GDriveItemView) URLSelectTemplate() string {
-	return fmt.Sprintf("/gdrive/set-template/%s", gdf.Item.ID)
+	Item GDriveItem
 }
 
 // ---- Google Drive Permission

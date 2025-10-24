@@ -34,15 +34,15 @@ func main() {
 
 	queries := New(conn)
 
-	gdriveWorker, err := NewGDriveWithServiceAccount(ctx, config.GoogleDrive, queries)
+	gdriveSA, err := NewGDriveWithServiceAccount(ctx, config.GoogleDrive, queries)
 	if err != nil {
 		panic(err)
 	}
-	_ = gdriveWorker
+	worker := NewGDriveWorker(config.GoogleDrive, gdriveSA, cache)
 
 	go backgroundDeleteExpiredItems(ctx, queries)
 
-	err = startServer(ctx, conn, queries, cache, config, BuildKey)
+	err = startServer(ctx, conn, queries, cache, worker, config, BuildKey)
 	if err != nil {
 		panic(err)
 	}

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 
@@ -28,7 +27,7 @@ func (c *Cache) Close() {
 	c.db.Close()
 }
 
-func (c *Cache) GetString(ctx context.Context, key string) (string, bool) {
+func (c *Cache) GetString(key string) (string, bool) {
 	var out string
 	if err := c.db.View(func(tx *buntdb.Tx) error {
 		var err error
@@ -43,8 +42,8 @@ func (c *Cache) GetString(ctx context.Context, key string) (string, bool) {
 	return out, true
 }
 
-func (c *Cache) Get(ctx context.Context, key string, obj any) bool {
-	v, ok := c.GetString(ctx, key)
+func (c *Cache) Get(key string, obj any) bool {
+	v, ok := c.GetString(key)
 	if !ok {
 		return false
 	}
@@ -55,7 +54,7 @@ func (c *Cache) Get(ctx context.Context, key string, obj any) bool {
 	return true
 }
 
-func (c *Cache) SetString(ctx context.Context, key string, value string) {
+func (c *Cache) SetString(key string, value string) {
 	if err := c.db.Update(func(tx *buntdb.Tx) error {
 		_, _, err := tx.Set(key, value, nil)
 		return err
@@ -64,20 +63,31 @@ func (c *Cache) SetString(ctx context.Context, key string, value string) {
 	}
 }
 
-func (c *Cache) Set(ctx context.Context, key string, obj any) {
+func (c *Cache) Set(key string, obj any) {
 	v, err := json.Marshal(obj)
 	if err != nil {
 		c.onerror("Marshal", key, err)
 		return
 	}
-	c.SetString(ctx, key, string(v))
+	c.SetString(key, string(v))
 }
 
-func (c *Cache) Delete(ctx context.Context, key string) {
+func (c *Cache) Delete(key string) {
 	if err := c.db.Update(func(tx *buntdb.Tx) error {
 		_, err := tx.Delete(key)
 		return err
 	}); err != nil {
 		c.onerror("Delete", key, err)
 	}
+}
+
+func (c *Cache) Cached(key string, obj any, fetcher func() error) {
+	if c.Get(key, obj) {
+		return
+	}
+	if err := fetcher(); err != nil {
+		c.onerror("Fetch", key, err)
+		return
+	}
+	c.Set(key, obj)
 }

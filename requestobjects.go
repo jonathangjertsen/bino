@@ -36,8 +36,9 @@ type CommonData struct {
 	User     UserData
 	// Cached result of queries that might be called more than once
 	QueryCache struct {
-		AllUsers         map[string]UserView
-		CanCreateJournal bool
+		self             UserView
+		emailToUser      map[string]UserView
+		canCreateJournal bool
 	}
 	Feedback Feedback
 }
@@ -81,17 +82,21 @@ func (cd *CommonData) SetFeedback(fbt FeedbackType, msg string) {
 
 func (server *Server) getUserViews(ctx context.Context) map[string]UserView {
 	commonData := MustLoadCommonData(ctx)
-	if commonData.QueryCache.AllUsers == nil {
+	if commonData.QueryCache.emailToUser == nil {
 		users, err := server.Queries.GetAppusers(ctx)
 		if err == nil {
-			commonData.QueryCache.AllUsers = SliceToMap(users, func(user GetAppusersRow) (string, UserView) {
+			commonData.QueryCache.emailToUser = SliceToMap(users, func(user GetAppusersRow) (string, UserView) {
 				return user.Email, user.ToUserView()
 			})
 		} else {
 			LogCtx(ctx, "GetAppusers failed: %w", err)
 		}
 	}
-	return commonData.QueryCache.AllUsers
+	return commonData.QueryCache.emailToUser
+}
+
+func (server *Server) lookupUserByEmail(ctx context.Context, email string) UserView {
+	return server.getUserViews(ctx)[email]
 }
 
 func (cd *CommonData) StaticFile(name string) string {
