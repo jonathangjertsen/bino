@@ -64,7 +64,7 @@ func (server *Server) InviteUser(ctx context.Context, g *GDrive, file string, em
 	if err != nil {
 		return err
 	}
-	call := g.Service.Permissions.Create(item.ID, &drive.Permission{
+	call := g.Drive.Permissions.Create(item.ID, &drive.Permission{
 		Type:         "user",
 		EmailAddress: email,
 		Role:         "writer",

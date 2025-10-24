@@ -364,6 +364,9 @@ var NO = &Language{
 		EventStatusChanged:                  "Endret status",
 		EventDeleted:                        "Slettet",
 		EventNameChanged:                    "Endret navn",
+		EventJournalCreated:                 "Opprettet journal i Google Drive",
+		EventJournalAttached:                "Koblet til journal i Google Drive",
+		EventJournalDetached:                "Koblet fra journal i Google Drive",
 	},
 }
 
@@ -561,6 +564,9 @@ var EN = &Language{
 		EventStatusChanged:                  "Status changed",
 		EventDeleted:                        "Deleted",
 		EventNameChanged:                    "Name changed",
+		EventJournalCreated:                 "Created journal",
+		EventJournalAttached:                "Linked journal",
+		EventJournalDetached:                "Unlinked journal",
 	},
 }
 
@@ -668,10 +674,10 @@ func (l *Language) FormatTimeRel(t time.Time) string {
 		if diff < -356*24*time.Hour {
 			return ""
 		}
-		if diff < 2*24*time.Hour {
+		if diff < -2*24*time.Hour {
 			return fmt.Sprintf("om %d dager", -int(diff.Hours()/24))
 		}
-		if diff < 24*time.Hour {
+		if diff < -24*time.Hour {
 			return fmt.Sprintf("om 1 dag")
 		}
 		if diff < -2*time.Hour {

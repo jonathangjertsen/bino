@@ -19,6 +19,9 @@ import "net/http"
 //	StatusChanged                  = 11, // Associated ID is status
 //	Deleted                        = 12,
 //	NameChanged                    = 13,
+//	JournalCreated                 = 14,
+//	JournalAttached                = 15,
+//	JournalDetached                = 16,
 //
 // )
 type Event int32

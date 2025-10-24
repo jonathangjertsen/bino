@@ -1,5 +1,9 @@
 package main
 
+import (
+	"log"
+)
+
 type GDriveWorker struct {
 	cfg GDriveConfig
 	g   *GDrive
@@ -24,7 +28,7 @@ func NewGDriveWorker(cfg GDriveConfig, g *GDrive, c *Cache) *GDriveWorker {
 
 type GDriveConfigInfo struct {
 	JournalFolder GDriveItem
-	TemplateFile  GDriveItem
+	TemplateDoc   GDriveJournal
 }
 
 func (w *GDriveWorker) GetGDriveConfigInfo() GDriveConfigInfo {
@@ -36,11 +40,16 @@ func (w *GDriveWorker) GetGDriveConfigInfo() GDriveConfigInfo {
 		}
 		configInfo.JournalFolder = item
 
-		item, err = w.g.GetFile(w.cfg.TemplateFile)
+		doc, err := w.g.ReadDocument(w.cfg.TemplateFile)
 		if err != nil {
 			return err
 		}
-		configInfo.TemplateFile = item
+		configInfo.TemplateDoc = doc
+
+		if err := doc.Validate(); err != nil {
+			return err
+		}
+		log.Printf("Fetched GDrive Config info")
 
 		return nil
 	})

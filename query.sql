@@ -98,7 +98,7 @@ ORDER BY name
 ;
 
 -- name: GetActivePatients :many
-SELECT p.id, p.name, p.curr_home_id, p.status, COALESCE(sl.name, '???') AS species FROM patient AS p
+SELECT p.id, p.name, p.curr_home_id, p.status, p.journal_url, COALESCE(sl.name, '???') AS species FROM patient AS p
 LEFT JOIN species_language AS sl
     ON sl.species_id = p.species_id
 WHERE curr_home_id IS NOT NULL
@@ -259,6 +259,12 @@ SET name = $2
 WHERE id = $1
 ;
 
+-- name: SetPatientJournal :exec
+UPDATE patient
+SET journal_url = $2
+WHERE id = $1
+;
+
 -- name: GetEventsForPatient :many
 SELECT
     pe.*,
@@ -272,6 +278,15 @@ JOIN appuser AS au
   ON au.id = pe.appuser_id
 WHERE pe.patient_id = $1
 ORDER BY pe.time
+;
+
+-- name: GetFirstEventOfTypeForPatient :one
+SELECT
+  pe.time
+FROM patient_event AS pe
+WHERE pe.patient_id = $1
+  AND pe.event_id = $2
+ORDER BY pe.time ASC
 ;
 
 -- name: GetHome :one

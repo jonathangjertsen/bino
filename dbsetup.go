@@ -11,12 +11,12 @@ import (
 	"golang.org/x/term"
 )
 
-type ConfigDB struct {
+type DBConfig struct {
 	URL       string
 	CacheFile string
 }
 
-func dbSetup(ctx context.Context, cfg ConfigDB) (*pgxpool.Pool, error) {
+func dbSetup(ctx context.Context, cfg DBConfig) (*pgxpool.Pool, error) {
 	pass := os.Getenv("BINO_DB_PASSWORD")
 	if pass == "" {
 		fmt.Print("Password for user bino: ")

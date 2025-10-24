@@ -42,11 +42,17 @@ const (
 	EventDeleted Event = 12
 	// EventNameChanged is a Event of type NameChanged.
 	EventNameChanged Event = 13
+	// EventJournalCreated is a Event of type JournalCreated.
+	EventJournalCreated Event = 14
+	// EventJournalAttached is a Event of type JournalAttached.
+	EventJournalAttached Event = 15
+	// EventJournalDetached is a Event of type JournalDetached.
+	EventJournalDetached Event = 16
 )
 
 var ErrInvalidEvent = errors.New("not a valid Event")
 
-const _EventName = "UnknownRegisteredAdmittedAdoptedReleasedTransferredToOtherHomeTransferredOutsideOrganizationDiedEuthanizedTagAddedTagRemovedStatusChangedDeletedNameChanged"
+const _EventName = "UnknownRegisteredAdmittedAdoptedReleasedTransferredToOtherHomeTransferredOutsideOrganizationDiedEuthanizedTagAddedTagRemovedStatusChangedDeletedNameChangedJournalCreatedJournalAttachedJournalDetached"
 
 var _EventMap = map[Event]string{
 	EventUnknown:                        _EventName[0:7],
@@ -63,6 +69,9 @@ var _EventMap = map[Event]string{
 	EventStatusChanged:                  _EventName[124:137],
 	EventDeleted:                        _EventName[137:144],
 	EventNameChanged:                    _EventName[144:155],
+	EventJournalCreated:                 _EventName[155:169],
+	EventJournalAttached:                _EventName[169:184],
+	EventJournalDetached:                _EventName[184:199],
 }
 
 // String implements the Stringer interface.
@@ -95,6 +104,9 @@ var _EventValue = map[string]Event{
 	_EventName[124:137]: EventStatusChanged,
 	_EventName[137:144]: EventDeleted,
 	_EventName[144:155]: EventNameChanged,
+	_EventName[155:169]: EventJournalCreated,
+	_EventName[169:184]: EventJournalAttached,
+	_EventName[184:199]: EventJournalDetached,
 }
 
 // ParseEvent attempts to convert a string to a Event.

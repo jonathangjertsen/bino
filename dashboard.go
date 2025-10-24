@@ -66,10 +66,11 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 				return p.CurrHomeID.Valid && p.CurrHomeID.Int32 == h.ID
 			}), func(p GetActivePatientsRow) PatientView {
 				return PatientView{
-					ID:      p.ID,
-					Species: p.Species,
-					Name:    p.Name,
-					Status:  p.Status,
+					ID:         p.ID,
+					Species:    p.Species,
+					Name:       p.Name,
+					Status:     p.Status,
+					JournalURL: p.JournalUrl.String,
 					Tags: SliceToSlice(FilterSlice(patientTags, func(t GetTagsForActivePatientsRow) bool {
 						return t.PatientID == p.ID
 					}), func(t GetTagsForActivePatientsRow) TagView {

@@ -2,10 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"slices"
 
+	"google.golang.org/api/docs/v1"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
 )
@@ -15,7 +18,8 @@ var GoogleDriveScopes = []string{
 }
 
 type GDrive struct {
-	Service   *drive.Service
+	Drive     *drive.Service
+	Docs      *docs.Service
 	Queries   *Queries
 	DriveBase string
 }
@@ -28,13 +32,19 @@ type GDriveConfig struct {
 }
 
 func NewGDriveWithServiceAccount(ctx context.Context, config GDriveConfig, queries *Queries) (*GDrive, error) {
-	srv, err := drive.NewService(ctx, option.WithCredentialsFile(config.ServiceAccountKeyLocation))
+	drive, err := drive.NewService(ctx, option.WithCredentialsFile(config.ServiceAccountKeyLocation))
 	if err != nil {
 		return nil, fmt.Errorf("creating Drive service: %w", err)
 	}
 
+	docs, err := docs.NewService(ctx, option.WithCredentialsFile(config.ServiceAccountKeyLocation))
+	if err != nil {
+		return nil, fmt.Errorf("creating Docs service: %w", err)
+	}
+
 	return &GDrive{
-		Service:   srv,
+		Drive:     drive,
+		Docs:      docs,
 		Queries:   queries,
 		DriveBase: config.DriveBase,
 	}, nil
@@ -47,13 +57,20 @@ func (server *Server) getDriveService(r *http.Request) (*GDrive, error) {
 	}
 
 	client := server.OAuthConfig.Client(r.Context(), token)
-	srv, err := drive.NewService(r.Context(), option.WithHTTPClient(client))
+
+	drive, err := drive.NewService(r.Context(), option.WithHTTPClient(client))
+	if err != nil {
+		return nil, fmt.Errorf("unable to create drive service: %v", err)
+	}
+
+	docs, err := docs.NewService(r.Context(), option.WithHTTPClient(client))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create drive service: %v", err)
 	}
 
 	return &GDrive{
-		Service:   srv,
+		Drive:     drive,
+		Docs:      docs,
 		Queries:   server.Queries,
 		DriveBase: server.Config.GoogleDrive.DriveBase,
 	}, nil
@@ -64,6 +81,14 @@ type GDriveItem struct {
 	Name        string
 	Valid       bool
 	Permissions []GDrivePermission
+}
+
+func (item *GDriveItem) FolderURL() string {
+	return "https://drive.google.com/drive/folders/" + item.ID
+}
+
+func (item *GDriveItem) DocumentURL() string {
+	return "https://docs.google.com/document/d/" + item.ID
 }
 
 func (server *Server) LoggedInUserCanShare(ctx context.Context, item GDriveItem) bool {
@@ -108,7 +133,7 @@ func (gdp GDrivePermission) CanWrite() bool {
 }
 
 func (g *GDrive) fileToItem(file *drive.File) (GDriveItem, error) {
-	call := g.Service.Permissions.List(file.Id).Fields("permissions(displayName, emailAddress, role)")
+	call := g.Drive.Permissions.List(file.Id).Fields("permissions(displayName, emailAddress, role)")
 
 	if g.DriveBase != "" {
 		call = call.
@@ -125,7 +150,7 @@ func (g *GDrive) fileToItem(file *drive.File) (GDriveItem, error) {
 }
 
 func (g *GDrive) GetFile(id string) (GDriveItem, error) {
-	call := g.Service.Files.Get(id).
+	call := g.Drive.Files.Get(id).
 		Fields("id, name, capabilities")
 
 	if g.DriveBase != "" {
@@ -135,6 +160,65 @@ func (g *GDrive) GetFile(id string) (GDriveItem, error) {
 
 	f, err := call.Do()
 	if err != nil {
+		return GDriveItem{}, err
+	}
+
+	return g.fileToItem(f)
+}
+
+func (g *GDrive) ReadDocument(id string) (GDriveJournal, error) {
+	item, err := g.GetFile(id)
+	if err != nil {
+		return GDriveJournal{}, err
+	}
+
+	call := g.Drive.Files.Export(id, "text/markdown")
+	f, err := call.Download()
+	if err != nil {
+		return GDriveJournal{}, err
+	}
+	defer f.Body.Close()
+	content, err := io.ReadAll(f.Body)
+	if err != nil {
+		return GDriveJournal{}, err
+	}
+	return GDriveJournal{
+		Content: string(content),
+		Item:    item,
+	}, nil
+}
+
+func (g *GDrive) CreateDocument(conf GDriveConfigInfo, vars GDriveTemplateVars) (GDriveItem, error) {
+	call := g.Drive.Files.Copy(conf.TemplateDoc.Item.ID, &drive.File{
+		Name:    vars.ApplyToString(conf.TemplateDoc.Item.Name),
+		Parents: []string{conf.JournalFolder.ID},
+	})
+
+	if g.DriveBase != "" {
+		call = call.
+			SupportsAllDrives(true)
+	}
+
+	f, err := call.Do()
+	if err != nil {
+		return GDriveItem{}, err
+	}
+
+	updateCall := g.Docs.Documents.BatchUpdate(f.Id, vars.ReplaceRequests())
+	_, err = updateCall.Do()
+	if err != nil {
+		deleteCall := g.Drive.Files.Delete(f.Id)
+
+		if g.DriveBase != "" {
+			deleteCall = deleteCall.
+				SupportsAllDrives(true)
+		}
+
+		deleteErr := deleteCall.Do()
+		if deleteErr != nil {
+			return GDriveItem{}, errors.Join(err, deleteErr)
+		}
+
 		return GDriveItem{}, err
 	}
 

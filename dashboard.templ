@@ -237,14 +237,8 @@ templ DashboardJournalUpdate(data *CommonData, patient PatientView) {
                 </a>
             } else {
                 <p>{data.User.Language.GDriveNoJournalForPatient}</p>
-                <div class="d-flex flex-column center gap-2">
-                    <button class="btn btn-sm btn-primary">
-                        {data.User.Language.GDriveCreateJournalForPatient}
-                    </button>
-                    <button class="btn btn-sm btn-primary">
-                        {data.User.Language.GDriveSelectExistingJournalForPatient}
-                    </button>
-                </div>
+                @SingleButtonForm(patient.URLSuffix("create-journal"), data.User.Language.GDriveCreateJournalForPatient, "POST", "btn-primary", "d-flex", "flex-column", "center", "mb-2")
+                @SingleButtonForm(patient.URLSuffix("attach-journal"), data.User.Language.GDriveSelectExistingJournalForPatient, "GET", "btn-primary", "d-flex", "flex-column", "center", "mb-2")
             }
         </td>
     </tr>

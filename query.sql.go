@@ -240,7 +240,7 @@ func (q *Queries) DeleteStaleSessions(ctx context.Context) (pgconn.CommandTag, e
 }
 
 const getActivePatients = `-- name: GetActivePatients :many
-SELECT p.id, p.name, p.curr_home_id, p.status, COALESCE(sl.name, '???') AS species FROM patient AS p
+SELECT p.id, p.name, p.curr_home_id, p.status, p.journal_url, COALESCE(sl.name, '???') AS species FROM patient AS p
 LEFT JOIN species_language AS sl
     ON sl.species_id = p.species_id
 WHERE curr_home_id IS NOT NULL
@@ -252,6 +252,7 @@ type GetActivePatientsRow struct {
 	Name       string
 	CurrHomeID pgtype.Int4
 	Status     int32
+	JournalUrl pgtype.Text
 	Species    string
 }
 
@@ -269,6 +270,7 @@ func (q *Queries) GetActivePatients(ctx context.Context, languageID int32) ([]Ge
 			&i.Name,
 			&i.CurrHomeID,
 			&i.Status,
+			&i.JournalUrl,
 			&i.Species,
 		); err != nil {
 			return nil, err
@@ -365,7 +367,7 @@ func (q *Queries) GetAppusersForHome(ctx context.Context, homeID int32) ([]Appus
 }
 
 const getCurrentPatientsForHome = `-- name: GetCurrentPatientsForHome :many
-SELECT p.id, p.species_id, p.curr_home_id, p.name, p.status, sl.name AS species_name FROM patient AS p
+SELECT p.id, p.species_id, p.curr_home_id, p.name, p.status, p.journal_url, sl.name AS species_name FROM patient AS p
 JOIN species_language AS sl
   ON sl.species_id = p.species_id
 WHERE p.curr_home_id = $1
@@ -383,6 +385,7 @@ type GetCurrentPatientsForHomeRow struct {
 	CurrHomeID  pgtype.Int4
 	Name        string
 	Status      int32
+	JournalUrl  pgtype.Text
 	SpeciesName string
 }
 
@@ -401,6 +404,7 @@ func (q *Queries) GetCurrentPatientsForHome(ctx context.Context, arg GetCurrentP
 			&i.CurrHomeID,
 			&i.Name,
 			&i.Status,
+			&i.JournalUrl,
 			&i.SpeciesName,
 		); err != nil {
 			return nil, err
@@ -472,6 +476,27 @@ func (q *Queries) GetEventsForPatient(ctx context.Context, patientID int32) ([]G
 		return nil, err
 	}
 	return items, nil
+}
+
+const getFirstEventOfTypeForPatient = `-- name: GetFirstEventOfTypeForPatient :one
+SELECT
+  pe.time
+FROM patient_event AS pe
+WHERE pe.patient_id = $1
+  AND pe.event_id = $2
+ORDER BY pe.time ASC
+`
+
+type GetFirstEventOfTypeForPatientParams struct {
+	PatientID int32
+	EventID   int32
+}
+
+func (q *Queries) GetFirstEventOfTypeForPatient(ctx context.Context, arg GetFirstEventOfTypeForPatientParams) (pgtype.Timestamptz, error) {
+	row := q.db.QueryRow(ctx, getFirstEventOfTypeForPatient, arg.PatientID, arg.EventID)
+	var time pgtype.Timestamptz
+	err := row.Scan(&time)
+	return time, err
 }
 
 const getFormerPatients = `-- name: GetFormerPatients :many
@@ -640,7 +665,7 @@ func (q *Queries) GetInvitations(ctx context.Context) ([]Invitation, error) {
 }
 
 const getPatient = `-- name: GetPatient :one
-SELECT id, species_id, curr_home_id, name, status FROM patient
+SELECT id, species_id, curr_home_id, name, status, journal_url FROM patient
 WHERE id = $1
 `
 
@@ -653,12 +678,13 @@ func (q *Queries) GetPatient(ctx context.Context, id int32) (Patient, error) {
 		&i.CurrHomeID,
 		&i.Name,
 		&i.Status,
+		&i.JournalUrl,
 	)
 	return i, err
 }
 
 const getPatientWithSpecies = `-- name: GetPatientWithSpecies :one
-SELECT p.id, p.species_id, p.curr_home_id, p.name, p.status, sl.name AS species_name FROM patient AS p
+SELECT p.id, p.species_id, p.curr_home_id, p.name, p.status, p.journal_url, sl.name AS species_name FROM patient AS p
 JOIN species_language AS sl
   ON sl.species_id = p.species_id
 WHERE p.id = $1
@@ -676,6 +702,7 @@ type GetPatientWithSpeciesRow struct {
 	CurrHomeID  pgtype.Int4
 	Name        string
 	Status      int32
+	JournalUrl  pgtype.Text
 	SpeciesName string
 }
 
@@ -688,6 +715,7 @@ func (q *Queries) GetPatientWithSpecies(ctx context.Context, arg GetPatientWithS
 		&i.CurrHomeID,
 		&i.Name,
 		&i.Status,
+		&i.JournalUrl,
 		&i.SpeciesName,
 	)
 	return i, err
@@ -1299,6 +1327,22 @@ type SetLoggingConsentParams struct {
 
 func (q *Queries) SetLoggingConsent(ctx context.Context, arg SetLoggingConsentParams) error {
 	_, err := q.db.Exec(ctx, setLoggingConsent, arg.ID, arg.Period)
+	return err
+}
+
+const setPatientJournal = `-- name: SetPatientJournal :exec
+UPDATE patient
+SET journal_url = $2
+WHERE id = $1
+`
+
+type SetPatientJournalParams struct {
+	ID         int32
+	JournalUrl pgtype.Text
+}
+
+func (q *Queries) SetPatientJournal(ctx context.Context, arg SetPatientJournalParams) error {
+	_, err := q.db.Exec(ctx, setPatientJournal, arg.ID, arg.JournalUrl)
 	return err
 }
 

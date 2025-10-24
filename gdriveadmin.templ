@@ -23,8 +23,13 @@ templ (server *Server) GDrivePermissionOverview(
 ) {
     @Card() {
         <h2>{data.User.Language.GDriveBaseDir} / {data.User.Language.GDriveTemplate}</h2>
-        <p><a href={"https://drive.google.com/drive/folders/" + info.JournalFolder.ID}>{info.JournalFolder.Name}</a></p>
-        <p><a href={"https://docs.google.com/document/d/" + info.TemplateFile.ID}>{info.TemplateFile.Name}</a></p>
+        <p><a href={info.JournalFolder.FolderURL()}>{info.JournalFolder.Name}</a></p>
+        <p><a href={info.TemplateDoc.Item.DocumentURL()}>{info.TemplateDoc.Item.Name}</a></p>
+    }
+
+    @Card() {
+        <h2>{data.User.Language.GDriveTemplate}</h2>
+        <p><pre>{info.TemplateDoc.Content}</pre></p>
     }
 
     @Card() {
