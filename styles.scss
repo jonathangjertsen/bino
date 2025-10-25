@@ -157,17 +157,6 @@ body {
 
 .brand-color {
     color: $text;
-    background: $accent;
-    background: linear-gradient(160deg, mix($accent, $dark, 80) 0%, mix($primary, $dark, 50) 100%);
-    background-size: 200% 200%;
-    transition: background-position 0.5s ease;
-}
-
-.brand-color:hover {
-  background-position: 100% 0;
-  .brand {
-    color: mix($accent, $text, 50);
-  }
 }
 
 .brand {
@@ -180,11 +169,24 @@ body {
 }
 
 .brand-badge {
-    border: 2px solid mix($dark, $accent, 50);
     padding: 0.2rem 0.85rem 0 0.70rem;
-    border-radius: 2rem;
 }
 
+.mascot-container {
+    min-height: 125px;
+    justify-content: center;
+    display: flex;
+    @media (max-width: $mobilethreshold) {
+        display: none;
+    }
+    flex-grow: 1;
+}
+
+.mascot {
+    height: 100px;
+    border-radius: 50%;
+    align-self: center;
+}
 
 .display-name {
     font-weight: bold
@@ -334,7 +336,10 @@ h1, h2, h3, h4, h5, h6 {
     margin-left: 0 !important;
     margin-bottom: 1rem !important;
     flex: 1;  
-    align-self: flex-start;  
+    align-self: flex-start;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .former-patients-search-container {

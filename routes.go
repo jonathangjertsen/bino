@@ -30,8 +30,6 @@ func (server *Server) postLanguageHandler(w http.ResponseWriter, r *http.Request
 
 	if err != nil {
 		commonData.Error(commonData.User.Language.LanguageUpdateFailed, err)
-	} else {
-		commonData.Success(commonData.User.Language.LanguageUpdateOK)
 	}
 
 	server.redirectToReferer(w, r)

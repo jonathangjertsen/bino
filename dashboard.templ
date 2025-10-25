@@ -7,6 +7,9 @@ templ DashboardPage(data *CommonData, dashboardData *DashboardData) {
         <div class="dashboard-left-sidebar m-2">
             @DashboardForm(data, dashboardData)
             @DashboardSearch(data)
+            <div class="mascot-container">
+                <img class="mascot" src={data.StaticFile("mascot.jpg")}>
+            </div>
         </div>
         if dashboardData.PreferredHomeView.Home.ID != 0 {
             @DashboardSelf(data, dashboardData)
