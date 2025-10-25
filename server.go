@@ -156,6 +156,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 	mux.Handle("POST /patient/{patient}/checkout", chainf(server.postCheckoutHandler, requiresLogin...))
 	mux.Handle("POST /patient/{patient}/set-name", chainf(server.postSetNameHandler, requiresLogin...))
 	mux.Handle("POST /patient/{patient}/create-journal", chainf(server.createJournalHandler, requiresLogin...))
+	mux.Handle("POST /patient/{patient}/attach-journal", chainf(server.attachJournalHandler, requiresLogin...))
 	mux.Handle("POST /event/{event}/set-note", chainf(server.postEventSetNoteHandler, requiresLogin...))
 	// Ajax
 	mux.Handle("POST /language", chainf(server.postLanguageHandler, requiresLogin...))

@@ -100,6 +100,7 @@ type Language struct {
 	GDriveUserInvited                      string
 	GDriveCreateJournalForPatient          string
 	GDriveSelectExistingJournalForPatient  string
+	GDriveSelectExistingJournalInstruction string
 	GDriveNoJournalForPatient              string
 
 	GenericAdd      string
@@ -127,6 +128,7 @@ type Language struct {
 	GenericFailed   string
 	GenericSuccess  string
 	GenericMessage  string
+	GenericURL      string
 
 	HomesArchiveHome       string
 	HomesAddToHome         string
@@ -276,7 +278,8 @@ var NO = &Language{
 	GDriveLoadFoldersFailed:                "Kunne ikke laste inn mapper fra Google Drive",
 	GDriveUserInvited:                      "Brukeren ble invitert til mappen",
 	GDriveCreateJournalForPatient:          "Opprett pasientjournal",
-	GDriveSelectExistingJournalForPatient:  "Koble en eksisterende journal til pasienten",
+	GDriveSelectExistingJournalForPatient:  "Velg",
+	GDriveSelectExistingJournalInstruction: "Eller velg en eksisterende journal i Google Drive:",
 	GDriveNoJournalForPatient:              "Det er ikke koblet noen journal til pasienten.",
 
 	GenericAdd:      "Legg til",
@@ -304,6 +307,7 @@ var NO = &Language{
 	GenericFailed:   "Noe gikk galt. Kontakt administrator.",
 	GenericSuccess:  "Handlingen ble utført.",
 	GenericMessage:  "Melding",
+	GenericURL:      "URL",
 
 	HomesAddToHome:         "Legg til",
 	HomesArchiveHome:       "Arkiver rehabhjem",
@@ -480,6 +484,7 @@ var EN = &Language{
 	GDriveUserInvited:                      "The user was invited to the journal folder",
 	GDriveCreateJournalForPatient:          "Create a new journal for the patient",
 	GDriveSelectExistingJournalForPatient:  "Connect an existing journal to the patient",
+	GDriveSelectExistingJournalInstruction: "Or connect an existing journal in Google Drive:",
 	GDriveNoJournalForPatient:              "No journal found",
 
 	GenericAdd:      "Add",
@@ -507,6 +512,7 @@ var EN = &Language{
 	GenericFailed:   "Something went wrong. Contact the site administrator.",
 	GenericSuccess:  "Success.",
 	GenericMessage:  "Message",
+	GenericURL:      "URL",
 
 	HomesAddToHome:         "Add",
 	HomesArchiveHome:       "Archive rehab home",

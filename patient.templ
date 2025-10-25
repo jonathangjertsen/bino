@@ -38,7 +38,7 @@ templ PatientPage(ctx context.Context, data *CommonData, view PatientPageView, s
             <table class="patient-table table table-bordered mb-2">
                 <tbody>
                     if data.User.HasGDriveAccess {
-                        @DashboardJournalUpdate(data, view.Patient)
+                        @DashboardJournalUpdate(data, view.Patient, true)
                     }
 
                     if !IsCheckoutStatus[Status(view.Patient.Status)] {

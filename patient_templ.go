@@ -211,7 +211,7 @@ func PatientPage(ctx context.Context, data *CommonData, view PatientPageView, se
 					return templ_7745c5c3_Err
 				}
 				if data.User.HasGDriveAccess {
-					templ_7745c5c3_Err = DashboardJournalUpdate(data, view.Patient).Render(ctx, templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = DashboardJournalUpdate(data, view.Patient, true).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}

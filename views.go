@@ -44,6 +44,10 @@ func (pv PatientView) CheckoutNoteID(prefix string) string {
 	return fmt.Sprintf("%spatient-checkout-note-%d", prefix, pv.ID)
 }
 
+func (pv PatientView) AttachJournalID(prefix string) string {
+	return fmt.Sprintf("%spatient-attach-journal-%d", prefix, pv.ID)
+}
+
 func (pv PatientView) URL() string {
 	return fmt.Sprintf("/patient/%d", pv.ID)
 }
