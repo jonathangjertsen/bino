@@ -148,7 +148,6 @@ type Language struct {
 	HomePreferredSpecies   string
 
 	LanguageUpdateFailed string
-	LanguageUpdateOK     string
 
 	NotFoundPageHead         string
 	NotFoundPageInstructions string
@@ -329,7 +328,6 @@ var NO = &Language{
 	HomeCapacity:           "Kapasitet",
 	HomePreferredSpecies:   "Favoritter",
 
-	LanguageUpdateOK:     "Oppdaterte språk",
 	LanguageUpdateFailed: "Kunne ikke oppdatere språk",
 
 	NotFoundPageHead:         "Ikke funnet",
@@ -537,7 +535,6 @@ var EN = &Language{
 	HomePreferredSpecies:   "Favorites",
 
 	LanguageUpdateFailed: "Failed to update language",
-	LanguageUpdateOK:     "Updated language",
 
 	NavbarCalendar:  "Calendar",
 	NavbarDashboard: "Dashboard",
