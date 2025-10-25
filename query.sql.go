@@ -156,6 +156,40 @@ func (q *Queries) ClearAllUserGDriveAccess(ctx context.Context) error {
 	return err
 }
 
+const createUser = `-- name: CreateUser :one
+INSERT INTO appuser (
+  display_name,
+  google_sub,
+  email, 
+  avatar_url
+) VALUES (
+  $1,
+  $2,
+  $3,
+  $4
+)
+RETURNING id
+`
+
+type CreateUserParams struct {
+	DisplayName string
+	GoogleSub   string
+	Email       string
+	AvatarUrl   pgtype.Text
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int32, error) {
+	row := q.db.QueryRow(ctx, createUser,
+		arg.DisplayName,
+		arg.GoogleSub,
+		arg.Email,
+		arg.AvatarUrl,
+	)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
 const deleteAppuser = `-- name: DeleteAppuser :exec
 DELETE
 FROM appuser
@@ -672,6 +706,20 @@ func (q *Queries) GetHomesWithDataForUser(ctx context.Context, appuserID int32) 
 		return nil, err
 	}
 	return items, nil
+}
+
+const getInvitation = `-- name: GetInvitation :one
+SELECT id
+FROM invitation
+WHERE email = $1
+  AND expires > NOW()
+`
+
+func (q *Queries) GetInvitation(ctx context.Context, email pgtype.Text) (string, error) {
+	row := q.db.QueryRow(ctx, getInvitation, email)
+	var id string
+	err := row.Scan(&id)
+	return id, err
 }
 
 const getInvitations = `-- name: GetInvitations :many
@@ -1239,7 +1287,8 @@ func (q *Queries) GetTagsWithLanguageCheckin(ctx context.Context, languageID int
 }
 
 const getUser = `-- name: GetUser :one
-SELECT au.id, au.display_name, au.google_sub, au.email, au.logging_consent, au.avatar_url, au.has_gdrive_access, COALESCE(al.language_id, 1) FROM appuser AS au
+SELECT au.id, au.display_name, au.google_sub, au.email, au.logging_consent, au.avatar_url, au.has_gdrive_access, COALESCE(al.language_id, 1)
+FROM appuser AS au
 LEFT JOIN appuser_language AS al
 ON au.id = al.appuser_id
 WHERE id = $1
@@ -1270,6 +1319,19 @@ func (q *Queries) GetUser(ctx context.Context, id int32) (GetUserRow, error) {
 		&i.LanguageID,
 	)
 	return i, err
+}
+
+const getUserIDByEmail = `-- name: GetUserIDByEmail :one
+SELECT id
+FROM appuser
+WHERE email = $1
+`
+
+func (q *Queries) GetUserIDByEmail(ctx context.Context, email string) (int32, error) {
+	row := q.db.QueryRow(ctx, getUserIDByEmail, email)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
 }
 
 const insertHome = `-- name: InsertHome :exec
@@ -1644,6 +1706,34 @@ func (q *Queries) UpdateTagDefaultShown(ctx context.Context, arg UpdateTagDefaul
 	return err
 }
 
+const updateUser = `-- name: UpdateUser :exec
+UPDATE appuser
+SET display_name = $3,
+    google_sub = $4,
+    avatar_url = $5
+WHERE id = $1
+  AND email = $2
+`
+
+type UpdateUserParams struct {
+	ID          int32
+	Email       string
+	DisplayName string
+	GoogleSub   string
+	AvatarUrl   pgtype.Text
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
+	_, err := q.db.Exec(ctx, updateUser,
+		arg.ID,
+		arg.Email,
+		arg.DisplayName,
+		arg.GoogleSub,
+		arg.AvatarUrl,
+	)
+	return err
+}
+
 const upsertSpeciesLanguage = `-- name: UpsertSpeciesLanguage :exec
 INSERT INTO species_language (species_id, language_id, name)
 VALUES ($1, $2, $3)
@@ -1678,33 +1768,4 @@ type UpsertTagLanguageParams struct {
 func (q *Queries) UpsertTagLanguage(ctx context.Context, arg UpsertTagLanguageParams) error {
 	_, err := q.db.Exec(ctx, upsertTagLanguage, arg.TagID, arg.LanguageID, arg.Name)
 	return err
-}
-
-const upsertUser = `-- name: UpsertUser :one
-INSERT INTO appuser (display_name, google_sub, email, avatar_url)
-VALUES ($1, $2, $3, $4)
-ON CONFLICT (google_sub) DO UPDATE
-    SET display_name = EXCLUDED.display_name,
-        email        = EXCLUDED.email,
-        avatar_url   = EXCLUDED.avatar_url
-RETURNING id
-`
-
-type UpsertUserParams struct {
-	DisplayName string
-	GoogleSub   string
-	Email       string
-	AvatarUrl   pgtype.Text
-}
-
-func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (int32, error) {
-	row := q.db.QueryRow(ctx, upsertUser,
-		arg.DisplayName,
-		arg.GoogleSub,
-		arg.Email,
-		arg.AvatarUrl,
-	)
-	var id int32
-	err := row.Scan(&id)
-	return id, err
 }

@@ -161,11 +161,22 @@ func NewGDriveWorker(cfg GDriveConfig, g *GDrive, c *Cache) *GDriveWorker {
 		_ = w.GetGDriveConfigInfo()
 	}()
 
+	// Workers
 	for i := range nWorkers {
 		go w.worker(i)
 	}
 
+	// Watcher
+	go w.watcher()
+
 	return w
+}
+
+func (w *GDriveWorker) watcher() {
+	for {
+		info := w.GetGDriveConfigInfo()
+		w.g.Drive.Files.Watch(info.JournalFolder.ID, &drive.Channel{})
+	}
 }
 
 type GDriveConfigInfo struct {

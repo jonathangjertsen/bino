@@ -459,8 +459,8 @@ var EN = &Language{
 	DashboardSelectCheckout:      "Select status",
 	DashboardSelectTag:           "Select tag",
 	DashboardSelectSpecies:       "Select species",
-	DashboardNonPreferredSpecies: "Andre arter",
-	DashboardOtherHome:           "Andre rehabhjem",
+	DashboardNonPreferredSpecies: "Other species",
+	DashboardOtherHome:           "Other homes",
 
 	ErrorPageHead:         "Error",
 	ErrorPageInstructions: "An error occurred while loading the page. The error has been logged and will be investigated. Send a message to the site admin for help. The technical error message is as follows.",

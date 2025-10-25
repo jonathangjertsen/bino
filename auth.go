@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
@@ -218,15 +219,44 @@ func (server *Server) callbackHandler(
 		return
 	}
 
-	// Insert or update user
-	userID, err := server.Queries.UpsertUser(ctx, UpsertUserParams{
-		GoogleSub:   claims.Sub,
-		Email:       claims.Email,
-		DisplayName: claims.Name,
-		AvatarUrl:   pgtype.Text{String: claims.Picture, Valid: claims.Picture != ""},
-	})
-	if err != nil {
-		http.Error(w, "upserting user failed", http.StatusInternalServerError)
+	// User must exist or be invited
+	userID, err := server.Queries.GetUserIDByEmail(ctx, claims.Email)
+	if err == nil {
+		// User exists; update personal data
+		if err := server.Queries.UpdateUser(ctx, UpdateUserParams{
+			ID:          userID,
+			GoogleSub:   claims.Sub,
+			Email:       claims.Email,
+			DisplayName: claims.Name,
+			AvatarUrl:   pgtype.Text{String: claims.Picture, Valid: claims.Picture != ""},
+		}); err != nil {
+			http.Error(w, "creating user failed", http.StatusInternalServerError)
+			return
+		}
+	} else if invitation, err := server.Queries.GetInvitation(ctx, pgtype.Text{String: claims.Email, Valid: true}); err == nil {
+		// User has been invited; create user
+		if server.Transaction(ctx, func(ctx context.Context, q *Queries) error {
+			if createdUserID, err := server.Queries.CreateUser(ctx, CreateUserParams{
+				DisplayName: claims.Name,
+				Email:       claims.Email,
+				GoogleSub:   claims.Sub,
+				AvatarUrl:   pgtype.Text{String: claims.Picture, Valid: claims.Picture != ""},
+			}); err != nil {
+				return err
+			} else {
+				userID = createdUserID
+			}
+			if err := server.Queries.DeleteInvitation(ctx, invitation); err != nil {
+				return err
+			}
+			return nil
+		}); err != nil {
+			http.Error(w, "creating user failed", http.StatusInternalServerError)
+			return
+		}
+	} else {
+		fmt.Printf("no inv for %s\n", claims.Email)
+		http.Error(w, "user doesn't exist and is not invited", http.StatusUnauthorized)
 		return
 	}
 

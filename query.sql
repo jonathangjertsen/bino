@@ -1,14 +1,43 @@
--- name: UpsertUser :one
-INSERT INTO appuser (display_name, google_sub, email, avatar_url)
-VALUES ($1, $2, $3, $4)
-ON CONFLICT (google_sub) DO UPDATE
-    SET display_name = EXCLUDED.display_name,
-        email        = EXCLUDED.email,
-        avatar_url   = EXCLUDED.avatar_url
-RETURNING id;
+-- name: CreateUser :one
+INSERT INTO appuser (
+  display_name,
+  google_sub,
+  email, 
+  avatar_url
+) VALUES (
+  $1,
+  $2,
+  $3,
+  $4
+)
+RETURNING id
+;
+
+-- name: UpdateUser :exec
+UPDATE appuser
+SET display_name = @display_name,
+    google_sub = @google_sub,
+    avatar_url = @avatar_url
+WHERE id = $1
+  AND email = $2
+;
+
+-- name: GetUserIDByEmail :one
+SELECT id
+FROM appuser
+WHERE email = $1
+;
+
+-- name: GetInvitation :one
+SELECT id
+FROM invitation
+WHERE email = $1
+  AND expires > NOW()
+;
 
 -- name: GetUser :one
-SELECT au.*, COALESCE(al.language_id, 1) FROM appuser AS au
+SELECT au.*, COALESCE(al.language_id, 1)
+FROM appuser AS au
 LEFT JOIN appuser_language AS al
 ON au.id = al.appuser_id
 WHERE id = $1
