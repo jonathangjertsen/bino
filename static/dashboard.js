@@ -83,6 +83,7 @@ $(function() {
   $(".dashboard-patient-list").sortable({
     connectWith: ".dashboard-patient-list",
     cancel: "a,button",
+    handle: ".card-header-patient",
     forcePlaceholderSize: true,
     forceHelperSize: true,
     zIndex: 9999,

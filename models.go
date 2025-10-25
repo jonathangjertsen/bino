@@ -39,6 +39,12 @@ type HomeAppuser struct {
 	HomeID    int32
 }
 
+type HomePreferredSpecy struct {
+	HomeID    int32
+	SpeciesID int32
+	SortOrder pgtype.Int4
+}
+
 type Invitation struct {
 	ID      string
 	Email   pgtype.Text

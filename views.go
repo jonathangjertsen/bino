@@ -11,16 +11,17 @@ type HomeView struct {
 	Home Home
 
 	// Optional
-	Patients []PatientView
-	Users    []UserView
+	Patients         []PatientView
+	Users            []UserView
+	PreferredSpecies []SpeciesView
 }
 
 func (hv HomeView) URL() string {
 	return fmt.Sprintf("/home/%d", hv.Home.ID)
 }
 
-func (hv HomeView) SetCapacityURL() string {
-	return fmt.Sprintf("/home/%d/set-capacity", hv.Home.ID)
+func (hv HomeView) URLSuffix(suffix string) string {
+	return fmt.Sprintf("/home/%d/%s", hv.Home.ID, suffix)
 }
 
 func (hv HomeView) SetCapacityID(prefix string) string {
@@ -60,6 +61,10 @@ func (pv PatientView) CollapseID(prefix string) string {
 
 func (pv PatientView) CheckoutNoteID(prefix string) string {
 	return fmt.Sprintf("%spatient-checkout-note-%d", prefix, pv.ID)
+}
+
+func (pv PatientView) CheckoutStatusID(prefix string) string {
+	return fmt.Sprintf("%spatient-checkout-status-%d", prefix, pv.ID)
 }
 
 func (pv PatientView) AttachJournalID(prefix string) string {
@@ -203,4 +208,28 @@ type GDriveItemView struct {
 type GDrivePermissionView struct {
 	Permission GDrivePermission
 	BinoUser   UserView
+}
+
+// ---- Preferred species
+
+type SpeciesView struct {
+	ID        int32
+	Name      string
+	Preferred bool
+}
+
+func (in GetPreferredSpeciesForHomeRow) ToSpeciesView() SpeciesView {
+	return SpeciesView{
+		ID:        in.SpeciesID,
+		Name:      in.Name,
+		Preferred: true,
+	}
+}
+
+func (in GetSpeciesWithLanguageRow) ToSpeciesView(preferred bool) SpeciesView {
+	return SpeciesView{
+		ID:        in.SpeciesID,
+		Name:      in.Name,
+		Preferred: preferred,
+	}
 }

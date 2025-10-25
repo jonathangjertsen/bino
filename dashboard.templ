@@ -44,9 +44,16 @@ templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
                 <label>{data.User.Language.GenericSpecies}</label>
                 <select autocomplete="off" class="form-control form-select" name="species">
                     <option value="" disabled selected>{data.User.Language.DashboardSelectSpecies}</option>
-                    for _, sp := range dashboardData.Species {
-                        <option value={sp.SpeciesID}>{sp.Name}</option>
-                    }
+                    <optgroup label={data.User.Language.HomePreferredSpecies}>
+                        for _, sp := range dashboardData.PreferredHomeView.PreferredSpecies {
+                            <option value={sp.ID}>{sp.Name}</option>
+                        }
+                    </optgroup>
+                    <optgroup label={data.User.Language.DashboardNonPreferredSpecies}>
+                        for _, sp := range dashboardData.NonPreferredSpecies {
+                            <option value={sp.ID}>{sp.Name}</option>
+                        }
+                    </optgroup>
                 </select>
             </div>
             <div class="form-group">
@@ -65,26 +72,32 @@ templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
             <div class="form-group">
                 <label for="patient-home">{data.User.Language.HomesHomeName}</label>
                 <select autocomplete="off" class="form-control form-select" name="home">
-                    for _, home := range dashboardData.Homes {
-                        <option value={home.Home.ID} selected?={home.Home.ID == data.User.PreferredHomeID}>{home.Home.Name}</option>
+                    <option value="" disabled selected>{data.User.Language.DashboardSelectHome}</option>
+                    if data.User.PreferredHome.ID != 0 {
+                        <option value={data.User.PreferredHome.ID} selected>{data.User.PreferredHome.Name}</option>
                     }
+                    <optgroup label={data.User.Language.DashboardOtherHome}>
+                        for _, home := range dashboardData.Homes {
+                            <option value={home.Home.ID}>{home.Home.Name}</option>
+                        }
+                    </optgroup>
                 </select>
             </div>
 
             <div class="form-group">
                 <div class="form-check-inline">
-                    <input autocomplete="off" type="checkbox" name="admitted" id="admitted" checked>
-                    <label for="admitted">
-                        {data.User.Language.CheckinIHaveThePatient}
+                    <input autocomplete="off" type="checkbox" name="create-journal" id="create-journal" checked>
+                    <label for="create-journal">
+                        {data.User.Language.GDriveCreateJournalForPatient}
                     </label>
                 </div>
             </div>
             
             <div class="form-group">
-                <button type="submit" disabled?={data.User.PreferredHomeID == 0} class="b-create-patient btn btn-primary">{data.User.Language.CheckinCheckInPatient}</button>
+                <button type="submit" disabled?={data.User.PreferredHome.ID == 0} class="b-create-patient btn btn-primary">{data.User.Language.CheckinCheckInPatient}</button>
             </div>
 
-            if data.User.PreferredHomeID == 0 {
+            if data.User.PreferredHome.ID == 0 {
                 <p class="small m-0">{data.User.Language.CheckinYouAreHomeless}</p>
             }
         }
@@ -133,7 +146,7 @@ templ DashboardHomeCard(data *CommonData, dashboardData *DashboardData, home *Ho
             }
         </div>
     </div>
-    if data.User.PreferredHomeID == home.Home.ID {
+    if data.User.PreferredHome.ID == home.Home.ID {
         <div class="card-header d-flex justify-content-between">
                 @CapacityForm(data, home)
         </div>
@@ -216,12 +229,23 @@ templ DashboardCheckout(data *CommonData, patient PatientView) {
                 "POST",
                 "form-control-sm", "form-control-plaintext",
             ) {
-                <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext">
+                <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext input-group-sm">
+                    <label for={patient.CheckoutStatusID("#")} class="input-group-text">{data.User.Language.GenericStatus}</label>
+                    <select autocomplete="off" class="form-control form-select form-select-sm" id={patient.CheckoutStatusID("")} name="status">
+                        <option disabled selected>{data.User.Language.DashboardSelectCheckout}</option>
+                        for statusID, status := range data.User.Language.Status {
+                            if IsCheckoutStatus[statusID] {
+                                <option value={int32(statusID)}>{status}</option>
+                            }
+                        }
+                    </select>
+                </form-group>
+                <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext input-group-sm">
                     <label for={patient.CheckoutNoteID("#")} class="input-group-text">{data.User.Language.GenericNote}</label>
                     <input autocomplete="off" type="text" class="form-control" id={patient.CheckoutNoteID("")} name="note"></input>
                 </form-group>
-                <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext">
-                    <button type="submit" class="btn btn-primary btn-sm w-50">{data.User.Language.DashboardCheckOut}</button>
+                <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext input-group-sm">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">{data.User.Language.DashboardCheckOut}</button>
                 </form-group>
             }
         </td>

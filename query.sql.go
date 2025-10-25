@@ -84,6 +84,26 @@ func (q *Queries) AddPatientTags(ctx context.Context, arg AddPatientTagsParams) 
 	return err
 }
 
+const addPreferredSpecies = `-- name: AddPreferredSpecies :exec
+INSERT INTO home_preferred_species (
+  home_id,
+  species_id
+) VALUES (
+  $1,
+  $2
+)
+`
+
+type AddPreferredSpeciesParams struct {
+	HomeID    int32
+	SpeciesID int32
+}
+
+func (q *Queries) AddPreferredSpecies(ctx context.Context, arg AddPreferredSpeciesParams) error {
+	_, err := q.db.Exec(ctx, addPreferredSpecies, arg.HomeID, arg.SpeciesID)
+	return err
+}
+
 const addSpecies = `-- name: AddSpecies :one
 INSERT INTO species (scientific_name)
 VALUES ($1)
@@ -211,6 +231,22 @@ type DeletePatientTagParams struct {
 
 func (q *Queries) DeletePatientTag(ctx context.Context, arg DeletePatientTagParams) error {
 	_, err := q.db.Exec(ctx, deletePatientTag, arg.PatientID, arg.TagID)
+	return err
+}
+
+const deletePreferredSpecies = `-- name: DeletePreferredSpecies :exec
+DELETE FROM home_preferred_species
+WHERE home_id    = $1
+  AND species_id = $2
+`
+
+type DeletePreferredSpeciesParams struct {
+	HomeID    int32
+	SpeciesID int32
+}
+
+func (q *Queries) DeletePreferredSpecies(ctx context.Context, arg DeletePreferredSpeciesParams) error {
+	_, err := q.db.Exec(ctx, deletePreferredSpecies, arg.HomeID, arg.SpeciesID)
 	return err
 }
 
@@ -584,23 +620,25 @@ func (q *Queries) GetHomes(ctx context.Context) ([]Home, error) {
 }
 
 const getHomesForUser = `-- name: GetHomesForUser :many
-SELECT home_id FROM home_appuser
+SELECT h.id, h.name, h.capacity FROM home_appuser AS ha
+INNER JOIN home AS h
+  ON h.id = ha.home_id
 WHERE appuser_id = $1
 `
 
-func (q *Queries) GetHomesForUser(ctx context.Context, appuserID int32) ([]int32, error) {
+func (q *Queries) GetHomesForUser(ctx context.Context, appuserID int32) ([]Home, error) {
 	rows, err := q.db.Query(ctx, getHomesForUser, appuserID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []int32
+	var items []Home
 	for rows.Next() {
-		var home_id int32
-		if err := rows.Scan(&home_id); err != nil {
+		var i Home
+		if err := rows.Scan(&i.ID, &i.Name, &i.Capacity); err != nil {
 			return nil, err
 		}
-		items = append(items, home_id)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -668,6 +706,24 @@ func (q *Queries) GetInvitations(ctx context.Context) ([]Invitation, error) {
 	return items, nil
 }
 
+const getNameOfSpecies = `-- name: GetNameOfSpecies :one
+SELECT name FROM species_language
+WHERE species_id = $1
+  AND language_id = $2
+`
+
+type GetNameOfSpeciesParams struct {
+	SpeciesID  int32
+	LanguageID int32
+}
+
+func (q *Queries) GetNameOfSpecies(ctx context.Context, arg GetNameOfSpeciesParams) (string, error) {
+	row := q.db.QueryRow(ctx, getNameOfSpecies, arg.SpeciesID, arg.LanguageID)
+	var name string
+	err := row.Scan(&name)
+	return name, err
+}
+
 const getPatient = `-- name: GetPatient :one
 SELECT id, species_id, curr_home_id, name, status, journal_url, sort_order FROM patient
 WHERE id = $1
@@ -726,6 +782,75 @@ func (q *Queries) GetPatientWithSpecies(ctx context.Context, arg GetPatientWithS
 		&i.SpeciesName,
 	)
 	return i, err
+}
+
+const getPreferredSpecies = `-- name: GetPreferredSpecies :many
+SELECT hps.home_id, sl.species_id, sl.name FROM home_preferred_species AS hps
+JOIN species_language AS sl USING (species_id)
+WHERE language_id = $1
+`
+
+type GetPreferredSpeciesRow struct {
+	HomeID    int32
+	SpeciesID int32
+	Name      string
+}
+
+func (q *Queries) GetPreferredSpecies(ctx context.Context, languageID int32) ([]GetPreferredSpeciesRow, error) {
+	rows, err := q.db.Query(ctx, getPreferredSpecies, languageID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetPreferredSpeciesRow
+	for rows.Next() {
+		var i GetPreferredSpeciesRow
+		if err := rows.Scan(&i.HomeID, &i.SpeciesID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getPreferredSpeciesForHome = `-- name: GetPreferredSpeciesForHome :many
+SELECT hps.species_id, sl.name FROM home_preferred_species AS hps
+JOIN species_language AS sl USING(species_id)
+WHERE hps.home_id = $1
+  AND sl.language_id = $2
+`
+
+type GetPreferredSpeciesForHomeParams struct {
+	HomeID     int32
+	LanguageID int32
+}
+
+type GetPreferredSpeciesForHomeRow struct {
+	SpeciesID int32
+	Name      string
+}
+
+func (q *Queries) GetPreferredSpeciesForHome(ctx context.Context, arg GetPreferredSpeciesForHomeParams) ([]GetPreferredSpeciesForHomeRow, error) {
+	rows, err := q.db.Query(ctx, getPreferredSpeciesForHome, arg.HomeID, arg.LanguageID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetPreferredSpeciesForHomeRow
+	for rows.Next() {
+		var i GetPreferredSpeciesForHomeRow
+		if err := rows.Scan(&i.SpeciesID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getSession = `-- name: GetSession :one
@@ -1468,6 +1593,28 @@ type UpdatePatientSortOrderParams struct {
 
 func (q *Queries) UpdatePatientSortOrder(ctx context.Context, arg UpdatePatientSortOrderParams) error {
 	_, err := q.db.Exec(ctx, updatePatientSortOrder, arg.Ids, arg.Orders)
+	return err
+}
+
+const updatePreferredSpeciesSortOrder = `-- name: UpdatePreferredSpeciesSortOrder :exec
+UPDATE home_preferred_species as hps
+SET sort_order = v.sort_order
+FROM (
+  SELECT UNNEST($2::int[]) AS id,
+         UNNEST($3::int[]) AS sort_order
+) AS v
+WHERE hps.species_id = v.id
+  AND hps.home_id = $1
+`
+
+type UpdatePreferredSpeciesSortOrderParams struct {
+	HomeID    int32
+	SpeciesID []int32
+	Orders    []int32
+}
+
+func (q *Queries) UpdatePreferredSpeciesSortOrder(ctx context.Context, arg UpdatePreferredSpeciesSortOrderParams) error {
+	_, err := q.db.Exec(ctx, updatePreferredSpeciesSortOrder, arg.HomeID, arg.SpeciesID, arg.Orders)
 	return err
 }
 

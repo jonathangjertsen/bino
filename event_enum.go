@@ -15,8 +15,6 @@ const (
 	EventUnknown Event = 0
 	// EventRegistered is a Event of type Registered.
 	EventRegistered Event = 1
-	// EventAdmitted is a Event of type Admitted.
-	EventAdmitted Event = 2
 	// EventAdopted is a Event of type Adopted.
 	EventAdopted Event = 3
 	// EventReleased is a Event of type Released.
@@ -52,26 +50,25 @@ const (
 
 var ErrInvalidEvent = errors.New("not a valid Event")
 
-const _EventName = "UnknownRegisteredAdmittedAdoptedReleasedTransferredToOtherHomeTransferredOutsideOrganizationDiedEuthanizedTagAddedTagRemovedStatusChangedDeletedNameChangedJournalCreatedJournalAttachedJournalDetached"
+const _EventName = "UnknownRegisteredAdoptedReleasedTransferredToOtherHomeTransferredOutsideOrganizationDiedEuthanizedTagAddedTagRemovedStatusChangedDeletedNameChangedJournalCreatedJournalAttachedJournalDetached"
 
 var _EventMap = map[Event]string{
 	EventUnknown:                        _EventName[0:7],
 	EventRegistered:                     _EventName[7:17],
-	EventAdmitted:                       _EventName[17:25],
-	EventAdopted:                        _EventName[25:32],
-	EventReleased:                       _EventName[32:40],
-	EventTransferredToOtherHome:         _EventName[40:62],
-	EventTransferredOutsideOrganization: _EventName[62:92],
-	EventDied:                           _EventName[92:96],
-	EventEuthanized:                     _EventName[96:106],
-	EventTagAdded:                       _EventName[106:114],
-	EventTagRemoved:                     _EventName[114:124],
-	EventStatusChanged:                  _EventName[124:137],
-	EventDeleted:                        _EventName[137:144],
-	EventNameChanged:                    _EventName[144:155],
-	EventJournalCreated:                 _EventName[155:169],
-	EventJournalAttached:                _EventName[169:184],
-	EventJournalDetached:                _EventName[184:199],
+	EventAdopted:                        _EventName[17:24],
+	EventReleased:                       _EventName[24:32],
+	EventTransferredToOtherHome:         _EventName[32:54],
+	EventTransferredOutsideOrganization: _EventName[54:84],
+	EventDied:                           _EventName[84:88],
+	EventEuthanized:                     _EventName[88:98],
+	EventTagAdded:                       _EventName[98:106],
+	EventTagRemoved:                     _EventName[106:116],
+	EventStatusChanged:                  _EventName[116:129],
+	EventDeleted:                        _EventName[129:136],
+	EventNameChanged:                    _EventName[136:147],
+	EventJournalCreated:                 _EventName[147:161],
+	EventJournalAttached:                _EventName[161:176],
+	EventJournalDetached:                _EventName[176:191],
 }
 
 // String implements the Stringer interface.
@@ -92,21 +89,20 @@ func (x Event) IsValid() bool {
 var _EventValue = map[string]Event{
 	_EventName[0:7]:     EventUnknown,
 	_EventName[7:17]:    EventRegistered,
-	_EventName[17:25]:   EventAdmitted,
-	_EventName[25:32]:   EventAdopted,
-	_EventName[32:40]:   EventReleased,
-	_EventName[40:62]:   EventTransferredToOtherHome,
-	_EventName[62:92]:   EventTransferredOutsideOrganization,
-	_EventName[92:96]:   EventDied,
-	_EventName[96:106]:  EventEuthanized,
-	_EventName[106:114]: EventTagAdded,
-	_EventName[114:124]: EventTagRemoved,
-	_EventName[124:137]: EventStatusChanged,
-	_EventName[137:144]: EventDeleted,
-	_EventName[144:155]: EventNameChanged,
-	_EventName[155:169]: EventJournalCreated,
-	_EventName[169:184]: EventJournalAttached,
-	_EventName[184:199]: EventJournalDetached,
+	_EventName[17:24]:   EventAdopted,
+	_EventName[24:32]:   EventReleased,
+	_EventName[32:54]:   EventTransferredToOtherHome,
+	_EventName[54:84]:   EventTransferredOutsideOrganization,
+	_EventName[84:88]:   EventDied,
+	_EventName[88:98]:   EventEuthanized,
+	_EventName[98:106]:  EventTagAdded,
+	_EventName[106:116]: EventTagRemoved,
+	_EventName[116:129]: EventStatusChanged,
+	_EventName[129:136]: EventDeleted,
+	_EventName[136:147]: EventNameChanged,
+	_EventName[147:161]: EventJournalCreated,
+	_EventName[161:176]: EventJournalAttached,
+	_EventName[176:191]: EventJournalDetached,
 }
 
 // ParseEvent attempts to convert a string to a Event.

@@ -60,15 +60,17 @@ type Language struct {
 	CheckinPatientName     string
 	CheckinYouAreHomeless  string
 
-	DashboardNoPatientsInHome string
-	DashboardGoToJournal      string
-	DashboardGoToPatientPage  string
-	DashboardCheckOut         string
-	DashboardSearch           string
-	DashboardSelectHome       string
-	DashboardSelectCheckout   string
-	DashboardSelectTag        string
-	DashboardSelectSpecies    string
+	DashboardNoPatientsInHome    string
+	DashboardGoToJournal         string
+	DashboardGoToPatientPage     string
+	DashboardCheckOut            string
+	DashboardSearch              string
+	DashboardSelectHome          string
+	DashboardSelectCheckout      string
+	DashboardSelectTag           string
+	DashboardSelectSpecies       string
+	DashboardNonPreferredSpecies string
+	DashboardOtherHome           string
 
 	ErrorPageHead         string
 	ErrorPageInstructions string
@@ -101,6 +103,7 @@ type Language struct {
 	GDriveCreateJournalForPatient          string
 	GDriveSelectExistingJournalInstruction string
 	GDriveNoJournalForPatient              string
+	GDriveCreateJournalFailed              string
 
 	GenericAdd      string
 	GenericAge      string
@@ -142,6 +145,7 @@ type Language struct {
 	HomesPatients          string
 	HomesUsers             string
 	HomeCapacity           string
+	HomePreferredSpecies   string
 
 	LanguageUpdateFailed string
 	LanguageUpdateOK     string
@@ -241,15 +245,17 @@ var NO = &Language{
 	CheckinPatientName:     "Pasientens navn",
 	CheckinYouAreHomeless:  "Du kan ikke sjekke inn pasienter ennå fordi du ikke er koblet til et rehabhjem.",
 
-	DashboardNoPatientsInHome: "Ingen pasienter",
-	DashboardGoToJournal:      "Gå til pasientjournal i Google Drive",
-	DashboardGoToPatientPage:  "Gå til pasientside",
-	DashboardCheckOut:         "Sjekk ut",
-	DashboardSearch:           "Søk",
-	DashboardSelectHome:       "Velg rehabhjem",
-	DashboardSelectCheckout:   "Velg status",
-	DashboardSelectTag:        "Velg tagg",
-	DashboardSelectSpecies:    "Velg art",
+	DashboardNoPatientsInHome:    "Ingen pasienter",
+	DashboardGoToJournal:         "Gå til pasientjournal i Google Drive",
+	DashboardGoToPatientPage:     "Gå til pasientside",
+	DashboardCheckOut:            "Sjekk ut",
+	DashboardSearch:              "Søk",
+	DashboardSelectHome:          "Velg rehabhjem",
+	DashboardSelectCheckout:      "Velg status",
+	DashboardSelectTag:           "Velg tagg",
+	DashboardSelectSpecies:       "Velg art",
+	DashboardNonPreferredSpecies: "Andre arter",
+	DashboardOtherHome:           "Andre rehabhjem",
 
 	ErrorPageHead:         "Feilmelding",
 	ErrorPageInstructions: "Det skjedde noe feil under lasting av siden. Feilen har blitt logget og vil bli undersøkt. Send melding til administrator for hjelp. Den tekniske feilmeldingen følger under.",
@@ -277,9 +283,10 @@ var NO = &Language{
 	GDriveGiveAccess:                       "Gi skrivetilgang",
 	GDriveLoadFoldersFailed:                "Kunne ikke laste inn mapper fra Google Drive",
 	GDriveUserInvited:                      "Brukeren ble invitert til mappen",
-	GDriveCreateJournalForPatient:          "Opprett pasientjournal",
+	GDriveCreateJournalForPatient:          "Opprett pasientjournal i Google Drive",
 	GDriveSelectExistingJournalInstruction: "Eller velg en eksisterende journal i Google Drive:",
 	GDriveNoJournalForPatient:              "Det er ikke koblet noen journal til pasienten.",
+	GDriveCreateJournalFailed:              "Pasienten ble lagt til, men kunne ikke opprette pasientjournal i Google Drive",
 
 	GenericAdd:      "Legg til",
 	GenericAge:      "Alder",
@@ -320,6 +327,7 @@ var NO = &Language{
 	HomesPatients:          "Pasienter",
 	HomesUsers:             "Brukere",
 	HomeCapacity:           "Kapasitet",
+	HomePreferredSpecies:   "Favoritter",
 
 	LanguageUpdateOK:     "Oppdaterte språk",
 	LanguageUpdateFailed: "Kunne ikke oppdatere språk",
@@ -343,7 +351,6 @@ var NO = &Language{
 
 	Status: map[Status]string{
 		StatusUnknown:                        "Ukjent",
-		StatusPendingAdmission:               "Venter på inntak",
 		StatusAdmitted:                       "I rehab",
 		StatusAdopted:                        "Adoptert",
 		StatusReleased:                       "Sluppet fri",
@@ -356,7 +363,6 @@ var NO = &Language{
 	Event: map[Event]string{
 		EventUnknown:                        "Ukjent",
 		EventRegistered:                     "Registrert",
-		EventAdmitted:                       "Tatt inn",
 		EventAdopted:                        "Adoptert",
 		EventReleased:                       "Sluppet fri",
 		EventTransferredToOtherHome:         "Overført",
@@ -444,15 +450,17 @@ var EN = &Language{
 	CheckinPatientName:     "Name of the patient",
 	CheckinYouAreHomeless:  "You can't check in patients yet because you're not connected to a rehab home.",
 
-	DashboardNoPatientsInHome: "No patients",
-	DashboardGoToJournal:      "Go to patient journal in Google Drive",
-	DashboardGoToPatientPage:  "Go to patient page",
-	DashboardCheckOut:         "Checkout",
-	DashboardSearch:           "Search",
-	DashboardSelectHome:       "Select home",
-	DashboardSelectCheckout:   "Select status",
-	DashboardSelectTag:        "Select tag",
-	DashboardSelectSpecies:    "Select species",
+	DashboardNoPatientsInHome:    "No patients",
+	DashboardGoToJournal:         "Go to patient journal in Google Drive",
+	DashboardGoToPatientPage:     "Go to patient page",
+	DashboardCheckOut:            "Checkout",
+	DashboardSearch:              "Search",
+	DashboardSelectHome:          "Select home",
+	DashboardSelectCheckout:      "Select status",
+	DashboardSelectTag:           "Select tag",
+	DashboardSelectSpecies:       "Select species",
+	DashboardNonPreferredSpecies: "Andre arter",
+	DashboardOtherHome:           "Andre rehabhjem",
 
 	ErrorPageHead:         "Error",
 	ErrorPageInstructions: "An error occurred while loading the page. The error has been logged and will be investigated. Send a message to the site admin for help. The technical error message is as follows.",
@@ -482,9 +490,10 @@ var EN = &Language{
 	GDriveBaseDirUpdated:                   "Google Drive journal folder was updated. Remember to also update the template.",
 	GDriveTemplateUpdated:                  "Template journal was updated",
 	GDriveUserInvited:                      "The user was invited to the journal folder",
-	GDriveCreateJournalForPatient:          "Create a new journal for the patient",
+	GDriveCreateJournalForPatient:          "Create journal in Google Drive",
 	GDriveSelectExistingJournalInstruction: "Or connect an existing journal in Google Drive:",
 	GDriveNoJournalForPatient:              "No journal found",
+	GDriveCreateJournalFailed:              "Patient was added, I couldn't create the journal in Google Drive",
 
 	GenericAdd:      "Add",
 	GenericAge:      "Age",
@@ -525,6 +534,7 @@ var EN = &Language{
 	HomesPatients:          "Patients",
 	HomesUsers:             "Users",
 	HomeCapacity:           "Capacity",
+	HomePreferredSpecies:   "Favorites",
 
 	LanguageUpdateFailed: "Failed to update language",
 	LanguageUpdateOK:     "Updated language",
@@ -545,7 +555,6 @@ var EN = &Language{
 
 	Status: map[Status]string{
 		StatusUnknown:                        "Unknown",
-		StatusPendingAdmission:               "Pending admission",
 		StatusAdmitted:                       "In rehab",
 		StatusAdopted:                        "Adopted",
 		StatusReleased:                       "Released",
@@ -558,7 +567,6 @@ var EN = &Language{
 	Event: map[Event]string{
 		EventUnknown:                        "Unknown",
 		EventRegistered:                     "Registered",
-		EventAdmitted:                       "Admitted",
 		EventAdopted:                        "Adopted",
 		EventReleased:                       "Released",
 		EventTransferredToOtherHome:         "Transferred",

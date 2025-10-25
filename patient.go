@@ -172,7 +172,7 @@ func (server *Server) createJournalHandler(w http.ResponseWriter, r *http.Reques
 		Time:    created.Time,
 		Name:    patientData.Name,
 		Species: patientData.SpeciesName,
-		BinoURL: fmt.Sprintf("%s/patient/%d", server.Config.SystemBaseURL, patient),
+		BinoURL: server.Config.BinoURLForPatient(patient),
 	})
 	if err != nil {
 		commonData.Error(commonData.User.Language.TODO("failed to create"), err)

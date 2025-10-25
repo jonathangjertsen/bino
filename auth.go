@@ -37,6 +37,7 @@ func (server *Server) requireLogin(f http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		commonData, err := server.authenticate(w, r)
 		if err != nil {
+			fmt.Println(err)
 			return
 		}
 
@@ -58,7 +59,7 @@ func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (Comm
 	}
 
 	homes, err := server.Queries.GetHomesForUser(ctx, user.ID)
-	preferredHome := int32(0)
+	var preferredHome Home
 	if len(homes) > 0 {
 		preferredHome = homes[0]
 	}
@@ -73,7 +74,7 @@ func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (Comm
 		HasAvatarURL:    user.AvatarUrl.Valid,
 		HasGDriveAccess: user.HasGdriveAccess,
 		Language:        GetLanguage(user.LanguageID),
-		PreferredHomeID: preferredHome,
+		PreferredHome:   preferredHome,
 		Homes:           homes,
 		LoggingConsent:  loggingConsent,
 	}
@@ -116,7 +117,7 @@ func (server *Server) getUser(r *http.Request) (GetUserRow, error) {
 	}
 	session, err := server.Queries.GetSession(ctx, sessionID)
 	if err != nil {
-		return GetUserRow{}, fmt.Errorf("%w: no such session %s", sessionID)
+		return GetUserRow{}, fmt.Errorf("%w: no such session %s", err, sessionID)
 	}
 	if time.Now().After(session.Expires.Time) {
 		return GetUserRow{}, fmt.Errorf("session expired")

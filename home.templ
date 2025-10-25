@@ -8,7 +8,9 @@ templ HomePage(ctx context.Context, data *CommonData, dashboardData *DashboardDa
     @Layout(data, "home-page") {
         <h1>{view.Home.Name}</h1>
         @Card() {
+            <h2>{data.User.Language.GenericUpdate}</h2>
             @CapacityForm(data, view)
+            @PreferredSpecies(data, dashboardData, view)
 
             <h2>{data.User.Language.HomesPatients} ({len(view.Patients)})</h2>
             for _, patient := range view.Patients {
@@ -28,7 +30,7 @@ templ HomePage(ctx context.Context, data *CommonData, dashboardData *DashboardDa
 
 templ CapacityForm(data *CommonData, view *HomeView) {
     @Form(
-        view.SetCapacityURL(),
+        view.URLSuffix("set-capacity"),
         "POST",
     ) {
         <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext">
@@ -37,4 +39,37 @@ templ CapacityForm(data *CommonData, view *HomeView) {
             <button type="submit" class="btn btn-primary btn-sm w-50">{data.User.Language.GenericUpdate}</button>
         </form-group>
     }
+}
+
+templ PreferredSpecies(data *CommonData, dashboardData *DashboardData, view *HomeView) {
+    <h3>{data.User.Language.HomePreferredSpecies}</h3>
+    <table class="table">
+    <tbody>
+        for _, species := range view.PreferredSpecies {
+            <tr data-id={species.ID}>
+                <td>{species.Name}</td>
+            </tr>
+        }
+        <tr>
+            <td>
+                @Form(
+                    view.URLSuffix("add-preferred-species"),
+                    "POST",
+                    "form-control-sm",
+                    "form-control-plaintext",
+                    "d-flex",
+                    "justify-content-between",
+                ) {
+                    <select autocomplete="off" class="form-control form-select form-select-sm" name="species">
+                        <option value="" disabled selected>{data.User.Language.DashboardSelectSpecies}</option>
+                        for _, otherSpecies := range dashboardData.NonPreferredSpecies {
+                            <option value={otherSpecies.ID}>{otherSpecies.Name}</option>
+                        }
+                    </select>
+                    <button type="submit" class="btn btn-primary btn-sm w-50">{data.User.Language.GenericAdd}</button>
+                }
+            </td>
+        </tr>
+    </tbody>
+    </table>
 }

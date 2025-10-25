@@ -13,8 +13,6 @@ import (
 const (
 	// StatusUnknown is a Status of type Unknown.
 	StatusUnknown Status = 0
-	// StatusPendingAdmission is a Status of type PendingAdmission.
-	StatusPendingAdmission Status = 1
 	// StatusAdmitted is a Status of type Admitted.
 	StatusAdmitted Status = 2
 	// StatusReleased is a Status of type Released.
@@ -33,13 +31,12 @@ const (
 
 var ErrInvalidStatus = errors.New("not a valid Status")
 
-const _StatusName = "UnknownPendingAdmissionAdmittedReleasedDeadEuthanizedTransferredOutsideOrganizationAdoptedDeleted"
+const _StatusName = "UnknownAdmittedReleasedDeadEuthanizedTransferredOutsideOrganizationAdoptedDeleted"
 
 // StatusValues returns a list of the values for Status
 func StatusValues() []Status {
 	return []Status{
 		StatusUnknown,
-		StatusPendingAdmission,
 		StatusAdmitted,
 		StatusReleased,
 		StatusDead,
@@ -52,14 +49,13 @@ func StatusValues() []Status {
 
 var _StatusMap = map[Status]string{
 	StatusUnknown:                        _StatusName[0:7],
-	StatusPendingAdmission:               _StatusName[7:23],
-	StatusAdmitted:                       _StatusName[23:31],
-	StatusReleased:                       _StatusName[31:39],
-	StatusDead:                           _StatusName[39:43],
-	StatusEuthanized:                     _StatusName[43:53],
-	StatusTransferredOutsideOrganization: _StatusName[53:83],
-	StatusAdopted:                        _StatusName[83:90],
-	StatusDeleted:                        _StatusName[90:97],
+	StatusAdmitted:                       _StatusName[7:15],
+	StatusReleased:                       _StatusName[15:23],
+	StatusDead:                           _StatusName[23:27],
+	StatusEuthanized:                     _StatusName[27:37],
+	StatusTransferredOutsideOrganization: _StatusName[37:67],
+	StatusAdopted:                        _StatusName[67:74],
+	StatusDeleted:                        _StatusName[74:81],
 }
 
 // String implements the Stringer interface.
@@ -79,14 +75,13 @@ func (x Status) IsValid() bool {
 
 var _StatusValue = map[string]Status{
 	_StatusName[0:7]:   StatusUnknown,
-	_StatusName[7:23]:  StatusPendingAdmission,
-	_StatusName[23:31]: StatusAdmitted,
-	_StatusName[31:39]: StatusReleased,
-	_StatusName[39:43]: StatusDead,
-	_StatusName[43:53]: StatusEuthanized,
-	_StatusName[53:83]: StatusTransferredOutsideOrganization,
-	_StatusName[83:90]: StatusAdopted,
-	_StatusName[90:97]: StatusDeleted,
+	_StatusName[7:15]:  StatusAdmitted,
+	_StatusName[15:23]: StatusReleased,
+	_StatusName[23:27]: StatusDead,
+	_StatusName[27:37]: StatusEuthanized,
+	_StatusName[37:67]: StatusTransferredOutsideOrganization,
+	_StatusName[67:74]: StatusAdopted,
+	_StatusName[74:81]: StatusDeleted,
 }
 
 // ParseStatus attempts to convert a string to a Status.

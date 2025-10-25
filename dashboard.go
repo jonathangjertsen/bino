@@ -10,21 +10,49 @@ import (
 )
 
 type DashboardData struct {
-	Species           []GetSpeciesWithLanguageRow
-	Tags              []GetTagsWithLanguageCheckinRow
-	PreferredHomeView HomeView
-	Homes             []HomeView
+	PreferredHomeView   HomeView
+	NonPreferredSpecies []SpeciesView
+	Tags                []GetTagsWithLanguageCheckinRow
+	Homes               []HomeView
 }
 
 func (r GetTagsWithLanguageCheckinRow) HTMLID() string {
 	return fmt.Sprintf("patient-label-%d", r.TagID)
 }
 
+func (server *Server) getSpeciesForUser(ctx context.Context) ([]SpeciesView, []SpeciesView, error) {
+	commonData := MustLoadCommonData(ctx)
+
+	preferredSpeciesRows, err := server.Queries.GetPreferredSpeciesForHome(ctx, GetPreferredSpeciesForHomeParams{
+		HomeID:     commonData.User.PreferredHome.ID,
+		LanguageID: commonData.Lang32(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	preferredSpecies := SliceToSlice(preferredSpeciesRows, func(in GetPreferredSpeciesForHomeRow) SpeciesView {
+		return in.ToSpeciesView()
+	})
+
+	otherSpeciesRows, err := server.Queries.GetSpeciesWithLanguage(ctx, commonData.Lang32())
+	if err != nil {
+		return nil, nil, err
+	}
+	otherSpecies := SliceToSlice(FilterSlice(otherSpeciesRows, func(in GetSpeciesWithLanguageRow) bool {
+		return Find(preferredSpecies, func(preferred SpeciesView) bool {
+			return preferred.ID == in.SpeciesID
+		}) == -1
+	}), func(in GetSpeciesWithLanguageRow) SpeciesView {
+		return in.ToSpeciesView(false)
+	})
+	return preferredSpecies, otherSpecies, nil
+}
+
 func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	commonData := MustLoadCommonData(ctx)
 
-	species, err := server.Queries.GetSpeciesWithLanguage(ctx, commonData.Lang32())
+	preferredSpecies, otherSpecies, err := server.getSpeciesForUser(ctx)
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return
@@ -89,17 +117,18 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 	var preferredHomeView HomeView
 	if preferredHomeIdx := Find(homes, func(h Home) bool {
-		return h.ID == commonData.User.PreferredHomeID
+		return h.ID == commonData.User.PreferredHome.ID
 	}); preferredHomeIdx != -1 {
 		preferredHomeView = homeViews[preferredHomeIdx]
 		homeViews = append(homeViews[:preferredHomeIdx], homeViews[preferredHomeIdx+1:]...)
 	}
+	preferredHomeView.PreferredSpecies = preferredSpecies
 
 	_ = DashboardPage(commonData, &DashboardData{
-		Species:           species,
-		Tags:              tags,
-		PreferredHomeView: preferredHomeView,
-		Homes:             homeViews,
+		NonPreferredSpecies: otherSpecies,
+		Tags:                tags,
+		PreferredHomeView:   preferredHomeView,
+		Homes:               homeViews,
 	}).Render(r.Context(), w)
 }
 
@@ -125,10 +154,13 @@ func (server *Server) postCheckinHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	admitted := server.getCheckboxValue(r, "admitted")
-	status := StatusPendingAdmission
-	if admitted {
-		status = StatusAdmitted
+	systemSpeciesName, err := server.Queries.GetNameOfSpecies(ctx, GetNameOfSpeciesParams{
+		SpeciesID:  fields["species"],
+		LanguageID: int32(server.Config.SystemLanguage),
+	})
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
 	}
 
 	if err := server.Transaction(ctx, func(ctx context.Context, q *Queries) error {
@@ -136,7 +168,7 @@ func (server *Server) postCheckinHandler(w http.ResponseWriter, r *http.Request)
 			SpeciesID:  fields["species"],
 			CurrHomeID: pgtype.Int4{Int32: fields["home"], Valid: true},
 			Name:       name,
-			Status:     int32(status),
+			Status:     int32(StatusAdmitted),
 		})
 		if err != nil {
 			return err
@@ -162,17 +194,18 @@ func (server *Server) postCheckinHandler(w http.ResponseWriter, r *http.Request)
 			return fmt.Errorf("registering patient: %w", err)
 		}
 
-		if admitted {
-			if _, err := q.AddPatientEvent(ctx, AddPatientEventParams{
-				PatientID: patientID,
-				AppuserID: commonData.User.AppuserID,
-				EventID:   int32(EventAdmitted),
-				HomeID:    fields["home"],
-				Note:      "",
-				Time:      pgtype.Timestamptz{Time: time.Now(), Valid: true},
-			}); err != nil {
-				return fmt.Errorf("marking patient as admitted: %w", err)
-			}
+		if item, err := server.GDriveWorker.CreateJournal(GDriveTemplateVars{
+			Time:    time.Now(),
+			Name:    name,
+			Species: systemSpeciesName,
+			BinoURL: server.Config.BinoURLForPatient(patientID),
+		}); err != nil {
+			commonData.Warning(commonData.User.Language.GDriveCreateJournalFailed, err)
+		} else {
+			q.SetPatientJournal(ctx, SetPatientJournalParams{
+				ID:         patientID,
+				JournalUrl: pgtype.Text{String: item.DocumentURL(), Valid: true},
+			})
 		}
 
 		return nil

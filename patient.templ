@@ -43,7 +43,7 @@ templ PatientPage(ctx context.Context, data *CommonData, view PatientPageView, s
 
                     if !IsCheckoutStatus[Status(view.Patient.Status)] {
                         @DashboardMove(data, view.Homes, view.Home, view.Patient)
-                        @DashboardCheckout(data, view.Patient)
+                        @PatientCheckout(data, view.Patient)
                     }
 
                     // This must be the last one.
@@ -81,4 +81,32 @@ templ PatientPage(ctx context.Context, data *CommonData, view PatientPageView, s
         }
     }
     <script src={data.StaticFile("patienttags.js")}></script>
+}
+
+templ PatientCheckout(data *CommonData, patient PatientView) {
+    <tr>
+        <th class="w-25">{data.User.Language.DashboardCheckOut}</th>
+        <td>
+            @Form(
+                patient.URLSuffix("checkout"),
+                "POST",
+                "form-control-sm", "form-control-plaintext",
+            ) {
+                <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext input-group-sm">
+                    <label for={patient.CheckoutStatusID("#")} class="input-group-text">{data.User.Language.GenericStatus}</label>
+                    <select autocomplete="off" class="form-control form-select form-select-sm" id={patient.CheckoutStatusID("")} name="status">
+                        <option disabled selected>{data.User.Language.DashboardSelectCheckout}</option>
+                        for statusID, status := range data.User.Language.Status {
+                            if IsCheckoutStatus[statusID] {
+                                <option value={int32(statusID)}>{status}</option>
+                            }
+                        }
+                    </select>
+                    <label for={patient.CheckoutNoteID("#")} class="input-group-text">{data.User.Language.GenericNote}</label>
+                    <input autocomplete="off" type="text" class="form-control" id={patient.CheckoutNoteID("")} name="note"></input>
+                    <button type="submit" class="btn btn-primary btn-sm w-100">{data.User.Language.DashboardCheckOut}</button>
+                </form-group>
+            }
+        </td>
+    </tr>
 }

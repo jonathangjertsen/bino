@@ -7,7 +7,6 @@ import "net/http"
 //
 //	Unknown                        = 0,
 //	Registered                     = 1,
-//	Admitted                       = 2,
 //	Adopted                        = 3,
 //	Released                       = 4,
 //	TransferredToOtherHome         = 5,

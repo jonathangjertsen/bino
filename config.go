@@ -30,3 +30,7 @@ func loadConfig(file string) (Config, error) {
 	}
 	return config, nil
 }
+
+func (config *Config) BinoURLForPatient(patient int32) string {
+	return fmt.Sprintf("%s/patient/%d", config.SystemBaseURL, patient)
+}

@@ -48,21 +48,21 @@ func (server *Server) getHomeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	species, err := server.Queries.GetSpeciesWithLanguage(ctx, commonData.Lang32())
-	if err != nil {
-		server.renderError(w, r, commonData, err)
-		return
-	}
-
 	homes, err := server.Queries.GetHomes(ctx)
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return
 	}
 
+	preferredSpecies, otherSpecies, err := server.getSpeciesForUser(ctx)
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
 	HomePage(ctx, commonData, &DashboardData{
-		Species: species,
-		Tags:    availableTags,
+		NonPreferredSpecies: otherSpecies,
+		Tags:                availableTags,
 		Homes: SliceToSlice(homes, func(h Home) HomeView {
 			return h.ToHomeView()
 		}),
@@ -84,6 +84,7 @@ func (server *Server) getHomeHandler(w http.ResponseWriter, r *http.Request) {
 				}),
 			}
 		}),
+		PreferredSpecies: preferredSpecies,
 	}).Render(r.Context(), w)
 }
 
@@ -108,6 +109,33 @@ func (server *Server) setCapacityHandler(w http.ResponseWriter, r *http.Request)
 		Capacity: capacity,
 	}); err != nil {
 		commonData.Error(commonData.User.Language.GenericFailed, err)
+	}
+
+	server.redirectToReferer(w, r)
+}
+
+func (server *Server) addPreferredSpeciesHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
+
+	id, err := server.getPathID(r, "home")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	species, err := server.getFormID(r, "species")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	if err := server.Queries.AddPreferredSpecies(ctx, AddPreferredSpeciesParams{
+		HomeID:    id,
+		SpeciesID: species,
+	}); err != nil {
+		server.renderError(w, r, commonData, err)
+		return
 	}
 
 	server.redirectToReferer(w, r)

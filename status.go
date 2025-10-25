@@ -4,7 +4,6 @@ package main
 // ENUM(
 //
 //	Unknown                        = 0,
-//	PendingAdmission               = 1,
 //	Admitted                       = 2,
 //	Released                       = 3,
 //	Dead                           = 4,
@@ -18,7 +17,6 @@ type Status int32
 
 var IsCheckoutStatus = map[Status]bool{
 	StatusUnknown:                        false,
-	StatusPendingAdmission:               false,
 	StatusAdmitted:                       false,
 	StatusAdopted:                        true,
 	StatusReleased:                       true,

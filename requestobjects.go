@@ -114,8 +114,8 @@ func (cd *CommonData) Lang32() int32 {
 type UserData struct {
 	AppuserID       int32
 	DisplayName     string
-	PreferredHomeID int32
-	Homes           []int32
+	PreferredHome   Home
+	Homes           []Home
 	Email           string
 	Language        *Language
 	LoggingConsent  bool
