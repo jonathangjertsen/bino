@@ -104,5 +104,6 @@ func jsonHandler[T any](
 		ajaxError(w, r, err, http.StatusInternalServerError)
 		return
 	}
+
 	w.WriteHeader(http.StatusOK)
 }

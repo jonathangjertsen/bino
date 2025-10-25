@@ -245,6 +245,7 @@ LEFT JOIN species_language AS sl
     ON sl.species_id = p.species_id
 WHERE curr_home_id IS NOT NULL
   AND language_id = $1
+ORDER BY p.curr_home_id, p.sort_order, p.id
 `
 
 type GetActivePatientsRow struct {
@@ -367,11 +368,12 @@ func (q *Queries) GetAppusersForHome(ctx context.Context, homeID int32) ([]Appus
 }
 
 const getCurrentPatientsForHome = `-- name: GetCurrentPatientsForHome :many
-SELECT p.id, p.species_id, p.curr_home_id, p.name, p.status, p.journal_url, sl.name AS species_name FROM patient AS p
+SELECT p.id, p.species_id, p.curr_home_id, p.name, p.status, p.journal_url, p.sort_order, sl.name AS species_name FROM patient AS p
 JOIN species_language AS sl
   ON sl.species_id = p.species_id
 WHERE p.curr_home_id = $1
   AND sl.language_id = $2
+ORDER BY p.sort_order, p.id
 `
 
 type GetCurrentPatientsForHomeParams struct {
@@ -386,6 +388,7 @@ type GetCurrentPatientsForHomeRow struct {
 	Name        string
 	Status      int32
 	JournalUrl  pgtype.Text
+	SortOrder   int32
 	SpeciesName string
 }
 
@@ -405,6 +408,7 @@ func (q *Queries) GetCurrentPatientsForHome(ctx context.Context, arg GetCurrentP
 			&i.Name,
 			&i.Status,
 			&i.JournalUrl,
+			&i.SortOrder,
 			&i.SpeciesName,
 		); err != nil {
 			return nil, err
@@ -665,7 +669,7 @@ func (q *Queries) GetInvitations(ctx context.Context) ([]Invitation, error) {
 }
 
 const getPatient = `-- name: GetPatient :one
-SELECT id, species_id, curr_home_id, name, status, journal_url FROM patient
+SELECT id, species_id, curr_home_id, name, status, journal_url, sort_order FROM patient
 WHERE id = $1
 `
 
@@ -679,12 +683,13 @@ func (q *Queries) GetPatient(ctx context.Context, id int32) (Patient, error) {
 		&i.Name,
 		&i.Status,
 		&i.JournalUrl,
+		&i.SortOrder,
 	)
 	return i, err
 }
 
 const getPatientWithSpecies = `-- name: GetPatientWithSpecies :one
-SELECT p.id, p.species_id, p.curr_home_id, p.name, p.status, p.journal_url, sl.name AS species_name FROM patient AS p
+SELECT p.id, p.species_id, p.curr_home_id, p.name, p.status, p.journal_url, p.sort_order, sl.name AS species_name FROM patient AS p
 JOIN species_language AS sl
   ON sl.species_id = p.species_id
 WHERE p.id = $1
@@ -703,6 +708,7 @@ type GetPatientWithSpeciesRow struct {
 	Name        string
 	Status      int32
 	JournalUrl  pgtype.Text
+	SortOrder   int32
 	SpeciesName string
 }
 
@@ -716,6 +722,7 @@ func (q *Queries) GetPatientWithSpecies(ctx context.Context, arg GetPatientWithS
 		&i.Name,
 		&i.Status,
 		&i.JournalUrl,
+		&i.SortOrder,
 		&i.SpeciesName,
 	)
 	return i, err
@@ -871,6 +878,7 @@ LEFT JOIN patient AS p
     ON p.id = pt.patient_id
 WHERE p.curr_home_id IS NOT NULL
 AND tl.language_id = $1
+ORDER BY p.curr_home_id, p.sort_order, p.id
 `
 
 type GetTagsForActivePatientsRow struct {
@@ -1440,6 +1448,26 @@ type UpdateHomeNameParams struct {
 
 func (q *Queries) UpdateHomeName(ctx context.Context, arg UpdateHomeNameParams) error {
 	_, err := q.db.Exec(ctx, updateHomeName, arg.ID, arg.Name)
+	return err
+}
+
+const updatePatientSortOrder = `-- name: UpdatePatientSortOrder :exec
+UPDATE patient as p
+SET sort_order = v.sort_order
+FROM (
+  SELECT UNNEST($1::int[]) AS id,
+         UNNEST($2::int[]) AS sort_order
+) AS v
+WHERE p.id = v.id
+`
+
+type UpdatePatientSortOrderParams struct {
+	Ids    []int32
+	Orders []int32
+}
+
+func (q *Queries) UpdatePatientSortOrder(ctx context.Context, arg UpdatePatientSortOrderParams) error {
+	_, err := q.db.Exec(ctx, updatePatientSortOrder, arg.Ids, arg.Orders)
 	return err
 }
 

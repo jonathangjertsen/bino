@@ -108,8 +108,6 @@ func (server *Server) setCapacityHandler(w http.ResponseWriter, r *http.Request)
 		Capacity: capacity,
 	}); err != nil {
 		commonData.Error(commonData.User.Language.GenericFailed, err)
-	} else {
-		commonData.Success(commonData.User.Language.GenericSuccess)
 	}
 
 	server.redirectToReferer(w, r)

@@ -3,7 +3,7 @@ const captureScroll = (elem) => {
   let dragging = false, lastX = 0;
 
   const isInteractive = (el) =>
-    el.closest('a,button,input,select,textarea,label,summary,[contenteditable],form,editable,::before,::after');
+    el.closest('a,button,input,select,textarea,label,summary,[contenteditable],form,editable,::before,::after,.dashboard-patient-card');
 
   const down = (ev) => {
     // Don't fuck with right click
@@ -78,3 +78,92 @@ const setupBoard = (elem) => {
 };
 
 document.querySelectorAll(".dashboard").forEach(setupBoard);
+
+$(function() {
+  $(".dashboard-patient-list").sortable({
+    connectWith: ".dashboard-patient-list",
+    cancel: "a,button",
+    forcePlaceholderSize: true,
+    forceHelperSize: true,
+    zIndex: 9999,
+    appendTo: document.body,
+    update: function(e, ui) {
+      if (TRANSFERSTARTED) {
+        return;
+      }
+      const sender = parseInt(e.target.dataset["home"]);
+      const receiver = ui.item.parent().data("home");
+      if (sender == receiver) {
+        reordered(sender);
+      } else {
+        patientTransferred(ui.item.data("patient-id"), sender, receiver);
+      }
+    },
+    over: function(e, ui) {
+      e.target.classList.add("drop-target");
+    },
+    out: function(e, ui) {
+      e.target.classList.remove("drop-target");
+    }
+  }).disableSelection();
+});
+
+function reordered(home) {
+  var req = {
+    Id: home,
+    Order: [],
+  }
+
+  $(".dashboard-patient-list").each(function(){
+    const id = $(this).data("home");
+    if (id == home) {
+      req.Order = $(this).children().map(function(){ return $(this).data("patient-id"); }).get();
+    }
+  });
+
+  fetch("/ajaxreorder", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+      body: JSON.stringify(req),
+  });
+}
+
+var TRANSFERSTARTED = false;
+
+function patientTransferred(patient, sender, receiver) {
+  TRANSFERSTARTED = true;
+  $( ".dashboard-patient-list" ).sortable({
+    disabled: true
+  });
+
+  var req = {
+    Sender: {
+      ID: sender,
+      Order: [],
+    },
+    Receiver: {
+      ID: receiver,
+      Order: [],
+    },
+    Patient: patient,
+  }
+  $(".dashboard-patient-list").each(function(){
+    const id = $(this).data("home");
+    if (id == receiver) {
+      req.Receiver.Order = $(this).children().map(function(){ return $(this).data("patient-id"); }).get();
+    }
+    if (id == sender) {
+      req.Sender.Order = $(this).children().map(function(){ return $(this).data("patient-id"); }).get();
+    }
+  });
+
+  fetch("/ajaxtransfer", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify(req),
+  }).then(() => location.reload());
+}

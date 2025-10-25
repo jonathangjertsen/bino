@@ -163,6 +163,8 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 	mux.Handle("POST /language", chainf(server.postLanguageHandler, requiresLogin...))
 	mux.Handle("DELETE /patient/{patient}/tag/{tag}", chainf(server.deletePatientTagHandler, requiresLogin...))
 	mux.Handle("POST /patient/{patient}/tag/{tag}", chainf(server.createPatientTagHandler, requiresLogin...))
+	mux.Handle("POST /ajaxreorder", chainf(server.ajaxReorderHandler, requiresLogin...))
+	mux.Handle("POST /ajaxtransfer", chainf(server.ajaxTransferHandler, requiresLogin...))
 
 	//// CONTENT MANAGEMENT
 	// Pages

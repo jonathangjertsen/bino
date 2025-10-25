@@ -117,6 +117,11 @@ body {
     margin-bottom: 1rem;
 }
 
+.dashboard.dashboard-self {
+    min-width: min(100%, $dashboard-home-column);
+    margin-right: 0.5rem;
+}
+
 .break-on-mobile {
     display: none;
     @media (min-width: $mobilethreshold) {
@@ -293,6 +298,15 @@ h1, h2, h3, h4, h5, h6 {
     padding: 0.5rem;
     color: black;
     font-weight: bold;
+}
+
+.dashboard-patient-list {
+    height: 100%;
+}
+
+.drop-target {
+  background-color: rgba(59, 130, 246, 0.1);
+  box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.5);
 }
 
 .dashboard-patient-card {

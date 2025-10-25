@@ -10,9 +10,10 @@ import (
 )
 
 type DashboardData struct {
-	Species []GetSpeciesWithLanguageRow
-	Tags    []GetTagsWithLanguageCheckinRow
-	Homes   []HomeView
+	Species           []GetSpeciesWithLanguageRow
+	Tags              []GetTagsWithLanguageCheckinRow
+	PreferredHomeView HomeView
+	Homes             []HomeView
 }
 
 func (r GetTagsWithLanguageCheckinRow) HTMLID() string {
@@ -86,16 +87,19 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	})
 
+	var preferredHomeView HomeView
 	if preferredHomeIdx := Find(homes, func(h Home) bool {
 		return h.ID == commonData.User.PreferredHomeID
 	}); preferredHomeIdx != -1 {
-		MoveToFront(homeViews, preferredHomeIdx)
+		preferredHomeView = homeViews[preferredHomeIdx]
+		homeViews = append(homeViews[:preferredHomeIdx], homeViews[preferredHomeIdx+1:]...)
 	}
 
 	_ = DashboardPage(commonData, &DashboardData{
-		Species: species,
-		Tags:    tags,
-		Homes:   homeViews,
+		Species:           species,
+		Tags:              tags,
+		PreferredHomeView: preferredHomeView,
+		Homes:             homeViews,
 	}).Render(r.Context(), w)
 }
 
@@ -467,4 +471,75 @@ func (server *Server) postSetNameHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	server.redirectToReferer(w, r)
+}
+
+type AJAXReorderRequest struct {
+	ID    int32
+	Order []int32
+}
+
+type AJAXTransferRequest struct {
+	Patient  int32
+	Sender   AJAXReorderRequest
+	Receiver AJAXReorderRequest
+}
+
+func (server *Server) ajaxReorderHandler(w http.ResponseWriter, r *http.Request) {
+	jsonHandler(server, w, r, func(q *Queries, req AJAXReorderRequest) error {
+		ctx := r.Context()
+		return sortPatients(ctx, server.Queries, req)
+	})
+}
+
+func (server *Server) ajaxTransferHandler(w http.ResponseWriter, r *http.Request) {
+	jsonHandler(server, w, r, func(q *Queries, req AJAXTransferRequest) error {
+		ctx := r.Context()
+		cd := MustLoadCommonData(ctx)
+		return server.Transaction(ctx, func(ctx context.Context, q *Queries) error {
+			patientData, err := q.GetPatient(ctx, req.Patient)
+			if err != nil {
+				return err
+			}
+
+			if err := q.MovePatient(ctx, MovePatientParams{
+				ID:         req.Patient,
+				CurrHomeID: pgtype.Int4{Int32: req.Receiver.ID, Valid: true},
+			}); err != nil {
+				return err
+			}
+
+			if _, err := q.AddPatientEvent(ctx, AddPatientEventParams{
+				PatientID:    req.Patient,
+				AppuserID:    cd.User.AppuserID,
+				HomeID:       req.Receiver.ID,
+				EventID:      int32(EventTransferredToOtherHome),
+				AssociatedID: patientData.CurrHomeID,
+				Note:         "",
+				Time:         pgtype.Timestamptz{Time: time.Now(), Valid: true},
+			}); err != nil {
+				return err
+			}
+
+			if err := sortPatients(ctx, q, req.Sender); err != nil {
+				return err
+			}
+			if err := sortPatients(ctx, q, req.Receiver); err != nil {
+				return err
+			}
+			return nil
+		})
+	})
+}
+
+func sortPatients(ctx context.Context, q *Queries, req AJAXReorderRequest) error {
+	ids := []int32{}
+	orders := []int32{}
+	for idx, id := range req.Order {
+		ids = append(ids, id)
+		orders = append(orders, int32(idx))
+	}
+	return q.UpdatePatientSortOrder(ctx, UpdatePatientSortOrderParams{
+		Ids:    ids,
+		Orders: orders,
+	})
 }

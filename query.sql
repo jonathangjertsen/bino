@@ -103,6 +103,7 @@ LEFT JOIN species_language AS sl
     ON sl.species_id = p.species_id
 WHERE curr_home_id IS NOT NULL
   AND language_id = $1
+ORDER BY p.curr_home_id, p.sort_order, p.id
 ;
 
 -- name: GetTagsForActivePatients :many
@@ -113,6 +114,7 @@ LEFT JOIN patient AS p
     ON p.id = pt.patient_id
 WHERE p.curr_home_id IS NOT NULL
 AND tl.language_id = $1
+ORDER BY p.curr_home_id, p.sort_order, p.id
 ;
 
 -- name: GetFormerPatients :many
@@ -234,6 +236,7 @@ JOIN species_language AS sl
   ON sl.species_id = p.species_id
 WHERE p.curr_home_id = $1
   AND sl.language_id = $2
+ORDER BY p.sort_order, p.id
 ;
 
 -- name: GetTagsForCurrentPatientsForHome :many
@@ -451,4 +454,14 @@ WHERE expires < NOW()
 UPDATE home
 SET capacity = $2
 WHERE id = $1
+;
+
+-- name: UpdatePatientSortOrder :exec
+UPDATE patient as p
+SET sort_order = v.sort_order
+FROM (
+  SELECT UNNEST(@ids::int[]) AS id,
+         UNNEST(@orders::int[]) AS sort_order
+) AS v
+WHERE p.id = v.id
 ;

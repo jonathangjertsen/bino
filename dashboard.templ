@@ -8,8 +8,17 @@ templ DashboardPage(data *CommonData, dashboardData *DashboardData) {
             @DashboardForm(data, dashboardData)
             @DashboardSearch(data)
         </div>
+        if dashboardData.PreferredHomeView.Home.ID != 0 {
+            @DashboardSelf(data, dashboardData)
+        }
         @DashboardHomes(data, dashboardData)
     }
+
+    // drag and drop
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
+
     <script src={data.StaticFile("dashboard.js")}></script>
     <script src={data.StaticFile("dashboard-search.js")}></script>
     <script src={data.StaticFile("patienttags.js")}></script>
@@ -82,10 +91,20 @@ templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
     }
 }
 
+templ DashboardSelf(data *CommonData, dashboardData *DashboardData) {
+    <div class="dashboard dashboard-self shadow-m">
+        <div class="dashboard-home card">
+            @DashboardHomeCard(data, dashboardData, &dashboardData.PreferredHomeView)
+        </div>
+    </div>
+}
+
 templ DashboardHomes(data *CommonData, dashboardData *DashboardData) {
     <div class="dashboard search-container">
         for _, home := range dashboardData.Homes {
-            @DashboardHomeCard(data, dashboardData, &home)
+            <div class="dashboard-home card filter-box"> 
+                @DashboardHomeCard(data, dashboardData, &home)
+            </div>
         }
         <div id="filter-none" hidden>No results found</div>
     </div>
@@ -106,34 +125,30 @@ templ Avatar(u UserView) {
 }
 
 templ DashboardHomeCard(data *CommonData, dashboardData *DashboardData, home *HomeView) {
-    <div class="dashboard-home card filter-box"> 
-        <div class="card-header d-flex justify-content-between">
-            <a href={home.URL()} class="filter-content">{home.Home.Name} — <span class={"occupancy", home.OccupancyClass()}>{len(home.Patients)} / {home.Home.Capacity}</span></a>
-            <div>
-                for _, u := range home.Users {
-                    @Avatar(u)
-                }
-            </div>
-        </div>
-        if data.User.PreferredHomeID == home.Home.ID {
-            <div class="card-header d-flex justify-content-between">
-                    @CapacityForm(data, home)
-            </div>
-        }
-        <div class="card-content">
-            if len(home.Patients) > 0 {
-                for _, patient := range home.Patients {
-                    @DashboardPatientCard(data, dashboardData, home, patient)
-                }
-            } else {
-                <p class="m-2">{data.User.Language.DashboardNoPatientsInHome}</p>
+    <div class="card-header d-flex justify-content-between">
+        <a href={home.URL()} class="filter-content">{home.Home.Name} — <span class={"occupancy", home.OccupancyClass()}>{len(home.Patients)} / {home.Home.Capacity}</span></a>
+        <div>
+            for _, u := range home.Users {
+                @Avatar(u)
             }
         </div>
+    </div>
+    if data.User.PreferredHomeID == home.Home.ID {
+        <div class="card-header d-flex justify-content-between">
+                @CapacityForm(data, home)
+        </div>
+    }
+    <div class="card-content dashboard-patient-list" data-home={home.Home.ID}>
+        if len(home.Patients) > 0 {
+            for _, patient := range home.Patients {
+                @DashboardPatientCard(data, dashboardData, home, patient)
+            }
+        }
     </div>
 }
 
 templ DashboardPatientCard(data *CommonData, dashboardData *DashboardData, home *HomeView, patient PatientView) {
-    @Card("dashboard-patient-card", "m-2", "filter-box") {
+    <div class="card b-card dashboard-patient-card m-2 filter-box" id={patient.CardID("#")} data-patient-id={patient.ID}>
         <div class="card-header card-header-patient d-flex justify-content-between">
             <a href={patient.URL()} class="filter-content">{patient.Name}</a>
             <div>
@@ -144,7 +159,7 @@ templ DashboardPatientCard(data *CommonData, dashboardData *DashboardData, home 
         <div class="card-content collapse" id={patient.CollapseID("")}>
             @DashboardPatientTable(data, dashboardData.Homes, dashboardData.Tags, home, patient)
         </div>
-    }
+    </div>
 }
 
 templ DashboardPatientTable(
