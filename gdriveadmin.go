@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"maps"
 	"net/http"
-
-	"google.golang.org/api/drive/v3"
 )
 
 func (s *Server) getGDriveHandler(w http.ResponseWriter, r *http.Request) {
@@ -43,13 +41,7 @@ func (s *Server) gdriveInviteUserHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	g, err := s.getDriveService(r)
-	if err != nil {
-		s.renderError(w, r, commonData, fmt.Errorf("connecting to Google Drive: %w", err))
-		return
-	}
-
-	if err := s.InviteUser(ctx, g, s.Config.GoogleDrive.JournalFolder, email); err != nil {
+	if err := s.GDriveWorker.InviteUser(s.Config.GoogleDrive.JournalFolder, email, "writer"); err != nil {
 		s.renderError(w, r, commonData, fmt.Errorf("inviting user: %w", err))
 		return
 	}
@@ -57,28 +49,4 @@ func (s *Server) gdriveInviteUserHandler(w http.ResponseWriter, r *http.Request)
 	commonData.Success(commonData.User.Language.GDriveUserInvited)
 
 	s.redirect(w, r, "/gdrive")
-}
-
-func (server *Server) InviteUser(ctx context.Context, g *GDrive, file string, email string) error {
-	item, err := g.GetFile(file)
-	if err != nil {
-		return err
-	}
-	call := g.Drive.Permissions.Create(item.ID, &drive.Permission{
-		Type:         "user",
-		EmailAddress: email,
-		Role:         "writer",
-	}).SendNotificationEmail(true)
-
-	if g.DriveBase != "" {
-		call = call.
-			SupportsAllDrives(true)
-	}
-
-	_, err = call.Do()
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

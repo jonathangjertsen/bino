@@ -108,13 +108,18 @@ templ Avatar(u UserView) {
 templ DashboardHomeCard(data *CommonData, dashboardData *DashboardData, home *HomeView) {
     <div class="dashboard-home card filter-box"> 
         <div class="card-header d-flex justify-content-between">
-            <a href={home.URL()} class="filter-content">{home.Home.Name}</a>
+            <a href={home.URL()} class="filter-content">{home.Home.Name} — <span class={"occupancy", home.OccupancyClass()}>{len(home.Patients)} / {home.Home.Capacity}</span></a>
             <div>
                 for _, u := range home.Users {
                     @Avatar(u)
                 }
             </div>
         </div>
+        if data.User.PreferredHomeID == home.Home.ID {
+            <div class="card-header d-flex justify-content-between">
+                    @CapacityForm(data, home)
+            </div>
+        }
         <div class="card-content">
             if len(home.Patients) > 0 {
                 for _, patient := range home.Patients {
@@ -241,7 +246,7 @@ templ DashboardJournalUpdate(data *CommonData, patient PatientView, unconditiona
                     <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext">
                         <label for={patient.AttachJournalID("#")} class="input-group-text">{data.User.Language.GenericURL}</label>
                         <input autocomplete="off" type="text" class="form-control" id={patient.AttachJournalID("")} name="url"></input>
-                        <button type="submit" class="btn btn-primary btn-sm w-50">{data.User.Language.GDriveSelectExistingJournalForPatient}</button>
+                        <button type="submit" class="btn btn-primary btn-sm w-50">{data.User.Language.GenericUpdate}</button>
                     </form-group>
                 }
             }

@@ -5,17 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"slices"
 
 	"google.golang.org/api/docs/v1"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
 )
-
-var GoogleDriveScopes = []string{
-	"https://www.googleapis.com/auth/drive",
-}
 
 type GDrive struct {
 	Drive     *drive.Service
@@ -47,32 +42,6 @@ func NewGDriveWithServiceAccount(ctx context.Context, config GDriveConfig, queri
 		Docs:      docs,
 		Queries:   queries,
 		DriveBase: config.DriveBase,
-	}, nil
-}
-
-func (server *Server) getDriveService(r *http.Request) (*GDrive, error) {
-	token, err := server.getTokenFromRequest(r)
-	if err != nil {
-		return nil, err
-	}
-
-	client := server.OAuthConfig.Client(r.Context(), token)
-
-	drive, err := drive.NewService(r.Context(), option.WithHTTPClient(client))
-	if err != nil {
-		return nil, fmt.Errorf("unable to create drive service: %v", err)
-	}
-
-	docs, err := docs.NewService(r.Context(), option.WithHTTPClient(client))
-	if err != nil {
-		return nil, fmt.Errorf("unable to create drive service: %v", err)
-	}
-
-	return &GDrive{
-		Drive:     drive,
-		Docs:      docs,
-		Queries:   server.Queries,
-		DriveBase: server.Config.GoogleDrive.DriveBase,
 	}, nil
 }
 

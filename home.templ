@@ -8,6 +8,8 @@ templ HomePage(ctx context.Context, data *CommonData, dashboardData *DashboardDa
     @Layout(data, "home-page") {
         <h1>{view.Home.Name}</h1>
         @Card() {
+            @CapacityForm(data, view)
+
             <h2>{data.User.Language.HomesPatients} ({len(view.Patients)})</h2>
             for _, patient := range view.Patients {
                 @DashboardPatientCard(data, dashboardData, view, patient)
@@ -22,4 +24,17 @@ templ HomePage(ctx context.Context, data *CommonData, dashboardData *DashboardDa
         }
     }
     <script src={data.StaticFile("patienttags.js")}></script>
+}
+
+templ CapacityForm(data *CommonData, view *HomeView) {
+    @Form(
+        view.SetCapacityURL(),
+        "POST",
+    ) {
+        <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext">
+            <label for={view.SetCapacityID("#")} class="input-group-text">{data.User.Language.HomeCapacity}</label>
+            <input autocomplete="off" type="number" class="form-control" id={view.SetCapacityID("")} name="capacity" value={view.Home.Capacity}></input>
+            <button type="submit" class="btn btn-primary btn-sm w-50">{data.User.Language.GenericUpdate}</button>
+        </form-group>
+    }
 }

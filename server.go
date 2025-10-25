@@ -112,7 +112,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 			ClientSecret: c.Web.ClientSecret,
 			RedirectURL:  c.Web.RedirectURIs[0],
 			Endpoint:     google.Endpoint,
-			Scopes:       append(ProfileScopes, GoogleDriveScopes...),
+			Scopes:       ProfileScopes,
 		},
 		TokenVerifier: provider.Verifier(&oidc.Config{
 			ClientID: c.Web.ClientID,
@@ -158,6 +158,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 	mux.Handle("POST /patient/{patient}/create-journal", chainf(server.createJournalHandler, requiresLogin...))
 	mux.Handle("POST /patient/{patient}/attach-journal", chainf(server.attachJournalHandler, requiresLogin...))
 	mux.Handle("POST /event/{event}/set-note", chainf(server.postEventSetNoteHandler, requiresLogin...))
+	mux.Handle("POST /home/{home}/set-capacity", chainf(server.setCapacityHandler, requiresLogin...))
 	// Ajax
 	mux.Handle("POST /language", chainf(server.postLanguageHandler, requiresLogin...))
 	mux.Handle("DELETE /patient/{patient}/tag/{tag}", chainf(server.deletePatientTagHandler, requiresLogin...))

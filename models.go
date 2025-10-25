@@ -28,8 +28,9 @@ type AppuserLanguage struct {
 
 // Each row is a rehab home
 type Home struct {
-	ID   int32
-	Name string
+	ID       int32
+	Name     string
+	Capacity int32
 }
 
 // Each row associates an app user with a rehab home

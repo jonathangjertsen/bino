@@ -86,3 +86,31 @@ func (server *Server) getHomeHandler(w http.ResponseWriter, r *http.Request) {
 		}),
 	}).Render(r.Context(), w)
 }
+
+func (server *Server) setCapacityHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
+
+	id, err := server.getPathID(r, "home")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	capacity, err := server.getFormID(r, "capacity")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	if err := server.Queries.SetHomeCapacity(ctx, SetHomeCapacityParams{
+		ID:       id,
+		Capacity: capacity,
+	}); err != nil {
+		commonData.Error(commonData.User.Language.GenericFailed, err)
+	} else {
+		commonData.Success(commonData.User.Language.GenericSuccess)
+	}
+
+	server.redirectToReferer(w, r)
+}

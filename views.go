@@ -19,6 +19,24 @@ func (hv HomeView) URL() string {
 	return fmt.Sprintf("/home/%d", hv.Home.ID)
 }
 
+func (hv HomeView) SetCapacityURL() string {
+	return fmt.Sprintf("/home/%d/set-capacity", hv.Home.ID)
+}
+
+func (hv HomeView) SetCapacityID(prefix string) string {
+	return fmt.Sprintf("%sset-capacity-%d", prefix, hv.Home.ID)
+}
+
+func (h HomeView) OccupancyClass() string {
+	if len(h.Patients) < int(h.Home.Capacity) {
+		return "text-success"
+	}
+	if len(h.Patients) == int(h.Home.Capacity) {
+		return "text-warning"
+	}
+	return "text-danger"
+}
+
 func (h Home) ToHomeView() HomeView {
 	return HomeView{
 		Home: h,

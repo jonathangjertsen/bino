@@ -446,3 +446,9 @@ WHERE email = $1
 DELETE FROM invitation
 WHERE expires < NOW()
 ;
+
+-- name: SetHomeCapacity :exec
+UPDATE home
+SET capacity = $2
+WHERE id = $1
+;

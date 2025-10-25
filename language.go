@@ -99,7 +99,6 @@ type Language struct {
 	GDriveTemplateUpdated                  string
 	GDriveUserInvited                      string
 	GDriveCreateJournalForPatient          string
-	GDriveSelectExistingJournalForPatient  string
 	GDriveSelectExistingJournalInstruction string
 	GDriveNoJournalForPatient              string
 
@@ -142,6 +141,7 @@ type Language struct {
 	HomesUnassignedUsers   string
 	HomesPatients          string
 	HomesUsers             string
+	HomeCapacity           string
 
 	LanguageUpdateFailed string
 	LanguageUpdateOK     string
@@ -278,7 +278,6 @@ var NO = &Language{
 	GDriveLoadFoldersFailed:                "Kunne ikke laste inn mapper fra Google Drive",
 	GDriveUserInvited:                      "Brukeren ble invitert til mappen",
 	GDriveCreateJournalForPatient:          "Opprett pasientjournal",
-	GDriveSelectExistingJournalForPatient:  "Velg",
 	GDriveSelectExistingJournalInstruction: "Eller velg en eksisterende journal i Google Drive:",
 	GDriveNoJournalForPatient:              "Det er ikke koblet noen journal til pasienten.",
 
@@ -320,6 +319,7 @@ var NO = &Language{
 	HomesViewHomes:         "Rehabhjem",
 	HomesPatients:          "Pasienter",
 	HomesUsers:             "Brukere",
+	HomeCapacity:           "Kapasitet",
 
 	LanguageUpdateOK:     "Oppdaterte språk",
 	LanguageUpdateFailed: "Kunne ikke oppdatere språk",
@@ -483,7 +483,6 @@ var EN = &Language{
 	GDriveTemplateUpdated:                  "Template journal was updated",
 	GDriveUserInvited:                      "The user was invited to the journal folder",
 	GDriveCreateJournalForPatient:          "Create a new journal for the patient",
-	GDriveSelectExistingJournalForPatient:  "Connect an existing journal to the patient",
 	GDriveSelectExistingJournalInstruction: "Or connect an existing journal in Google Drive:",
 	GDriveNoJournalForPatient:              "No journal found",
 
@@ -525,6 +524,7 @@ var EN = &Language{
 	HomesViewHomes:         "Rehab homes",
 	HomesPatients:          "Patients",
 	HomesUsers:             "Users",
+	HomeCapacity:           "Capacity",
 
 	LanguageUpdateFailed: "Failed to update language",
 	LanguageUpdateOK:     "Updated language",

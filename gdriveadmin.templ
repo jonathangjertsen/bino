@@ -28,11 +28,6 @@ templ (server *Server) GDrivePermissionOverview(
     }
 
     @Card() {
-        <h2>{data.User.Language.GDriveTemplate}</h2>
-        <p><pre>{info.TemplateDoc.Content}</pre></p>
-    }
-
-    @Card() {
         <h2>{data.User.Language.GDrivePermissionsForBaseDir}</h2>
         <p>{data.User.Language.GDrivePermissionsForBaseDirInstruction}</p>
         <table class="table table-sm">

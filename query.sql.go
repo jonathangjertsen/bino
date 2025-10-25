@@ -543,19 +543,19 @@ func (q *Queries) GetFormerPatients(ctx context.Context, languageID int32) ([]Ge
 }
 
 const getHome = `-- name: GetHome :one
-SELECT id, name FROM home
+SELECT id, name, capacity FROM home
 WHERE id = $1
 `
 
 func (q *Queries) GetHome(ctx context.Context, id int32) (Home, error) {
 	row := q.db.QueryRow(ctx, getHome, id)
 	var i Home
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(&i.ID, &i.Name, &i.Capacity)
 	return i, err
 }
 
 const getHomes = `-- name: GetHomes :many
-SELECT id, name FROM home
+SELECT id, name, capacity FROM home
 ORDER BY name
 `
 
@@ -568,7 +568,7 @@ func (q *Queries) GetHomes(ctx context.Context) ([]Home, error) {
 	var items []Home
 	for rows.Next() {
 		var i Home
-		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+		if err := rows.Scan(&i.ID, &i.Name, &i.Capacity); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -605,7 +605,7 @@ func (q *Queries) GetHomesForUser(ctx context.Context, appuserID int32) ([]int32
 }
 
 const getHomesWithDataForUser = `-- name: GetHomesWithDataForUser :many
-SELECT h.id, h.name
+SELECT h.id, h.name, h.capacity
 FROM home AS h
 INNER JOIN home_appuser AS hau
   ON hau.home_id = h.id
@@ -621,7 +621,7 @@ func (q *Queries) GetHomesWithDataForUser(ctx context.Context, appuserID int32) 
 	var items []Home
 	for rows.Next() {
 		var i Home
-		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+		if err := rows.Scan(&i.ID, &i.Name, &i.Capacity); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -1312,6 +1312,22 @@ type SetEventNoteParams struct {
 
 func (q *Queries) SetEventNote(ctx context.Context, arg SetEventNoteParams) error {
 	_, err := q.db.Exec(ctx, setEventNote, arg.ID, arg.Note)
+	return err
+}
+
+const setHomeCapacity = `-- name: SetHomeCapacity :exec
+UPDATE home
+SET capacity = $2
+WHERE id = $1
+`
+
+type SetHomeCapacityParams struct {
+	ID       int32
+	Capacity int32
+}
+
+func (q *Queries) SetHomeCapacity(ctx context.Context, arg SetHomeCapacityParams) error {
+	_, err := q.db.Exec(ctx, setHomeCapacity, arg.ID, arg.Capacity)
 	return err
 }
 

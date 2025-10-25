@@ -168,23 +168,12 @@ func (server *Server) createJournalHandler(w http.ResponseWriter, r *http.Reques
 		created = pgtype.Timestamptz{Time: time.Now(), Valid: true}
 	}
 
-	templateVars := GDriveTemplateVars{
+	item, err := server.GDriveWorker.CreateJournal(GDriveTemplateVars{
 		Time:    created.Time,
 		Name:    patientData.Name,
 		Species: patientData.SpeciesName,
 		BinoURL: fmt.Sprintf("%s/patient/%d", server.Config.SystemBaseURL, patient),
-	}
-
-	info := server.GDriveWorker.GetGDriveConfigInfo()
-
-	g, err := server.getDriveService(r)
-	if err != nil {
-		commonData.Error(commonData.User.Language.TODO("no drive access"), err)
-		server.redirectToReferer(w, r)
-		return
-	}
-
-	item, err := g.CreateDocument(info, templateVars)
+	})
 	if err != nil {
 		commonData.Error(commonData.User.Language.TODO("failed to create"), err)
 		server.redirectToReferer(w, r)
