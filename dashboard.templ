@@ -8,7 +8,7 @@ templ DashboardPage(data *CommonData, dashboardData *DashboardData) {
             @DashboardForm(data, dashboardData)
             @DashboardSearch(data)
             <div class="mascot-container">
-                <img class="mascot" src={data.StaticFile("mascot.jpg")}>
+                <img class="mascot shadow-sm" src={data.StaticFile("mascot.jpg")}>
             </div>
         </div>
         if dashboardData.PreferredHomeView.Home.ID != 0 {
@@ -28,7 +28,7 @@ templ DashboardPage(data *CommonData, dashboardData *DashboardData) {
 }
 
 templ DashboardSearch(data *CommonData) {
-    @Card("dashboard-search", "shadow-m") {
+    @Card("dashboard-search", "shadow-sm") {
         <div class="form-group">
             <label for="dashboard-search">{data.User.Language.DashboardSearch}</label>
             <input autocomplete="off" class="form-control search" id="dashboard-search"></input>
@@ -37,7 +37,7 @@ templ DashboardSearch(data *CommonData) {
 }
 
 templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
-    @Card("dashboard-form", "shadow-m") {
+    @Card("dashboard-form", "shadow-sm") {
         @Form("/checkin", "POST") {
             <div class="form-group">
                 <label>{data.User.Language.CheckinPatientName}</label>
@@ -108,7 +108,7 @@ templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
 }
 
 templ DashboardSelf(data *CommonData, dashboardData *DashboardData) {
-    <div class="dashboard dashboard-self shadow-m">
+    <div class="dashboard dashboard-self shadow-sm">
         <div class="dashboard-home card">
             @DashboardHomeCard(data, dashboardData, &dashboardData.PreferredHomeView)
         </div>
@@ -164,7 +164,7 @@ templ DashboardHomeCard(data *CommonData, dashboardData *DashboardData, home *Ho
 }
 
 templ DashboardPatientCard(data *CommonData, dashboardData *DashboardData, home *HomeView, patient PatientView) {
-    <div class="card b-card dashboard-patient-card m-2 filter-box" id={patient.CardID("#")} data-patient-id={patient.ID}>
+    <div class="card b-card dashboard-patient-card m-2 filter-box shadow-sm" id={patient.CardID("#")} data-patient-id={patient.ID}>
         <div class="card-header card-header-patient d-flex justify-content-between">
             <a href={patient.URL()} class="filter-content">{patient.Name}</a>
             <div>
