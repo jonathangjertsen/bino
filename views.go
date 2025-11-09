@@ -170,21 +170,26 @@ type UserView struct {
 	Email        string
 	AvatarURL    string
 	HasAvatarURL bool
+	AccessLevel  AccessLevel
 
 	// Optional
 	Homes []HomeView
 }
 
-func (u UserView) Valid() bool {
+func (u *UserView) Valid() bool {
 	return u.ID > 0
 }
 
-func (u UserView) URL() string {
+func (u *UserView) URL() string {
 	return fmt.Sprintf("/user/%d", u.ID)
 }
 
-func (u UserView) URLSuffix(suffix string) string {
+func (u *UserView) URLSuffix(suffix string) string {
 	return fmt.Sprintf("/user/%d/%s", u.ID, suffix)
+}
+
+func (u *UserView) HasAccess(al AccessLevel) bool {
+	return u.AccessLevel >= al
 }
 
 func (user GetAppusersRow) ToUserView() UserView {
@@ -194,6 +199,7 @@ func (user GetAppusersRow) ToUserView() UserView {
 		Email:        user.Email,
 		AvatarURL:    user.AvatarUrl.String,
 		HasAvatarURL: user.AvatarUrl.Valid,
+		AccessLevel:  AccessLevel(user.AccessLevel),
 	}
 }
 
@@ -204,6 +210,7 @@ func (user Appuser) ToUserView() UserView {
 		Email:        user.Email,
 		AvatarURL:    user.AvatarUrl.String,
 		HasAvatarURL: user.AvatarUrl.Valid,
+		AccessLevel:  AccessLevel(user.AccessLevel),
 	}
 }
 
@@ -214,10 +221,11 @@ func (user GetUserRow) ToUserView() UserView {
 		Email:        user.Email,
 		AvatarURL:    user.AvatarUrl.String,
 		HasAvatarURL: user.AvatarUrl.Valid,
+		AccessLevel:  AccessLevel(user.AccessLevel),
 	}
 }
 
-// ---- User
+// ---- Invitation
 
 type InvitationView struct {
 	ID      string

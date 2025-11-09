@@ -933,4 +933,11 @@ func Form(url string, method string, formClasses ...string) templ.Component {
 	})
 }
 
+func ClassIf(condition bool, classes ...string) []string {
+	if condition {
+		return classes
+	}
+	return nil
+}
+
 var _ = templruntime.GeneratedTemplate

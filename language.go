@@ -25,6 +25,9 @@ type Language struct {
 	Months      map[time.Month]string
 	GDriveRoles map[string]string
 
+	AccessLevel  string
+	AccessLevels map[AccessLevel]string
+
 	AdminDefaultIncludeTag      string
 	AdminDisplayName            string
 	AdminEmailAddress           string
@@ -250,6 +253,15 @@ var NO = &Language{
 		"commenter":     "Kan kommentere på journaler",
 		"reader":        "Kan lese journaler",
 	},
+
+	AccessLevel: "Tilgangsnivå",
+	AccessLevels: map[AccessLevel]string{
+		AccessLevelAdmin:       "Administrator",
+		AccessLevelCoordinator: "Koordinator",
+		AccessLevelRehabber:    "Rehabilitør",
+		AccessLevelNone:        "Ingen",
+	},
+
 	AdminDefaultIncludeTag:      "Vis ved innsjekk",
 	AdminDisplayName:            "Navn",
 	AdminEmailAddress:           "Epostaddresse",
@@ -467,6 +479,16 @@ var EN = &Language{
 		"commenter":     "Can comment on journals",
 		"reader":        "Can read journals",
 	},
+
+	AccessLevel: "Access level",
+
+	AccessLevels: map[AccessLevel]string{
+		AccessLevelAdmin:       "Administrator",
+		AccessLevelCoordinator: "Coordinator",
+		AccessLevelRehabber:    "Rehabilitator",
+		AccessLevelNone:        "None",
+	},
+
 	AdminDefaultIncludeTag:      "Show at check-in",
 	AdminDisplayName:            "Name",
 	AdminEmailAddress:           "Email address",
@@ -646,6 +668,17 @@ var EN = &Language{
 		EventJournalAttached:                "Linked journal",
 		EventJournalDetached:                "Unlinked journal",
 	},
+}
+
+func (l *Language) AccessLevelBlocked(al AccessLevel) string {
+	switch l.ID {
+	case NO.ID:
+		return fmt.Sprintf("Du har ikke tilgang til dette (trenger tilgangsnivå: %s).", l.AccessLevels[al])
+	case EN.ID:
+		fallthrough
+	default:
+		return fmt.Sprintf("You don't have access to this (access level required: %s).", l.AccessLevels[al])
+	}
 }
 
 func (l *Language) FormatEvent(ctx context.Context, e int32, assocID pgtype.Int4, server *Server) string {

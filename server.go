@@ -52,6 +52,8 @@ type HTTPConfig struct {
 	IdleTimeoutSeconds       time.Duration
 }
 
+type Middleware = func(http.Handler) http.Handler
+
 func (s *Server) Transaction(ctx context.Context, f func(ctx context.Context, q *Queries) error) error {
 	tx, err := s.Conn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
@@ -123,9 +125,17 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 
 	mux := http.NewServeMux()
 
-	requiresLogin := []func(http.Handler) http.Handler{server.requireLogin, withLogging, server.withFeedbackFromRedirects}
-	requiresContentManagerRole := slices.Clone(requiresLogin) // TODO
-	requiresAdminRole := slices.Clone(requiresLogin)          // TODO
+	// Set up auth middlewares
+	requiresLogin := []Middleware{server.requireLogin, withLogging, server.withFeedbackFromRedirects}
+
+	requiresRehabber := slices.Clone(requiresLogin)
+	requiresRehabber = append(requiresRehabber, server.requireAccessLevel(AccessLevelRehabber))
+
+	requiresCoordinator := slices.Clone(requiresLogin)
+	requiresCoordinator = append(requiresCoordinator, server.requireAccessLevel(AccessLevelCoordinator))
+
+	requiresAdmin := slices.Clone(requiresLogin)
+	requiresAdmin = append(requiresAdmin, server.requireAccessLevel(AccessLevelAdmin))
 
 	//// PUBLIC
 	// Pages
@@ -150,53 +160,53 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 	mux.Handle("GET /user/{user}", chainf(server.getUserHandler, requiresLogin...))
 	mux.Handle("GET /former-patients", chainf(server.formerPatientsHandler, requiresLogin...))
 	// Forms
-	mux.Handle("POST /checkin", chainf(server.postCheckinHandler, requiresLogin...))
+	mux.Handle("POST /checkin", chainf(server.postCheckinHandler, requiresRehabber...))
 	mux.Handle("POST /privacy", chainf(server.postPrivacyHandler, requiresLogin...))
-	mux.Handle("POST /patient/{patient}/move", chainf(server.movePatientHandler, requiresLogin...))
-	mux.Handle("POST /patient/{patient}/checkout", chainf(server.postCheckoutHandler, requiresLogin...))
-	mux.Handle("POST /patient/{patient}/set-name", chainf(server.postSetNameHandler, requiresLogin...))
-	mux.Handle("POST /patient/{patient}/create-journal", chainf(server.createJournalHandler, requiresLogin...))
-	mux.Handle("POST /patient/{patient}/attach-journal", chainf(server.attachJournalHandler, requiresLogin...))
-	mux.Handle("POST /event/{event}/set-note", chainf(server.postEventSetNoteHandler, requiresLogin...))
-	mux.Handle("POST /home/{home}/set-capacity", chainf(server.setCapacityHandler, requiresLogin...))
-	mux.Handle("POST /home/{home}/add-preferred-species", chainf(server.addPreferredSpeciesHandler, requiresLogin...))
-	mux.Handle("POST /home/{home}/add-unavailable", chainf(server.addHomeUnavailablePeriodHandler, requiresLogin...))
-	mux.Handle("POST /home/{home}/set-note", chainf(server.homeSetNoteHandler, requiresLogin...))
-	mux.Handle("POST /period/{period}/delete", chainf(server.deleteHomeUnavailableHandler, requiresLogin...))
+	mux.Handle("POST /patient/{patient}/move", chainf(server.movePatientHandler, requiresRehabber...))
+	mux.Handle("POST /patient/{patient}/checkout", chainf(server.postCheckoutHandler, requiresRehabber...))
+	mux.Handle("POST /patient/{patient}/set-name", chainf(server.postSetNameHandler, requiresRehabber...))
+	mux.Handle("POST /patient/{patient}/create-journal", chainf(server.createJournalHandler, requiresRehabber...))
+	mux.Handle("POST /patient/{patient}/attach-journal", chainf(server.attachJournalHandler, requiresRehabber...))
+	mux.Handle("POST /event/{event}/set-note", chainf(server.postEventSetNoteHandler, requiresRehabber...))
+	mux.Handle("POST /home/{home}/set-capacity", chainf(server.setCapacityHandler, requiresRehabber...))
+	mux.Handle("POST /home/{home}/add-preferred-species", chainf(server.addPreferredSpeciesHandler, requiresRehabber...))
+	mux.Handle("POST /home/{home}/add-unavailable", chainf(server.addHomeUnavailablePeriodHandler, requiresRehabber...))
+	mux.Handle("POST /home/{home}/set-note", chainf(server.homeSetNoteHandler, requiresRehabber...))
+	mux.Handle("POST /period/{period}/delete", chainf(server.deleteHomeUnavailableHandler, requiresRehabber...))
 	// Ajax
 	mux.Handle("POST /language", chainf(server.postLanguageHandler, requiresLogin...))
-	mux.Handle("DELETE /patient/{patient}/tag/{tag}", chainf(server.deletePatientTagHandler, requiresLogin...))
-	mux.Handle("POST /patient/{patient}/tag/{tag}", chainf(server.createPatientTagHandler, requiresLogin...))
-	mux.Handle("POST /ajaxreorder", chainf(server.ajaxReorderHandler, requiresLogin...))
-	mux.Handle("POST /ajaxtransfer", chainf(server.ajaxTransferHandler, requiresLogin...))
+	mux.Handle("DELETE /patient/{patient}/tag/{tag}", chainf(server.deletePatientTagHandler, requiresRehabber...))
+	mux.Handle("POST /patient/{patient}/tag/{tag}", chainf(server.createPatientTagHandler, requiresRehabber...))
+	mux.Handle("POST /ajaxreorder", chainf(server.ajaxReorderHandler, requiresRehabber...))
+	mux.Handle("POST /ajaxtransfer", chainf(server.ajaxTransferHandler, requiresRehabber...))
 
 	//// CONTENT MANAGEMENT
 	// Pages
-	mux.Handle("GET /species", chainf(server.getSpeciesHandler, requiresContentManagerRole...))
-	mux.Handle("GET /tag", chainf(server.getTagHandler, requiresContentManagerRole...))
-	mux.Handle("GET /admin", chainf(server.adminRootHandler, requiresContentManagerRole...))
-	mux.Handle("GET /homes", chainf(server.getHomesHandler, requiresContentManagerRole...))
-	mux.Handle("GET /users", chainf(server.userAdminHandler, requiresContentManagerRole...))
+	mux.Handle("GET /species", chainf(server.getSpeciesHandler, requiresCoordinator...))
+	mux.Handle("GET /tag", chainf(server.getTagHandler, requiresCoordinator...))
+	mux.Handle("GET /admin", chainf(server.adminRootHandler, requiresCoordinator...))
+	mux.Handle("GET /homes", chainf(server.getHomesHandler, requiresCoordinator...))
+	mux.Handle("GET /users", chainf(server.userAdminHandler, requiresCoordinator...))
 	// Forms
-	mux.Handle("POST /homes", chainf(server.postHomeHandler, requiresLogin...))
-	mux.Handle("POST /homes/{home}/set-name", chainf(server.postHomeSetName, requiresLogin...))
+	mux.Handle("POST /homes", chainf(server.postHomeHandler, requiresCoordinator...))
+	mux.Handle("POST /homes/{home}/set-name", chainf(server.postHomeSetName, requiresCoordinator...))
 	// Ajax
-	mux.Handle("POST /species", chainf(server.postSpeciesHandler, requiresLogin...))
-	mux.Handle("PUT /species", chainf(server.putSpeciesHandler, requiresLogin...))
-	mux.Handle("POST /tag", chainf(server.postTagHandler, requiresLogin...))
-	mux.Handle("PUT /tag", chainf(server.putTagHandler, requiresLogin...))
+	mux.Handle("POST /species", chainf(server.postSpeciesHandler, requiresCoordinator...))
+	mux.Handle("PUT /species", chainf(server.putSpeciesHandler, requiresCoordinator...))
+	mux.Handle("POST /tag", chainf(server.postTagHandler, requiresCoordinator...))
+	mux.Handle("PUT /tag", chainf(server.putTagHandler, requiresCoordinator...))
 
 	//// ADMIN
 	// Pages
-	mux.Handle("GET /gdrive", chainf(server.getGDriveHandler, requiresAdminRole...))
-	mux.Handle("GET /user/{user}/confirm-scrub", chainf(server.userConfirmScrubHandler, requiresAdminRole...))
-	mux.Handle("GET /user/{user}/confirm-nuke", chainf(server.userConfirmNukeHandler, requiresAdminRole...))
+	mux.Handle("GET /gdrive", chainf(server.getGDriveHandler, requiresAdmin...))
+	mux.Handle("GET /user/{user}/confirm-scrub", chainf(server.userConfirmScrubHandler, requiresAdmin...))
+	mux.Handle("GET /user/{user}/confirm-nuke", chainf(server.userConfirmNukeHandler, requiresAdmin...))
 	// Forms
-	mux.Handle("POST /user/{user}/scrub", chainf(server.userDoScrubHandler, requiresLogin...))
-	mux.Handle("POST /user/{user}/nuke", chainf(server.userDoNukeHandler, requiresLogin...))
-	mux.Handle("POST /gdrive/invite/{email}", chainf(server.gdriveInviteUserHandler, requiresLogin...))
-	mux.Handle("POST /invite", chainf(server.inviteHandler, requiresLogin...))
-	mux.Handle("POST /invite/{id}/delete", chainf(server.inviteDeleteHandler, requiresLogin...))
+	mux.Handle("POST /user/{user}/scrub", chainf(server.userDoScrubHandler, requiresAdmin...))
+	mux.Handle("POST /user/{user}/nuke", chainf(server.userDoNukeHandler, requiresAdmin...))
+	mux.Handle("POST /gdrive/invite/{email}", chainf(server.gdriveInviteUserHandler, requiresAdmin...))
+	mux.Handle("POST /invite", chainf(server.inviteHandler, requiresAdmin...))
+	mux.Handle("POST /invite/{id}/delete", chainf(server.inviteDeleteHandler, requiresAdmin...))
 
 	//// FALLBACK
 	// Pages

@@ -17,7 +17,8 @@ templ UserPage(ctx context.Context, data *CommonData, user UserView) {
             if len(user.Homes) == 0 {
                 <p class="small">{data.User.Language.UserIsHomeless}</p>
             }
-
+            <h2>{data.User.Language.AccessLevel}</h2>
+            <p>{data.User.Language.AccessLevels[user.AccessLevel]}</p>
         }
     }
     <script src={data.StaticFile("patienttags.js")}></script>

@@ -147,6 +147,10 @@ func (server *Server) postCheckinHandler(w http.ResponseWriter, r *http.Request)
 	ctx := r.Context()
 	commonData := MustLoadCommonData(ctx)
 
+	if !server.ensureAccess(w, r, AccessLevelRehabber) {
+		return
+	}
+
 	name, err := server.getFormValue(r, "name")
 	if err != nil {
 		server.renderError(w, r, commonData, err)

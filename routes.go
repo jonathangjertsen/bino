@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -61,6 +62,23 @@ func (server *Server) render404(w http.ResponseWriter, r *http.Request, commonDa
 	w.WriteHeader(http.StatusNotFound)
 	_ = NotFoundPage(commonData, err.Error(), server.lastGoodURL(r)).Render(ctx, w)
 	logError(r, err)
+}
+
+func (server *Server) ensureAccess(w http.ResponseWriter, r *http.Request, al AccessLevel) bool {
+	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
+	hasAccess := commonData.User.AccessLevel < al
+	if !hasAccess {
+		w.WriteHeader(http.StatusUnauthorized)
+		err := errors.New(commonData.User.Language.AccessLevelBlocked(al))
+		_ = ErrorPage(
+			commonData,
+			err,
+			server.lastGoodURL(r),
+		).Render(ctx, w)
+		logError(r, err)
+	}
+	return hasAccess
 }
 
 func ajaxError(w http.ResponseWriter, r *http.Request, err error, statusCode int) {

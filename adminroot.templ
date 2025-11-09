@@ -4,11 +4,15 @@ templ AdminRootPage(data *CommonData) {
 	@Layout(data) {
         <h1>{data.User.Language.AdminRoot}</h1>
         <div class="card b-card">
-            <li class="card mb-1 p-1"><a href="/species">{data.User.Language.AdminManageSpecies}</a></li>
-            <li class="card mb-1 p-1"><a href="/tag">{data.User.Language.AdminManageTags}</a></li>
-            <li class="card mb-1 p-1"><a href="/homes">{data.User.Language.AdminManageHomes}</a></li>
-            <li class="card mb-1 p-1"><a href="/users">{data.User.Language.AdminManageUsers}</a></li>
-            <li class="card mb-1 p-1"><a href="/gdrive">{data.User.Language.AdminManageGoogleDrive}</a></li>
+            if data.User.AccessLevel >= AccessLevelCoordinator {
+                <li class="card mb-1 p-1"><a href="/species">{data.User.Language.AdminManageSpecies}</a></li>
+                <li class="card mb-1 p-1"><a href="/tag">{data.User.Language.AdminManageTags}</a></li>
+            }
+            if data.User.AccessLevel >= AccessLevelAdmin {
+                <li class="card mb-1 p-1"><a href="/homes">{data.User.Language.AdminManageHomes}</a></li>
+                <li class="card mb-1 p-1"><a href="/users">{data.User.Language.AdminManageUsers}</a></li>
+                <li class="card mb-1 p-1"><a href="/gdrive">{data.User.Language.AdminManageGoogleDrive}</a></li>
+            }
         </div>
     }
 }

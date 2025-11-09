@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -42,11 +43,32 @@ func (server *Server) requireLogin(f http.Handler) http.Handler {
 			return
 		}
 
+		if val, ok := r.URL.Query()["_AL"]; ok && len(val) == 1 {
+			if demotedAccessLevel, err := ParseAccessLevel(val[0]); err == nil && commonData.User.AccessLevel >= demotedAccessLevel {
+				commonData.User.AccessLevel = demotedAccessLevel
+			}
+		}
+
 		ctx := WithCommonData(r.Context(), &commonData)
 		r = r.WithContext(ctx)
 
 		f.ServeHTTP(w, r)
 	})
+}
+
+func (server *Server) requireAccessLevel(al AccessLevel) Middleware {
+	return func(f http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			data := MustLoadCommonData(ctx)
+
+			if data.User.AccessLevel < al {
+				server.renderError(w, r, data, errors.New(data.User.Language.AccessLevelBlocked(al)))
+				return
+			}
+			f.ServeHTTP(w, r)
+		})
+	}
 }
 
 func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (CommonData, error) {
@@ -78,6 +100,7 @@ func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (Comm
 		PreferredHome:   preferredHome,
 		Homes:           homes,
 		LoggingConsent:  loggingConsent,
+		AccessLevel:     AccessLevel(user.AccessLevel),
 	}
 
 	commonData := CommonData{

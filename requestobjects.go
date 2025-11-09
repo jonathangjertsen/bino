@@ -122,6 +122,17 @@ type UserData struct {
 	AvatarURL       string
 	HasAvatarURL    bool
 	HasGDriveAccess bool
+	AccessLevel     AccessLevel
+}
+
+func (u *UserData) HasHomeOrAccess(homeID int32, al AccessLevel) bool {
+	if len(u.Homes) > 0 && u.PreferredHome.ID == homeID {
+		return true
+	}
+	if u.AccessLevel >= al {
+		return true
+	}
+	return false
 }
 
 type LanguageView struct {

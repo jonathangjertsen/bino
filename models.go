@@ -18,6 +18,7 @@ type Appuser struct {
 	LoggingConsent  pgtype.Timestamptz
 	AvatarUrl       pgtype.Text
 	HasGdriveAccess bool
+	AccessLevel     int32
 }
 
 // Language preference for each user

@@ -204,13 +204,13 @@ templ DashboardHomeCard(data *CommonData, dashboardData *DashboardData, home *Ho
             <p class="mb-0 filter-content">{availability}</p>
         </div>
     }
-    if data.User.PreferredHome.ID == home.Home.ID {
+    if data.User.PreferredHome.ID == home.Home.ID || data.User.AccessLevel >= AccessLevelCoordinator {
         <div class="card-header d-flex justify-content-between">
                 @CapacityForm(data, home)
         </div>
     }
     <div class="card-header small fw-normal">
-        <div class="mb-0 filter-content editable editable-lg" data-action={home.URLSuffix("set-note")}>
+        <div class={"mb-0", "filter-content", ClassIf(data.User.HasHomeOrAccess(home.Home.ID, AccessLevelCoordinator), "editable", "editable-lg")} data-action={home.URLSuffix("set-note")}>
             <div class="d-block">
                 for _, p := range strings.Split(home.Home.Note, "\n") {
                     <p class="home-note">{p}</p>
