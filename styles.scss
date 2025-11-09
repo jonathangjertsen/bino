@@ -208,8 +208,19 @@ body {
 }
 
 .b-navbar-item {
-    margin: 0.5em;
     text-decoration: none;
+    padding: 0.5em;
+}
+
+.b-navbar-item-text {
+    background-color: mix($dark, black, 75);
+    border-radius: 0.5em;
+    @media (min-width: $mobilethreshold) {
+        margin-right: 0.5em;
+    }
+    @media (max-width: $mobilethreshold) {
+        margin-top: 0.5em;        
+    }
 }
 
 .patient-table {

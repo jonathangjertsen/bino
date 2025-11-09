@@ -121,6 +121,7 @@ FROM patient_event AS pe
 WHERE pe.patient_id = $1
   AND pe.event_id = $2
 ORDER BY pe.time ASC
+LIMIT 1
 `
 
 type GetFirstEventOfTypeForPatientParams struct {

@@ -52,7 +52,7 @@ func (server *Server) requireLogin(f http.Handler) http.Handler {
 func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (CommonData, error) {
 	ctx := r.Context()
 
-	user, err := server.getUser(r)
+	user, err := server.getUser(r, w)
 
 	if err != nil {
 		server.loginHandler(w, r)
@@ -88,7 +88,7 @@ func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (Comm
 	return commonData, err
 }
 
-func (server *Server) getUser(r *http.Request) (GetUserRow, error) {
+func (server *Server) getUser(r *http.Request, w http.ResponseWriter) (GetUserRow, error) {
 	// Get the encrypted auth cookie
 	ctx := r.Context()
 	sess, _ := server.Cookies.Get(r, "auth")
@@ -114,7 +114,7 @@ func (server *Server) getUser(r *http.Request) (GetUserRow, error) {
 			return GetUserRow{}, fmt.Errorf("unable to marshal new token: %w", err)
 		}
 		sess.Values["oauth_token"] = string(b)
-		_ = sess.Save(r, nil)
+		_ = sess.Save(r, w)
 	}
 
 	// Look up session

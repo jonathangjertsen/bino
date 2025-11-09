@@ -1,5 +1,14 @@
 -- name: GetActivePatients :many
-SELECT p.id, p.name, p.curr_home_id, p.status, p.journal_url, COALESCE(sl.name, '???') AS species FROM patient AS p
+SELECT
+  p.id,
+  p.name,
+  p.curr_home_id,
+  p.status,
+  p.journal_url,
+  p.time_checkin,
+  p.time_checkout,
+  COALESCE(sl.name, '???') AS species
+FROM patient AS p
 LEFT JOIN species_language AS sl
     ON sl.species_id = p.species_id
 WHERE curr_home_id IS NOT NULL
@@ -8,7 +17,16 @@ ORDER BY p.curr_home_id, p.sort_order, p.id
 ;
 
 -- name: GetFormerPatients :many
-SELECT p.id, p.name, p.curr_home_id, p.status, COALESCE(sl.name, '???') AS species FROM patient AS p
+SELECT
+  p.id,
+  p.name,
+  p.curr_home_id,
+  p.status,
+  p.journal_url,
+  p.time_checkin,
+  p.time_checkout,
+  COALESCE(sl.name, '???') AS species
+FROM patient AS p
 LEFT JOIN species_language AS sl
   ON sl.species_id = p.species_id
 WHERE curr_home_id IS NULL
@@ -17,8 +35,8 @@ ORDER BY p.id DESC
 ;
 
 -- name: AddPatient :one
-INSERT INTO patient (species_id, name, curr_home_id, status)
-VALUES ($1, $2, $3, $4)
+INSERT INTO patient (species_id, name, curr_home_id, status, time_checkin)
+VALUES ($1, $2, $3, $4, NOW())
 RETURNING id
 ;
 
@@ -76,4 +94,10 @@ FROM (
          UNNEST(@orders::int[]) AS sort_order
 ) AS v
 WHERE p.id = v.id
+;
+
+-- name: CheckoutPatient :exec
+UPDATE patient
+SET time_checkout = $2
+WHERE id = $1
 ;

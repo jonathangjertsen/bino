@@ -189,9 +189,9 @@ func FormerPatients(data *CommonData, patients []PatientView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var13 string
-				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(data.User.Language.TODO("checkin"))
+				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(data.User.Language.FormatTimeAbsWithRelParen(p.TimeCheckin))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `formerpatients.templ`, Line: 27, Col: 94}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `formerpatients.templ`, Line: 27, Col: 119}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -202,9 +202,9 @@ func FormerPatients(data *CommonData, patients []PatientView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var14 string
-				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(data.User.Language.TODO("checkout"))
+				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(data.User.Language.FormatTimeAbsWithRelParen(p.TimeCheckout))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `formerpatients.templ`, Line: 28, Col: 95}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `formerpatients.templ`, Line: 28, Col: 120}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {

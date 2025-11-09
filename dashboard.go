@@ -409,6 +409,15 @@ func (server *Server) postCheckoutHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	if err := server.Transaction(ctx, func(ctx context.Context, q *Queries) error {
+		now := pgtype.Timestamptz{Time: time.Now(), Valid: true}
+
+		if err := q.CheckoutPatient(ctx, CheckoutPatientParams{
+			ID:           patientData.ID,
+			TimeCheckout: now,
+		}); err != nil {
+			return err
+		}
+
 		if err := q.SetPatientStatus(ctx, SetPatientStatusParams{
 			ID:     patient,
 			Status: status,
@@ -448,7 +457,7 @@ func (server *Server) postCheckoutHandler(w http.ResponseWriter, r *http.Request
 			EventID:      int32(event),
 			AssociatedID: associatedID,
 			Note:         note,
-			Time:         pgtype.Timestamptz{Time: time.Now(), Valid: true},
+			Time:         now,
 		}); err != nil {
 			return err
 		}

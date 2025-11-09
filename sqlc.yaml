@@ -8,7 +8,7 @@ sql:
     - "sql-patient.sql"
     - "sql-session.sql"
     - "sql-species.sql"
-    - "sql-tags.sql"
+    - "sql-tag.sql"
     - "sql-user.sql"
     schema: "migrations"
     gen:

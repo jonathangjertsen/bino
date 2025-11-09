@@ -710,6 +710,10 @@ func (l *Language) formatStatusChanged(status Status) string {
 }
 
 func (l *Language) FormatTimeRelWithAbsFallback(t time.Time) string {
+	if t.IsZero() {
+		return l.GenericNever
+	}
+
 	rel := l.FormatTimeRel(t)
 	if rel != "" {
 		return rel
@@ -718,6 +722,10 @@ func (l *Language) FormatTimeRelWithAbsFallback(t time.Time) string {
 }
 
 func (l *Language) FormatTimeAbsWithRelParen(t time.Time) string {
+	if t.IsZero() {
+		return l.GenericNever
+	}
+
 	abs := l.FormatTimeAbs(t)
 	rel := l.FormatTimeRel(t)
 	if rel == "" {
@@ -727,6 +735,10 @@ func (l *Language) FormatTimeAbsWithRelParen(t time.Time) string {
 }
 
 func (l *Language) FormatTimeAbs(t time.Time) string {
+	if t.IsZero() {
+		return l.GenericNever
+	}
+
 	switch l.ID {
 	case LanguageIDNO:
 		return fmt.Sprintf("%d. %s %d kl. %02d:%02d",
@@ -744,6 +756,10 @@ func (l *Language) FormatTimeAbs(t time.Time) string {
 }
 
 func (l *Language) FormatTimeRel(t time.Time) string {
+	if t.IsZero() {
+		return l.GenericNever
+	}
+
 	now := time.Now()
 	diff := now.Sub(t)
 

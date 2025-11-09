@@ -12,8 +12,8 @@ import (
 )
 
 const addPatient = `-- name: AddPatient :one
-INSERT INTO patient (species_id, name, curr_home_id, status)
-VALUES ($1, $2, $3, $4)
+INSERT INTO patient (species_id, name, curr_home_id, status, time_checkin)
+VALUES ($1, $2, $3, $4, NOW())
 RETURNING id
 `
 
@@ -36,8 +36,33 @@ func (q *Queries) AddPatient(ctx context.Context, arg AddPatientParams) (int32, 
 	return id, err
 }
 
+const checkoutPatient = `-- name: CheckoutPatient :exec
+UPDATE patient
+SET time_checkout = $2
+WHERE id = $1
+`
+
+type CheckoutPatientParams struct {
+	ID           int32
+	TimeCheckout pgtype.Timestamptz
+}
+
+func (q *Queries) CheckoutPatient(ctx context.Context, arg CheckoutPatientParams) error {
+	_, err := q.db.Exec(ctx, checkoutPatient, arg.ID, arg.TimeCheckout)
+	return err
+}
+
 const getActivePatients = `-- name: GetActivePatients :many
-SELECT p.id, p.name, p.curr_home_id, p.status, p.journal_url, COALESCE(sl.name, '???') AS species FROM patient AS p
+SELECT
+  p.id,
+  p.name,
+  p.curr_home_id,
+  p.status,
+  p.journal_url,
+  p.time_checkin,
+  p.time_checkout,
+  COALESCE(sl.name, '???') AS species
+FROM patient AS p
 LEFT JOIN species_language AS sl
     ON sl.species_id = p.species_id
 WHERE curr_home_id IS NOT NULL
@@ -46,12 +71,14 @@ ORDER BY p.curr_home_id, p.sort_order, p.id
 `
 
 type GetActivePatientsRow struct {
-	ID         int32
-	Name       string
-	CurrHomeID pgtype.Int4
-	Status     int32
-	JournalUrl pgtype.Text
-	Species    string
+	ID           int32
+	Name         string
+	CurrHomeID   pgtype.Int4
+	Status       int32
+	JournalUrl   pgtype.Text
+	TimeCheckin  pgtype.Timestamptz
+	TimeCheckout pgtype.Timestamptz
+	Species      string
 }
 
 func (q *Queries) GetActivePatients(ctx context.Context, languageID int32) ([]GetActivePatientsRow, error) {
@@ -69,6 +96,8 @@ func (q *Queries) GetActivePatients(ctx context.Context, languageID int32) ([]Ge
 			&i.CurrHomeID,
 			&i.Status,
 			&i.JournalUrl,
+			&i.TimeCheckin,
+			&i.TimeCheckout,
 			&i.Species,
 		); err != nil {
 			return nil, err
@@ -82,7 +111,7 @@ func (q *Queries) GetActivePatients(ctx context.Context, languageID int32) ([]Ge
 }
 
 const getCurrentPatientsForHome = `-- name: GetCurrentPatientsForHome :many
-SELECT p.id, p.species_id, p.curr_home_id, p.name, p.status, p.journal_url, p.sort_order, sl.name AS species_name FROM patient AS p
+SELECT p.id, p.species_id, p.curr_home_id, p.name, p.status, p.journal_url, p.sort_order, p.time_checkin, p.time_checkout, sl.name AS species_name FROM patient AS p
 JOIN species_language AS sl
   ON sl.species_id = p.species_id
 WHERE p.curr_home_id = $1
@@ -96,14 +125,16 @@ type GetCurrentPatientsForHomeParams struct {
 }
 
 type GetCurrentPatientsForHomeRow struct {
-	ID          int32
-	SpeciesID   int32
-	CurrHomeID  pgtype.Int4
-	Name        string
-	Status      int32
-	JournalUrl  pgtype.Text
-	SortOrder   int32
-	SpeciesName string
+	ID           int32
+	SpeciesID    int32
+	CurrHomeID   pgtype.Int4
+	Name         string
+	Status       int32
+	JournalUrl   pgtype.Text
+	SortOrder    int32
+	TimeCheckin  pgtype.Timestamptz
+	TimeCheckout pgtype.Timestamptz
+	SpeciesName  string
 }
 
 func (q *Queries) GetCurrentPatientsForHome(ctx context.Context, arg GetCurrentPatientsForHomeParams) ([]GetCurrentPatientsForHomeRow, error) {
@@ -123,6 +154,8 @@ func (q *Queries) GetCurrentPatientsForHome(ctx context.Context, arg GetCurrentP
 			&i.Status,
 			&i.JournalUrl,
 			&i.SortOrder,
+			&i.TimeCheckin,
+			&i.TimeCheckout,
 			&i.SpeciesName,
 		); err != nil {
 			return nil, err
@@ -136,7 +169,16 @@ func (q *Queries) GetCurrentPatientsForHome(ctx context.Context, arg GetCurrentP
 }
 
 const getFormerPatients = `-- name: GetFormerPatients :many
-SELECT p.id, p.name, p.curr_home_id, p.status, COALESCE(sl.name, '???') AS species FROM patient AS p
+SELECT
+  p.id,
+  p.name,
+  p.curr_home_id,
+  p.status,
+  p.journal_url,
+  p.time_checkin,
+  p.time_checkout,
+  COALESCE(sl.name, '???') AS species
+FROM patient AS p
 LEFT JOIN species_language AS sl
   ON sl.species_id = p.species_id
 WHERE curr_home_id IS NULL
@@ -145,11 +187,14 @@ ORDER BY p.id DESC
 `
 
 type GetFormerPatientsRow struct {
-	ID         int32
-	Name       string
-	CurrHomeID pgtype.Int4
-	Status     int32
-	Species    string
+	ID           int32
+	Name         string
+	CurrHomeID   pgtype.Int4
+	Status       int32
+	JournalUrl   pgtype.Text
+	TimeCheckin  pgtype.Timestamptz
+	TimeCheckout pgtype.Timestamptz
+	Species      string
 }
 
 func (q *Queries) GetFormerPatients(ctx context.Context, languageID int32) ([]GetFormerPatientsRow, error) {
@@ -166,6 +211,9 @@ func (q *Queries) GetFormerPatients(ctx context.Context, languageID int32) ([]Ge
 			&i.Name,
 			&i.CurrHomeID,
 			&i.Status,
+			&i.JournalUrl,
+			&i.TimeCheckin,
+			&i.TimeCheckout,
 			&i.Species,
 		); err != nil {
 			return nil, err
@@ -179,7 +227,7 @@ func (q *Queries) GetFormerPatients(ctx context.Context, languageID int32) ([]Ge
 }
 
 const getPatient = `-- name: GetPatient :one
-SELECT id, species_id, curr_home_id, name, status, journal_url, sort_order FROM patient
+SELECT id, species_id, curr_home_id, name, status, journal_url, sort_order, time_checkin, time_checkout FROM patient
 WHERE id = $1
 `
 
@@ -194,12 +242,14 @@ func (q *Queries) GetPatient(ctx context.Context, id int32) (Patient, error) {
 		&i.Status,
 		&i.JournalUrl,
 		&i.SortOrder,
+		&i.TimeCheckin,
+		&i.TimeCheckout,
 	)
 	return i, err
 }
 
 const getPatientWithSpecies = `-- name: GetPatientWithSpecies :one
-SELECT p.id, p.species_id, p.curr_home_id, p.name, p.status, p.journal_url, p.sort_order, sl.name AS species_name FROM patient AS p
+SELECT p.id, p.species_id, p.curr_home_id, p.name, p.status, p.journal_url, p.sort_order, p.time_checkin, p.time_checkout, sl.name AS species_name FROM patient AS p
 JOIN species_language AS sl
   ON sl.species_id = p.species_id
 WHERE p.id = $1
@@ -212,14 +262,16 @@ type GetPatientWithSpeciesParams struct {
 }
 
 type GetPatientWithSpeciesRow struct {
-	ID          int32
-	SpeciesID   int32
-	CurrHomeID  pgtype.Int4
-	Name        string
-	Status      int32
-	JournalUrl  pgtype.Text
-	SortOrder   int32
-	SpeciesName string
+	ID           int32
+	SpeciesID    int32
+	CurrHomeID   pgtype.Int4
+	Name         string
+	Status       int32
+	JournalUrl   pgtype.Text
+	SortOrder    int32
+	TimeCheckin  pgtype.Timestamptz
+	TimeCheckout pgtype.Timestamptz
+	SpeciesName  string
 }
 
 func (q *Queries) GetPatientWithSpecies(ctx context.Context, arg GetPatientWithSpeciesParams) (GetPatientWithSpeciesRow, error) {
@@ -233,6 +285,8 @@ func (q *Queries) GetPatientWithSpecies(ctx context.Context, arg GetPatientWithS
 		&i.Status,
 		&i.JournalUrl,
 		&i.SortOrder,
+		&i.TimeCheckin,
+		&i.TimeCheckout,
 		&i.SpeciesName,
 	)
 	return i, err

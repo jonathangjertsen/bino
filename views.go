@@ -85,12 +85,14 @@ func (hv HomeView) AvailabilityString(language *Language) (Availability, string)
 // ---- Patient
 
 type PatientView struct {
-	ID         int32
-	Status     int32
-	Name       string
-	Species    string
-	Tags       []TagView
-	JournalURL string
+	ID           int32
+	Status       int32
+	Name         string
+	Species      string
+	Tags         []TagView
+	JournalURL   string
+	TimeCheckin  time.Time
+	TimeCheckout time.Time
 }
 
 func (pv PatientView) CollapseID(prefix string) string {
@@ -123,10 +125,12 @@ func (pv PatientView) URLSuffix(suffix string) string {
 
 func (in GetFormerPatientsRow) ToPatientView() PatientView {
 	return PatientView{
-		ID:      in.ID,
-		Status:  in.Status,
-		Name:    in.Name,
-		Species: in.Species,
+		ID:           in.ID,
+		Status:       in.Status,
+		Name:         in.Name,
+		Species:      in.Species,
+		TimeCheckin:  in.TimeCheckin.Time,
+		TimeCheckout: in.TimeCheckout.Time,
 	}
 }
 

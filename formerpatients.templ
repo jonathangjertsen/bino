@@ -24,8 +24,8 @@ templ FormerPatients(data *CommonData, patients []PatientView) {
                                 <td><a href={templ.URL(p.URL())} class="filter-content">{p.Name}</a></td>
                                 <td class="filter-content">{p.Species}</td>
                                 <td class="filter-content">{data.User.Language.Status[Status(p.Status)]}</td>
-                                <td class="filter-content">{data.User.Language.TODO("checkin")}</td>
-                                <td class="filter-content">{data.User.Language.TODO("checkout")}</td>
+                                <td class="filter-content">{data.User.Language.FormatTimeAbsWithRelParen(p.TimeCheckin)}</td>
+                                <td class="filter-content">{data.User.Language.FormatTimeAbsWithRelParen(p.TimeCheckout)}</td>
                             </tr>
                         }
                         <tr id="filter-none" hidden>

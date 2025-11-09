@@ -11825,8 +11825,23 @@ body {
 }
 
 .b-navbar-item {
-  margin: 0.5em;
   text-decoration: none;
+  padding: 0.5em;
+}
+
+.b-navbar-item-text {
+  background-color: #2d2d3c;
+  border-radius: 0.5em;
+}
+@media (min-width: 1000px) {
+  .b-navbar-item-text {
+    margin-right: 0.5em;
+  }
+}
+@media (max-width: 1000px) {
+  .b-navbar-item-text {
+    margin-top: 0.5em;
+  }
 }
 
 .patient-table {
