@@ -161,14 +161,18 @@ func (server *Server) inviteHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	data := MustLoadCommonData(ctx)
 
-	email, err := server.getFormValue(r, "email")
+	email, err := server.getPathValue(r, "email")
+	if err != nil {
+		email, err = server.getFormValue(r, "email")
+	}
+
 	if err != nil {
 		server.renderError(w, r, data, err)
 		return
 	}
 
 	now := time.Now()
-	expires := now.AddDate(0, 0, 7)
+	expires := now.AddDate(0, 0, 14)
 
 	// Generate 8-char invite code, handle collision
 	inviteCodes := rand.Text()

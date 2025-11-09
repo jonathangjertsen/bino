@@ -1,6 +1,6 @@
 package main
 
-templ Layout(data *CommonData, classes ...string) {
+templ FullLayout(data *CommonData, classes ...string) {
     <!doctype html>
     <html lang="en">
     <head>
@@ -20,10 +20,7 @@ templ Layout(data *CommonData, classes ...string) {
                 }
             </div>
         }
-        <div class={"main b-container", classes}>
-            { children... }
-        </div>
-
+        { children... }
         @Footer(&data.User)
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,6 +36,14 @@ templ Layout(data *CommonData, classes ...string) {
         <script src={data.StaticFile("editable.js")}></script>
     </body>
     </html>
+}
+
+templ Layout(data *CommonData, classes ...string) {
+    @FullLayout(data, classes...) {
+        <div class={"main b-container", classes}>
+            { children... }
+        </div>
+    }
 }
 
 templ Card(classes ...string) {
@@ -68,7 +73,7 @@ templ Navbar(data *CommonData) {
 
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 @NavbarPageLink(data.User.Language.NavbarDashboard, "/")
-                //@NavbarPageLink(data.User.Language.Calendar, "/calendar")
+                @NavbarPageLink(data.User.Language.Calendar, "/calendar")
                 @NavbarPageLink(data.User.Language.FormerPatients, "/former-patients")
                 @NavbarPageLink(data.User.Language.AdminRoot, "/admin")
                 @LanguageSelect(data)

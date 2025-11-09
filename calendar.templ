@@ -1,0 +1,51 @@
+package main
+
+import (
+    "time"
+
+    "fmt"
+)
+
+templ CalendarPage(data *CommonData, initialTime, initialView string) {
+	@FullLayout(data, "calendar") {
+        <div class="h-100">
+            <h1>{data.User.Language.Calendar}</h1>
+            <div class="card p-2 w-100">
+                <div id="calendar" data-initialdate={initialTime} data-initialview={initialView}>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js"></script>
+        <script src={data.StaticFile("calendar-locale-no.js")}></script>
+        <script src={data.StaticFile("calendar.js")}></script>
+    }
+}
+
+templ CalendarLink(formatter func(t time.Time) string, t time.Time, v string) {
+    if !t.IsZero() {
+        <a class="calendar-link" href={templ.URL(fmt.Sprintf("/calendar?t=%s&v=%s", t.Format(timeFormatFullCalendarNoTZ), v))}>
+            {formatter(t)}
+        </a>
+    } else {
+        <span class="calendar-link calendar-link-never">
+            {formatter(t)}
+        </span>
+    }
+}
+
+templ CalendarLinkAbs(lang *Language, t time.Time, v string) {
+    @CalendarLink(lang.FormatTimeAbs, t, v)
+}
+
+templ CalendarLinkRel(lang *Language, t time.Time, v string) {
+    @CalendarLink(lang.FormatTimeRel, t, v)
+}
+
+templ CalendarLinkRelWithAbsFallback(lang *Language, t time.Time, v string) {
+    @CalendarLink(lang.FormatTimeRelWithAbsFallback, t, v)
+}
+
+templ CalendarLinkAbsWithRelParen(lang *Language, t time.Time, v string) {
+    @CalendarLink(lang.FormatTimeAbsWithRelParen, t, v)
+}

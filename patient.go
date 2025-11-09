@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"regexp"
 	"time"
@@ -10,26 +9,6 @@ import (
 )
 
 var journalRegex = regexp.MustCompile(`(https:\/\/docs\.google\.com\/document\/d\/[^\/?#\n]+)`)
-
-type PatientPageView struct {
-	Patient PatientView
-	Home    *HomeView
-	Tags    []GetTagsWithLanguageCheckinRow
-	Events  []EventView
-	Homes   []HomeView
-}
-
-type EventView struct {
-	Row     GetEventsForPatientRow
-	TimeAbs string
-	TimeRel string
-	Home    HomeView
-	User    UserView
-}
-
-func (ev *EventView) SetNoteURL() string {
-	return fmt.Sprintf("/event/%d/set-note", ev.Row.ID)
-}
 
 func (server *Server) getPatientHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -94,6 +73,7 @@ func (server *Server) getPatientHandler(w http.ResponseWriter, r *http.Request) 
 			Row:     r,
 			TimeRel: commonData.User.Language.FormatTimeRel(r.Time.Time),
 			TimeAbs: commonData.User.Language.FormatTimeAbs(r.Time.Time),
+			Time:    r.Time.Time,
 			User: UserView{
 				ID:           r.AppuserID,
 				Name:         r.UserName,

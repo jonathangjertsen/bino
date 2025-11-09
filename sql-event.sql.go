@@ -53,6 +53,70 @@ func (q *Queries) DeleteEventsCreatedByUser(ctx context.Context, appuserID int32
 	return err
 }
 
+const getEventsForCalendar = `-- name: GetEventsForCalendar :many
+SELECT
+  pe.id, pe.patient_id, pe.home_id, pe.note, pe.event_id, pe.time, pe.associated_id, pe.appuser_id,
+  h.name AS home_name,
+  p.name AS patient_name
+FROM patient_event AS pe
+JOIN home AS h
+  ON h.id = pe.home_id
+JOIN patient AS p
+  ON p.id = pe.patient_id
+WHERE pe.time >= $1
+  AND pe.time <= $2
+ORDER BY pe.time
+`
+
+type GetEventsForCalendarParams struct {
+	RangeBegin pgtype.Timestamptz
+	RangeEnd   pgtype.Timestamptz
+}
+
+type GetEventsForCalendarRow struct {
+	ID           int32
+	PatientID    int32
+	HomeID       int32
+	Note         string
+	EventID      int32
+	Time         pgtype.Timestamptz
+	AssociatedID pgtype.Int4
+	AppuserID    int32
+	HomeName     string
+	PatientName  string
+}
+
+func (q *Queries) GetEventsForCalendar(ctx context.Context, arg GetEventsForCalendarParams) ([]GetEventsForCalendarRow, error) {
+	rows, err := q.db.Query(ctx, getEventsForCalendar, arg.RangeBegin, arg.RangeEnd)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetEventsForCalendarRow
+	for rows.Next() {
+		var i GetEventsForCalendarRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.PatientID,
+			&i.HomeID,
+			&i.Note,
+			&i.EventID,
+			&i.Time,
+			&i.AssociatedID,
+			&i.AppuserID,
+			&i.HomeName,
+			&i.PatientName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getEventsForPatient = `-- name: GetEventsForPatient :many
 SELECT
     pe.id, pe.patient_id, pe.home_id, pe.note, pe.event_id, pe.time, pe.associated_id, pe.appuser_id,

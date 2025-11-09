@@ -133,3 +133,12 @@ FROM home_unavailable
 WHERE to_date + INTERVAL '1 DAY' >= NOW()
 ORDER BY home_id, to_date
 ;
+
+-- name: GetUnavailablePeriodsInRange :many
+SELECT hu.*, h.name
+FROM home_unavailable AS hu
+INNER JOIN home AS h
+  ON hu.home_id = h.id
+WHERE from_date <= @range_end
+  AND to_date >= @range_begin
+;

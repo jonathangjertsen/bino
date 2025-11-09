@@ -58,6 +58,8 @@ type Language struct {
 
 	AuthLogOut string
 
+	Calendar string
+
 	CheckinCheckInPatient  string
 	CheckinIHaveThePatient string
 	CheckinPatientName     string
@@ -78,6 +80,7 @@ type Language struct {
 	DashboardSelectSpecies         string
 	DashboardNonPreferredSpecies   string
 	DashboardOtherHome             string
+	DashboardTagsShowAll           string
 
 	ErrorPageHead         string
 	ErrorPageInstructions string
@@ -214,6 +217,23 @@ func (l *Language) HomeAvailableUntil(dv DateView) string {
 	}
 }
 
+func (l *Language) HomeIsUnavailable(name string, note string) string {
+	switch l.ID {
+	case LanguageIDNO:
+		if note != "" {
+			note = fmt.Sprintf(" (%s)", note)
+		}
+		return fmt.Sprintf("%s er utilgjengelig%s", name, note)
+	case LanguageIDEN:
+		fallthrough
+	default:
+		if note != "" {
+			note = fmt.Sprintf(" (%s)", note)
+		}
+		return fmt.Sprintf("%s is unavailable%s", name, note)
+	}
+}
+
 func (l *Language) TODO(s string) string {
 	return fmt.Sprintf("TODO[%s]", s)
 }
@@ -292,6 +312,8 @@ var NO = &Language{
 
 	AuthLogOut: "Logg ut",
 
+	Calendar: "Kalender",
+
 	CheckinCheckInPatient:  "Sjekk inn pasient",
 	CheckinIHaveThePatient: "Pasienten er her",
 	CheckinPatientName:     "Pasientens navn",
@@ -312,6 +334,7 @@ var NO = &Language{
 	DashboardSelectSpecies:         "Velg art",
 	DashboardNonPreferredSpecies:   "Andre arter",
 	DashboardOtherHome:             "Andre rehabhjem",
+	DashboardTagsShowAll:           "Vis alle",
 
 	ErrorPageHead:         "Feilmelding",
 	ErrorPageInstructions: "Det skjedde noe feil under lasting av siden. Feilen har blitt logget og vil bli undersøkt. Send melding til administrator for hjelp. Den tekniske feilmeldingen følger under.",
@@ -519,6 +542,8 @@ var EN = &Language{
 
 	AuthLogOut: "Log out",
 
+	Calendar: "Kalender",
+
 	CheckinCheckInPatient:  "Check in",
 	CheckinIHaveThePatient: "The patient is here",
 	CheckinPatientName:     "Name of the patient",
@@ -539,6 +564,7 @@ var EN = &Language{
 	DashboardSelectSpecies:         "Select species",
 	DashboardNonPreferredSpecies:   "Other species",
 	DashboardOtherHome:             "Other homes",
+	DashboardTagsShowAll:           "Show all",
 
 	ErrorPageHead:         "Error",
 	ErrorPageInstructions: "An error occurred while loading the page. The error has been logged and will be investigated. Send a message to the site admin for help. The technical error message is as follows.",

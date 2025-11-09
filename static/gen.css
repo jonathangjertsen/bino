@@ -12183,4 +12183,23 @@ legend {
   font-size: 1rem;
 }
 
+@media (min-width: 1000px) {
+  #calendar {
+    min-width: 950px;
+  }
+}
+
+.fc-daygrid-dot-event {
+  white-space: initial !important;
+  align-items: start;
+}
+
+.fc-daygrid-event-dot {
+  display: none;
+}
+
+.fc-toolbar-title {
+  text-transform: capitalize;
+}
+
 /*# sourceMappingURL=gen.css.map */

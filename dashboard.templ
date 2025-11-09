@@ -113,13 +113,16 @@ templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
                 <label>{data.User.Language.GenericTags}</label>
                 <br/>
                 for _, tag := range dashboardData.Tags {
-                    <div class="form-check-inline checkbox" data-hidden={!tag.DefaultShow}>
+                    <div class="form-check-inline checkbox dashboard-tag" data-hidden={!tag.DefaultShow}>
                         <input autocomplete="off" type="checkbox" name="tag" id={tag.HTMLID()} value={tag.TagID}>
                         <label for={tag.HTMLID()}>
                             {tag.Name}
                         </label>
                     </div>
                 }
+                <div class="form-check-inline" id="dashboard-tags-show-all">
+                    <label>{data.User.Language.DashboardTagsShowAll}</label>
+                </div>
             </div>
 
             <div class="form-group">

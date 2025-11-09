@@ -313,6 +313,56 @@ func (q *Queries) GetPreferredSpeciesForHome(ctx context.Context, arg GetPreferr
 	return items, nil
 }
 
+const getUnavailablePeriodsInRange = `-- name: GetUnavailablePeriodsInRange :many
+SELECT hu.id, hu.home_id, hu.from_date, hu.to_date, hu.note, h.name
+FROM home_unavailable AS hu
+INNER JOIN home AS h
+  ON hu.home_id = h.id
+WHERE from_date <= $1
+  AND to_date >= $2
+`
+
+type GetUnavailablePeriodsInRangeParams struct {
+	RangeEnd   pgtype.Date
+	RangeBegin pgtype.Date
+}
+
+type GetUnavailablePeriodsInRangeRow struct {
+	ID       int32
+	HomeID   int32
+	FromDate pgtype.Date
+	ToDate   pgtype.Date
+	Note     pgtype.Text
+	Name     string
+}
+
+func (q *Queries) GetUnavailablePeriodsInRange(ctx context.Context, arg GetUnavailablePeriodsInRangeParams) ([]GetUnavailablePeriodsInRangeRow, error) {
+	rows, err := q.db.Query(ctx, getUnavailablePeriodsInRange, arg.RangeEnd, arg.RangeBegin)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUnavailablePeriodsInRangeRow
+	for rows.Next() {
+		var i GetUnavailablePeriodsInRangeRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.HomeID,
+			&i.FromDate,
+			&i.ToDate,
+			&i.Note,
+			&i.Name,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertHome = `-- name: InsertHome :exec
 INSERT INTO home (name)
 VALUES ($1)

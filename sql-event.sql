@@ -19,6 +19,21 @@ WHERE pe.patient_id = $1
 ORDER BY pe.time
 ;
 
+-- name: GetEventsForCalendar :many
+SELECT
+  pe.*,
+  h.name AS home_name,
+  p.name AS patient_name
+FROM patient_event AS pe
+JOIN home AS h
+  ON h.id = pe.home_id
+JOIN patient AS p
+  ON p.id = pe.patient_id
+WHERE pe.time >= @range_begin
+  AND pe.time <= @range_end
+ORDER BY pe.time
+;
+
 -- name: GetFirstEventOfTypeForPatient :one
 SELECT
   pe.time

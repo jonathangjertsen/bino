@@ -27,8 +27,12 @@ type HomeView struct {
 // ENUM(AvailableIndefinitely, AvailableUntil, UnavailableUntil, UnavailableIndefinitely)
 type Availability int
 
+func HomeURL(id int32) string {
+	return fmt.Sprintf("/home/%d", id)
+}
+
 func (hv HomeView) URL() string {
-	return fmt.Sprintf("/home/%d", hv.Home.ID)
+	return HomeURL(hv.Home.ID)
 }
 
 func (hv HomeView) URLSuffix(suffix string) string {
@@ -95,6 +99,10 @@ type PatientView struct {
 	TimeCheckout time.Time
 }
 
+func PatientURL(id int32) string {
+	return fmt.Sprintf("/patient/%d", id)
+}
+
 func (pv PatientView) CollapseID(prefix string) string {
 	return fmt.Sprintf("%spatient-collapsible-%d", prefix, pv.ID)
 }
@@ -116,7 +124,7 @@ func (pv PatientView) CardID(prefix string) string {
 }
 
 func (pv PatientView) URL() string {
-	return fmt.Sprintf("/patient/%d", pv.ID)
+	return PatientURL(pv.ID)
 }
 
 func (pv PatientView) URLSuffix(suffix string) string {
@@ -361,4 +369,29 @@ func (dv DateView) Before(other DateView) bool {
 		return false
 	}
 	return dv.Day < other.Day
+}
+
+// ---- Patient page
+
+type PatientPageView struct {
+	Patient PatientView
+	Home    *HomeView
+	Tags    []GetTagsWithLanguageCheckinRow
+	Events  []EventView
+	Homes   []HomeView
+}
+
+// ---- Event
+
+type EventView struct {
+	Row     GetEventsForPatientRow
+	TimeAbs string
+	TimeRel string
+	Time    time.Time
+	Home    HomeView
+	User    UserView
+}
+
+func (ev *EventView) SetNoteURL() string {
+	return fmt.Sprintf("/event/%d/set-note", ev.Row.ID)
 }

@@ -79,6 +79,13 @@ const setupBoard = (elem) => {
 
 document.querySelectorAll(".dashboard").forEach(setupBoard);
 
+document.getElementById("dashboard-tags-show-all").addEventListener("click", ev => {
+  document.querySelectorAll(".dashboard-tag").forEach(e => {
+    e.style.display = "inline-block";
+  });
+  ev.target.style.display = "none";
+})
+
 $(function() {
   $(".dashboard-patient-list").sortable({
     connectWith: ".dashboard-patient-list",

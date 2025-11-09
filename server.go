@@ -159,6 +159,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 	mux.Handle("GET /home/{home}", chainf(server.getHomeHandler, requiresLogin...))
 	mux.Handle("GET /user/{user}", chainf(server.getUserHandler, requiresLogin...))
 	mux.Handle("GET /former-patients", chainf(server.formerPatientsHandler, requiresLogin...))
+	mux.Handle("GET /calendar", chainf(server.calendarHandler, requiresLogin...))
 	// Forms
 	mux.Handle("POST /checkin", chainf(server.postCheckinHandler, requiresRehabber...))
 	mux.Handle("POST /privacy", chainf(server.postPrivacyHandler, requiresLogin...))
@@ -179,6 +180,8 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 	mux.Handle("POST /patient/{patient}/tag/{tag}", chainf(server.createPatientTagHandler, requiresRehabber...))
 	mux.Handle("POST /ajaxreorder", chainf(server.ajaxReorderHandler, requiresRehabber...))
 	mux.Handle("POST /ajaxtransfer", chainf(server.ajaxTransferHandler, requiresRehabber...))
+	mux.Handle("GET /calendar/away", chainf(server.ajaxCalendarAwayHandler, requiresRehabber...))
+	mux.Handle("GET /calendar/patientevents", chainf(server.ajaxCalendarPatientEventsHandler, requiresRehabber...))
 
 	//// CONTENT MANAGEMENT
 	// Pages
@@ -206,6 +209,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 	mux.Handle("POST /user/{user}/nuke", chainf(server.userDoNukeHandler, requiresAdmin...))
 	mux.Handle("POST /gdrive/invite/{email}", chainf(server.gdriveInviteUserHandler, requiresAdmin...))
 	mux.Handle("POST /invite", chainf(server.inviteHandler, requiresAdmin...))
+	mux.Handle("POST /invite/{email}", chainf(server.inviteHandler, requiresAdmin...))
 	mux.Handle("POST /invite/{id}/delete", chainf(server.inviteDeleteHandler, requiresAdmin...))
 
 	//// FALLBACK
@@ -227,6 +231,18 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 	}()
 
 	return nil
+}
+
+func (server *Server) getQueryValue(r *http.Request, field string) (string, error) {
+	q := r.URL.Query()
+	values, ok := q[field]
+	if !ok {
+		return "", fmt.Errorf("no such value: '%s'", field)
+	}
+	if len(values) != 1 {
+		return "", fmt.Errorf("%d values named '%s", len(values), field)
+	}
+	return values[0], nil
 }
 
 func (server *Server) getFormIDs(r *http.Request, fields ...string) (map[string]int32, error) {

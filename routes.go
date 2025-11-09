@@ -67,7 +67,7 @@ func (server *Server) render404(w http.ResponseWriter, r *http.Request, commonDa
 func (server *Server) ensureAccess(w http.ResponseWriter, r *http.Request, al AccessLevel) bool {
 	ctx := r.Context()
 	commonData := MustLoadCommonData(ctx)
-	hasAccess := commonData.User.AccessLevel < al
+	hasAccess := commonData.User.AccessLevel >= al
 	if !hasAccess {
 		w.WriteHeader(http.StatusUnauthorized)
 		err := errors.New(commonData.User.Language.AccessLevelBlocked(al))

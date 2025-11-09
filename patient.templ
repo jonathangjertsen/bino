@@ -11,12 +11,10 @@ templ PatientPage(ctx context.Context, data *CommonData, view PatientPageView, s
             <h2>Personalia</h2>
             <table class="table table-bordered mb-2">
             <tbody>
-                if len(view.Events) > 0 {
-                    <tr>
-                        <th>{data.User.Language.PatientRegisteredTime}</th>
-                        <td>@UserTimeLong(view.Events[0].TimeRel, view.Events[0].TimeAbs)</td>
-                    </tr>
-                }
+                <tr>
+                    <th>{data.User.Language.PatientRegisteredTime}</th>
+                    <td>@CalendarLinkAbs(data.User.Language, view.Patient.TimeCheckin, "listDay")</td>
+                </tr>
                 <tr>
                     <th>{data.User.Language.GenericStatus}</th>
                     <td>{data.User.Language.Status[Status(view.Patient.Status)]}</td>
@@ -63,7 +61,7 @@ templ PatientPage(ctx context.Context, data *CommonData, view PatientPageView, s
             <tbody>
                 for _, event := range view.Events {
                     <tr>
-                        <td>@UserTime(event.TimeRel, event.TimeAbs)</td>
+                        <td>@CalendarLinkAbs(data.User.Language, event.Time, "listDay")</td>
                         <td class="center">
                             @Avatar(event.User)
                         </td>

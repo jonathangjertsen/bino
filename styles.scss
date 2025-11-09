@@ -552,3 +552,22 @@ legend {
     font-weight: bold;
     font-size: 1rem;
 }
+
+#calendar {
+    @media (min-width: $mobilethreshold) {
+        min-width: $mobilethreshold * 0.95;
+    }
+}
+
+.fc-daygrid-dot-event {
+    white-space: initial !important;
+    align-items: start;
+}
+
+.fc-daygrid-event-dot {
+    display: none;
+}
+
+.fc-toolbar-title {
+    text-transform: capitalize;
+}
