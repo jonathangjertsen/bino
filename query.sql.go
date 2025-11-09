@@ -12,6 +12,31 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addHomeUnavailablePeriod = `-- name: AddHomeUnavailablePeriod :one
+INSERT INTO home_unavailable (home_id, from_date, to_date, note)
+VALUES ($1, $2, $3, $4)
+RETURNING id
+`
+
+type AddHomeUnavailablePeriodParams struct {
+	HomeID   int32
+	FromDate pgtype.Date
+	ToDate   pgtype.Date
+	Note     pgtype.Text
+}
+
+func (q *Queries) AddHomeUnavailablePeriod(ctx context.Context, arg AddHomeUnavailablePeriodParams) (int32, error) {
+	row := q.db.QueryRow(ctx, addHomeUnavailablePeriod,
+		arg.HomeID,
+		arg.FromDate,
+		arg.ToDate,
+		arg.Note,
+	)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
 const addPatient = `-- name: AddPatient :one
 INSERT INTO patient (species_id, name, curr_home_id, status)
 VALUES ($1, $2, $3, $4)
@@ -232,6 +257,17 @@ func (q *Queries) DeleteExpiredInvitations(ctx context.Context) (pgconn.CommandT
 	return q.db.Exec(ctx, deleteExpiredInvitations)
 }
 
+const deleteHomeUnavailablePeriod = `-- name: DeleteHomeUnavailablePeriod :exec
+DELETE
+FROM home_unavailable
+WHERE id = $1
+`
+
+func (q *Queries) DeleteHomeUnavailablePeriod(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteHomeUnavailablePeriod, id)
+	return err
+}
+
 const deleteInvitation = `-- name: DeleteInvitation :exec
 DELETE FROM invitation
 WHERE id = $1
@@ -343,6 +379,39 @@ func (q *Queries) GetActivePatients(ctx context.Context, languageID int32) ([]Ge
 			&i.Status,
 			&i.JournalUrl,
 			&i.Species,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAllUnavailablePeriods = `-- name: GetAllUnavailablePeriods :many
+SELECT id, home_id, from_date, to_date, note
+FROM home_unavailable
+WHERE to_date + INTERVAL '1 DAY' >= NOW()
+ORDER BY home_id, to_date
+`
+
+func (q *Queries) GetAllUnavailablePeriods(ctx context.Context) ([]HomeUnavailable, error) {
+	rows, err := q.db.Query(ctx, getAllUnavailablePeriods)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []HomeUnavailable
+	for rows.Next() {
+		var i HomeUnavailable
+		if err := rows.Scan(
+			&i.ID,
+			&i.HomeID,
+			&i.FromDate,
+			&i.ToDate,
+			&i.Note,
 		); err != nil {
 			return nil, err
 		}
@@ -617,19 +686,58 @@ func (q *Queries) GetFormerPatients(ctx context.Context, languageID int32) ([]Ge
 }
 
 const getHome = `-- name: GetHome :one
-SELECT id, name, capacity FROM home
+SELECT id, name, capacity, note FROM home
 WHERE id = $1
 `
 
 func (q *Queries) GetHome(ctx context.Context, id int32) (Home, error) {
 	row := q.db.QueryRow(ctx, getHome, id)
 	var i Home
-	err := row.Scan(&i.ID, &i.Name, &i.Capacity)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Capacity,
+		&i.Note,
+	)
 	return i, err
 }
 
+const getHomeUnavailablePeriods = `-- name: GetHomeUnavailablePeriods :many
+SELECT id, home_id, from_date, to_date, note
+FROM home_unavailable
+WHERE home_id = $1
+  AND to_date + INTERVAL '1 DAY' >= NOW()
+ORDER BY to_date
+`
+
+func (q *Queries) GetHomeUnavailablePeriods(ctx context.Context, homeID int32) ([]HomeUnavailable, error) {
+	rows, err := q.db.Query(ctx, getHomeUnavailablePeriods, homeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []HomeUnavailable
+	for rows.Next() {
+		var i HomeUnavailable
+		if err := rows.Scan(
+			&i.ID,
+			&i.HomeID,
+			&i.FromDate,
+			&i.ToDate,
+			&i.Note,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getHomes = `-- name: GetHomes :many
-SELECT id, name, capacity FROM home
+SELECT id, name, capacity, note FROM home
 ORDER BY name
 `
 
@@ -642,7 +750,12 @@ func (q *Queries) GetHomes(ctx context.Context) ([]Home, error) {
 	var items []Home
 	for rows.Next() {
 		var i Home
-		if err := rows.Scan(&i.ID, &i.Name, &i.Capacity); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Capacity,
+			&i.Note,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -654,7 +767,7 @@ func (q *Queries) GetHomes(ctx context.Context) ([]Home, error) {
 }
 
 const getHomesForUser = `-- name: GetHomesForUser :many
-SELECT h.id, h.name, h.capacity FROM home_appuser AS ha
+SELECT h.id, h.name, h.capacity, h.note FROM home_appuser AS ha
 INNER JOIN home AS h
   ON h.id = ha.home_id
 WHERE appuser_id = $1
@@ -669,7 +782,12 @@ func (q *Queries) GetHomesForUser(ctx context.Context, appuserID int32) ([]Home,
 	var items []Home
 	for rows.Next() {
 		var i Home
-		if err := rows.Scan(&i.ID, &i.Name, &i.Capacity); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Capacity,
+			&i.Note,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -681,7 +799,7 @@ func (q *Queries) GetHomesForUser(ctx context.Context, appuserID int32) ([]Home,
 }
 
 const getHomesWithDataForUser = `-- name: GetHomesWithDataForUser :many
-SELECT h.id, h.name, h.capacity
+SELECT h.id, h.name, h.capacity, h.note
 FROM home AS h
 INNER JOIN home_appuser AS hau
   ON hau.home_id = h.id
@@ -697,7 +815,12 @@ func (q *Queries) GetHomesWithDataForUser(ctx context.Context, appuserID int32) 
 	var items []Home
 	for rows.Next() {
 		var i Home
-		if err := rows.Scan(&i.ID, &i.Name, &i.Capacity); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Capacity,
+			&i.Note,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -1526,6 +1649,22 @@ func (q *Queries) SetHomeCapacity(ctx context.Context, arg SetHomeCapacityParams
 	return err
 }
 
+const setHomeNote = `-- name: SetHomeNote :exec
+UPDATE home
+SET note = $2
+WHERE id = $1
+`
+
+type SetHomeNoteParams struct {
+	ID   int32
+	Note string
+}
+
+func (q *Queries) SetHomeNote(ctx context.Context, arg SetHomeNoteParams) error {
+	_, err := q.db.Exec(ctx, setHomeNote, arg.ID, arg.Note)
+	return err
+}
+
 const setLoggingConsent = `-- name: SetLoggingConsent :exec
 UPDATE appuser SET logging_consent = NOW() + $2::INT * INTERVAL '1 day'
 WHERE id = $1
@@ -1635,6 +1774,54 @@ type UpdateHomeNameParams struct {
 
 func (q *Queries) UpdateHomeName(ctx context.Context, arg UpdateHomeNameParams) error {
 	_, err := q.db.Exec(ctx, updateHomeName, arg.ID, arg.Name)
+	return err
+}
+
+const updateHomeUnavailableFrom = `-- name: UpdateHomeUnavailableFrom :exec
+UPDATE home_unavailable
+SET from_date = $2
+WHERE id = $1
+`
+
+type UpdateHomeUnavailableFromParams struct {
+	ID       int32
+	FromDate pgtype.Date
+}
+
+func (q *Queries) UpdateHomeUnavailableFrom(ctx context.Context, arg UpdateHomeUnavailableFromParams) error {
+	_, err := q.db.Exec(ctx, updateHomeUnavailableFrom, arg.ID, arg.FromDate)
+	return err
+}
+
+const updateHomeUnavailableNote = `-- name: UpdateHomeUnavailableNote :exec
+UPDATE home_unavailable
+SET note = $2
+WHERE id = $1
+`
+
+type UpdateHomeUnavailableNoteParams struct {
+	ID   int32
+	Note pgtype.Text
+}
+
+func (q *Queries) UpdateHomeUnavailableNote(ctx context.Context, arg UpdateHomeUnavailableNoteParams) error {
+	_, err := q.db.Exec(ctx, updateHomeUnavailableNote, arg.ID, arg.Note)
+	return err
+}
+
+const updateHomeUnavailableTo = `-- name: UpdateHomeUnavailableTo :exec
+UPDATE home_unavailable
+SET to_date = $2
+WHERE id = $1
+`
+
+type UpdateHomeUnavailableToParams struct {
+	ID     int32
+	ToDate pgtype.Date
+}
+
+func (q *Queries) UpdateHomeUnavailableTo(ctx context.Context, arg UpdateHomeUnavailableToParams) error {
+	_, err := q.db.Exec(ctx, updateHomeUnavailableTo, arg.ID, arg.ToDate)
 	return err
 }
 

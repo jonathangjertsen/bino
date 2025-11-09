@@ -3,7 +3,7 @@ const captureScroll = (elem) => {
   let dragging = false, lastX = 0;
 
   const isInteractive = (el) =>
-    el.closest('a,button,input,select,textarea,label,summary,[contenteditable],form,editable,::before,::after,.dashboard-patient-card');
+    el.closest('a,button,input,select,textarea,label,summary,[contenteditable],form,.editable,::before,::after,.dashboard-patient-card');
 
   const down = (ev) => {
     // Don't fuck with right click

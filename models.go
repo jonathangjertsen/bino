@@ -31,6 +31,7 @@ type Home struct {
 	ID       int32
 	Name     string
 	Capacity int32
+	Note     string
 }
 
 // Each row associates an app user with a rehab home
@@ -43,6 +44,14 @@ type HomePreferredSpecy struct {
 	HomeID    int32
 	SpeciesID int32
 	SortOrder pgtype.Int4
+}
+
+type HomeUnavailable struct {
+	ID       int32
+	HomeID   int32
+	FromDate pgtype.Date
+	ToDate   pgtype.Date
+	Note     pgtype.Text
 }
 
 type Invitation struct {

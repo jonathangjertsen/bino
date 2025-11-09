@@ -295,6 +295,15 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
+.home-note {
+    margin: 0rem;
+    margin-bottom: 0.5rem;
+}
+
+.home-note:last-of-type {
+    margin-bottom: 0;
+}
+
 .card-header {
     background-color: $midgray;
     color: $light;
@@ -338,9 +347,11 @@ h1, h2, h3, h4, h5, h6 {
     margin-bottom: 1rem !important;
     flex: 1;  
     align-self: flex-start;
-    height: 100%;
     display: flex;
     flex-direction: column;
+    @media (min-width: $mobilethreshold) {
+        height: 100%;
+    }
 }
 
 .former-patients-search-container {
@@ -352,10 +363,15 @@ h1, h2, h3, h4, h5, h6 {
     align-self: flex-start;  
 }
 
-.dashboard-search {
+.dashboard-filter {
     background-color: rgb(193.5, 194.25, 203.75);
     border: 1px solid $slightdark;
     margin: 0 !important;
+}
+
+.dashboard-search {
+    background-color: rgb(193.5, 194.25, 203.75);
+    border: 1px solid $slightdark;
 }
 
 .active-search {
@@ -515,4 +531,13 @@ pre {
 
 .td-email {
     max-width: 15em;
+}
+
+.short-label {
+    width: 5em;
+}
+
+legend {
+    font-weight: bold;
+    font-size: 1rem;
 }

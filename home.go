@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -60,6 +61,12 @@ func (server *Server) getHomeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	unavailablePeriods, err := server.Queries.GetHomeUnavailablePeriods(ctx, id)
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
 	HomePage(ctx, commonData, &DashboardData{
 		NonPreferredSpecies: otherSpecies,
 		Tags:                availableTags,
@@ -85,6 +92,9 @@ func (server *Server) getHomeHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}),
 		PreferredSpecies: preferredSpecies,
+		UnavailablePeriods: SliceToSlice(unavailablePeriods, func(in HomeUnavailable) PeriodView {
+			return in.ToPeriodView()
+		}),
 	}).Render(r.Context(), w)
 }
 
@@ -133,6 +143,100 @@ func (server *Server) addPreferredSpeciesHandler(w http.ResponseWriter, r *http.
 	if err := server.Queries.AddPreferredSpecies(ctx, AddPreferredSpeciesParams{
 		HomeID:    id,
 		SpeciesID: species,
+	}); err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	server.redirectToReferer(w, r)
+}
+
+func (server *Server) addHomeUnavailablePeriodHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
+
+	homeID, err := server.getPathID(r, "home")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	values, err := server.getFormValues(r, "unavailable-from", "unavailable-to", "unavailable-note")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	var fromV DateView
+	var toV DateView
+	note, hasNote := values["unavailable-note"]
+
+	if n, err := fmt.Sscanf(values["unavailable-from"], "%d-%d-%d", &fromV.Year, &fromV.Month, &fromV.Day); err != nil || n != 3 {
+		commonData.Warning(commonData.User.Language.HomePeriodInvalid, err)
+		server.redirectToReferer(w, r)
+		return
+	}
+	if n, err := fmt.Sscanf(values["unavailable-to"], "%d-%d-%d", &toV.Year, &toV.Month, &toV.Day); err != nil || n != 3 {
+		commonData.Warning(commonData.User.Language.HomePeriodInvalid, err)
+		server.redirectToReferer(w, r)
+		return
+	}
+
+	if toV.Before(fromV) {
+		commonData.Warning(commonData.User.Language.HomePeriodInvalid, fmt.Errorf("to is before from: %+v < %+v", toV, fromV))
+		server.redirectToReferer(w, r)
+		return
+	}
+	if _, err := server.Queries.AddHomeUnavailablePeriod(ctx, AddHomeUnavailablePeriodParams{
+		HomeID:   homeID,
+		FromDate: fromV.ToPGDate(),
+		ToDate:   toV.ToPGDate(),
+		Note:     pgtype.Text{String: note, Valid: hasNote && note != ""},
+	}); err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	server.redirectToReferer(w, r)
+}
+
+func (server *Server) deleteHomeUnavailableHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
+
+	periodID, err := server.getPathID(r, "period")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	if err := server.Queries.DeleteHomeUnavailablePeriod(ctx, periodID); err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	server.redirectToReferer(w, r)
+}
+
+func (server *Server) homeSetNoteHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
+
+	homeID, err := server.getPathID(r, "home")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	note, err := server.getFormValue(r, "value")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	if err := server.Queries.SetHomeNote(ctx, SetHomeNoteParams{
+		ID:   homeID,
+		Note: note,
 	}); err != nil {
 		server.renderError(w, r, commonData, err)
 		return

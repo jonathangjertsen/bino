@@ -1,6 +1,9 @@
 package main
 
-import "slices"
+import (
+    "slices"
+    "strings"
+)
 
 templ DashboardPage(data *CommonData, dashboardData *DashboardData) {
 	@Layout(data, "dashboard-container") {
@@ -28,12 +31,59 @@ templ DashboardPage(data *CommonData, dashboardData *DashboardData) {
 }
 
 templ DashboardSearch(data *CommonData) {
-    @Card("dashboard-search", "shadow-sm") {
-        <div class="form-group">
-            <label for="dashboard-search">{data.User.Language.DashboardSearch}</label>
-            <input autocomplete="off" class="form-control search" id="dashboard-search"></input>
-        </div>
+    @Card("dashboard-search", "shadow-sm", "mb-2") {
+        <fieldset>
+            <legend for="dashboard-search">{data.User.Language.DashboardSearch}</legend>
+            <form-group class="form-group">
+                <input autocomplete="off" class="form-control search" id="dashboard-search"></input>
+            </form-group>
+        </fieldset>
     }
+    @Card("dashboard-filter", "shadow-sm") {
+        <fieldset>
+            <legend>{data.User.Language.DashboardSearchFilter}</legend>
+            @DashboardSearchCheckbox(
+                "ds-show-me",
+                data.User.Language.DashboardSearchShowMine,
+                true,
+            )
+            @DashboardSearchCheckbox(
+                "ds-show-full",
+                data.User.Language.DashboardSearchShowFull,
+                true,
+            )
+            @DashboardSearchCheckbox(
+                "ds-show-unavailable",
+                data.User.Language.DashboardSearchShowUnavailable,
+                true,
+            )
+        </fieldset>
+
+        <fieldset>
+            <legend>{data.User.Language.HomeAvailability}</legend>
+            <div>
+                <label for="ds-availability-from">
+                    {data.User.Language.GenericFrom}
+                </label>
+                <input class="form-control" autocomplete="off" type="date" name="ds-availability-from" id="ds-availability-from">
+                <label for="ds-availability-to">
+                    {data.User.Language.GenericTo}
+                </label>
+                <input class="form-control" autocomplete="off" type="date" name="ds-availability-to" id="ds-availability-to">
+            </div>
+        </fieldset>
+    }
+}
+
+templ DashboardSearchCheckbox(id, text string, checked bool) {
+    <div class="form-group">
+        <div class="form-check-inline">
+            <input autocomplete="off" type="checkbox" name={id} id={id} checked?={checked}>
+            <label for={id}>
+                {text}
+            </label>
+        </div>
+    </div>
 }
 
 templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
@@ -149,11 +199,25 @@ templ DashboardHomeCard(data *CommonData, dashboardData *DashboardData, home *Ho
             }
         </div>
     </div>
+    if _, availability := home.AvailabilityString(data.User.Language); true {
+        <div class="card-header small fw-normal">
+            <p class="mb-0 filter-content">{availability}</p>
+        </div>
+    }
     if data.User.PreferredHome.ID == home.Home.ID {
         <div class="card-header d-flex justify-content-between">
                 @CapacityForm(data, home)
         </div>
     }
+    <div class="card-header small fw-normal">
+        <div class="mb-0 filter-content editable editable-lg" data-action={home.URLSuffix("set-note")}>
+            <div class="d-block">
+                for _, p := range strings.Split(home.Home.Note, "\n") {
+                    <p class="home-note">{p}</p>
+                }
+            </div>
+        </div>
+    </div>
     <div class="card-content dashboard-patient-list" data-home={home.Home.ID}>
         if len(home.Patients) > 0 {
             for _, patient := range home.Patients {
@@ -233,7 +297,7 @@ templ DashboardCheckout(data *CommonData, patient PatientView) {
                 "form-control-sm", "form-control-plaintext",
             ) {
                 <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext input-group-sm">
-                    <label for={patient.CheckoutStatusID("#")} class="input-group-text">{data.User.Language.GenericStatus}</label>
+                    <label for={patient.CheckoutStatusID("#")} class="input-group-text short-label">{data.User.Language.GenericStatus}</label>
                     <select autocomplete="off" class="form-control form-select form-select-sm" id={patient.CheckoutStatusID("")} name="status">
                         <option disabled selected>{data.User.Language.DashboardSelectCheckout}</option>
                         for statusID, status := range data.User.Language.Status {
@@ -244,7 +308,7 @@ templ DashboardCheckout(data *CommonData, patient PatientView) {
                     </select>
                 </form-group>
                 <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext input-group-sm">
-                    <label for={patient.CheckoutNoteID("#")} class="input-group-text">{data.User.Language.GenericNote}</label>
+                    <label for={patient.CheckoutNoteID("#")} class="input-group-text short-label">{data.User.Language.GenericNote}</label>
                     <input autocomplete="off" type="text" class="form-control" id={patient.CheckoutNoteID("")} name="note"></input>
                 </form-group>
                 <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext input-group-sm">
@@ -286,7 +350,7 @@ templ DashboardJournalUpdate(data *CommonData, patient PatientView, unconditiona
                     "form-control-sm", "form-control-plaintext",
                 ) {
                     <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext">
-                        <label for={patient.AttachJournalID("#")} class="input-group-text">{data.User.Language.GenericURL}</label>
+                        <label for={patient.AttachJournalID("#")} class="input-group-text short-label">{data.User.Language.GenericURL}</label>
                         <input autocomplete="off" type="text" class="form-control" id={patient.AttachJournalID("")} name="url"></input>
                         <button type="submit" class="btn btn-primary btn-sm w-50">{data.User.Language.GenericUpdate}</button>
                     </form-group>

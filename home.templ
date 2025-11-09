@@ -9,7 +9,13 @@ templ HomePage(ctx context.Context, data *CommonData, dashboardData *DashboardDa
         <h1>{view.Home.Name}</h1>
         @Card() {
             <h2>{data.User.Language.GenericUpdate}</h2>
+            <h3>{data.User.Language.HomeCapacity}</h3>
             @CapacityForm(data, view)
+
+            <h3>{data.User.Language.HomeAvailability}</h3>
+            @UnavailableEditor(data, view)
+
+            <h3>{data.User.Language.HomePreferredSpecies}</h3>
             @PreferredSpecies(data, dashboardData, view)
 
             <h2>{data.User.Language.HomesPatients} ({len(view.Patients)})</h2>
@@ -28,21 +34,95 @@ templ HomePage(ctx context.Context, data *CommonData, dashboardData *DashboardDa
     <script src={data.StaticFile("patienttags.js")}></script>
 }
 
+templ (dv DateView) View(data *CommonData) {
+    <span class="date-view">
+        {dv.Year}-{int(dv.Month)}-{dv.Day}
+    </span>
+}
+
+templ UnavailableEditor(data *CommonData, view *HomeView) {
+    if _, availability := view.AvailabilityString(data.User.Language); true {
+        <p>{availability}</p>
+    }
+
+    if len(view.UnavailablePeriods) > 0 {
+        <div class="card">
+            <table class="table table-sm m-0">
+                <thead>
+                    <tr>
+                        <th>{data.User.Language.GenericFrom}</th>
+                        <th>{data.User.Language.GenericTo}</th>
+                        <th>{data.User.Language.GenericNote}</th>
+                        <th>{data.User.Language.GenericDelete}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    for _, period := range view.UnavailablePeriods {
+                        <tr>
+                            <td>@period.From.View(data)</td>
+                            <td>@period.To.View(data)</td>
+                            <td><span>{period.Note}</span></td>
+                            <td>
+                                @SingleButtonForm(
+                                    period.DeleteURL(),
+                                    data.User.Language.GenericDelete,
+                                    "POST",
+                                    "btn-warning",
+                                )
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <h4>{data.User.Language.GenericAdd}</h4>
+    @Form(
+        view.URLSuffix("add-unavailable"),
+        "POST",
+        "card p-2",
+    ) {
+        <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext">
+            <label for={FormID("#", "unavailable-from", view.Home.ID)} class="input-group-text short-label">{data.User.Language.GenericFrom}</label>
+            <input autocomplete="off" type="date" class="form-control" id={FormID("", "unavailable-from", view.Home.ID)} name="unavailable-from"></input>
+        </form-group>
+        <small class="form-text text-muted">{data.User.Language.HomeUnavailableFromInstruction}</small>
+
+        <hr class="m-1"/>
+
+        <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext">
+            <label for={FormID("#", "unavailable-to", view.Home.ID)} class="input-group-text short-label">{data.User.Language.GenericTo}</label>
+            <input autocomplete="off" type="date" class="form-control" id={FormID("", "unavailable-to", view.Home.ID)} name="unavailable-to"></input>
+        </form-group>
+        <small class="form-text text-muted">{data.User.Language.HomeUnavailableToInstruction}</small>
+
+        <hr class="m-1"/>
+
+        <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext">
+            <label for={FormID("#", "unavailable-note", view.Home.ID)} class="input-group-text short-label">{data.User.Language.GenericNote}</label>
+            <input autocomplete="off" type="text" class="form-control" id={FormID("", "unavailable-note", view.Home.ID)} name="unavailable-note"></input>
+        </form-group>
+        <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext">
+            <button type="submit" class="btn btn-primary btn-sm w-100">{data.User.Language.GenericAdd}</button>
+        </form-group>
+    }
+}
+
 templ CapacityForm(data *CommonData, view *HomeView) {
     @Form(
         view.URLSuffix("set-capacity"),
         "POST",
     ) {
         <form-group class="d-flex justify-content-between form-control-sm form-control-plaintext">
-            <label for={view.SetCapacityID("#")} class="input-group-text">{data.User.Language.HomeCapacity}</label>
-            <input autocomplete="off" type="number" class="form-control" id={view.SetCapacityID("")} name="capacity" value={view.Home.Capacity}></input>
+            <label for={FormID("#", "set-capacity", view.Home.ID)} class="input-group-text">{data.User.Language.HomeCapacity}</label>
+            <input autocomplete="off" type="number" class="form-control" id={FormID("", "set-capacity", view.Home.ID)} name="capacity" value={view.Home.Capacity}></input>
             <button type="submit" class="btn btn-primary btn-sm w-50">{data.User.Language.GenericUpdate}</button>
         </form-group>
     }
 }
 
 templ PreferredSpecies(data *CommonData, dashboardData *DashboardData, view *HomeView) {
-    <h3>{data.User.Language.HomePreferredSpecies}</h3>
     <table class="table">
     <tbody>
         for _, species := range view.PreferredSpecies {

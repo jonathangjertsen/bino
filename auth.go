@@ -89,9 +89,8 @@ func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (Comm
 }
 
 func (server *Server) getUser(r *http.Request) (GetUserRow, error) {
-	ctx := r.Context()
-
 	// Get the encrypted auth cookie
+	ctx := r.Context()
 	sess, _ := server.Cookies.Get(r, "auth")
 
 	// OAuth token data must be valid
@@ -103,8 +102,19 @@ func (server *Server) getUser(r *http.Request) (GetUserRow, error) {
 	if err := json.Unmarshal([]byte(tokenData), &token); err != nil {
 		return GetUserRow{}, fmt.Errorf("correpted OAuth token in session")
 	}
-	if !token.Valid() {
-		return GetUserRow{}, fmt.Errorf("invalid or expired OAuth token")
+
+	ts := oauth2.ReuseTokenSource(&token, server.OAuthConfig.TokenSource(ctx, &token))
+	newTok, err := ts.Token()
+	if err != nil {
+		return GetUserRow{}, fmt.Errorf("unable to refresh token: %w", err)
+	}
+	if newTok.AccessToken != token.AccessToken || newTok.Expiry != token.Expiry {
+		b, err := json.Marshal(newTok)
+		if err != nil {
+			return GetUserRow{}, fmt.Errorf("unable to marshal new token: %w", err)
+		}
+		sess.Values["oauth_token"] = string(b)
+		_ = sess.Save(r, nil)
 	}
 
 	// Look up session
@@ -149,7 +159,16 @@ func (server *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 	if err := session.Save(r, w); err != nil {
 		fmt.Fprintf(os.Stderr, "saving cookie: %v", err)
 	}
-	http.Redirect(w, r, server.OAuthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline), http.StatusFound)
+	http.Redirect(
+		w,
+		r,
+		server.OAuthConfig.AuthCodeURL(
+			state,
+			oauth2.AccessTypeOffline,
+			oauth2.SetAuthURLParam("prompt", "consent"),
+		),
+		http.StatusFound,
+	)
 }
 
 func (server *Server) AuthLogOutHandler(w http.ResponseWriter, r *http.Request) {
@@ -265,7 +284,7 @@ func (server *Server) callbackHandler(
 	if err := server.Queries.InsertSession(ctx, InsertSessionParams{
 		ID:        sessionID,
 		AppuserID: userID,
-		Expires:   pgtype.Timestamptz{Time: token.Expiry, Valid: true},
+		Expires:   pgtype.Timestamptz{Time: time.Now().AddDate(0, 1, 0), Valid: true},
 	}); err != nil {
 		http.Error(w, "creating session failed", http.StatusInternalServerError)
 		return

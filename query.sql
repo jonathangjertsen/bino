@@ -493,6 +493,12 @@ SET capacity = $2
 WHERE id = $1
 ;
 
+-- name: SetHomeNote :exec
+UPDATE home
+SET note = $2
+WHERE id = $1
+;
+
 -- name: UpdatePatientSortOrder :exec
 UPDATE patient as p
 SET sort_order = v.sort_order
@@ -541,4 +547,49 @@ FROM (
 ) AS v
 WHERE hps.species_id = v.id
   AND hps.home_id = @home_id
+;
+
+-- name: AddHomeUnavailablePeriod :one
+INSERT INTO home_unavailable (home_id, from_date, to_date, note)
+VALUES ($1, $2, $3, $4)
+RETURNING id
+;
+
+-- name: UpdateHomeUnavailableFrom :exec
+UPDATE home_unavailable
+SET from_date = $2
+WHERE id = $1
+;
+
+-- name: UpdateHomeUnavailableTo :exec
+UPDATE home_unavailable
+SET to_date = $2
+WHERE id = $1
+;
+
+-- name: UpdateHomeUnavailableNote :exec
+UPDATE home_unavailable
+SET note = $2
+WHERE id = $1
+;
+
+-- name: DeleteHomeUnavailablePeriod :exec
+DELETE
+FROM home_unavailable
+WHERE id = $1
+;
+
+-- name: GetHomeUnavailablePeriods :many
+SELECT *
+FROM home_unavailable
+WHERE home_id = $1
+  AND to_date + INTERVAL '1 DAY' >= NOW()
+ORDER BY to_date
+;
+
+-- name: GetAllUnavailablePeriods :many
+SELECT *
+FROM home_unavailable
+WHERE to_date + INTERVAL '1 DAY' >= NOW()
+ORDER BY home_id, to_date
 ;

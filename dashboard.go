@@ -88,6 +88,12 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	unavailablePeriods, err := server.Queries.GetAllUnavailablePeriods(ctx)
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
 	homeViews := SliceToSlice(homes, func(h Home) HomeView {
 		return HomeView{
 			Home: h,
@@ -111,6 +117,11 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 				return u.HomeID.Valid && u.HomeID.Int32 == h.ID
 			}), func(u GetAppusersRow) UserView {
 				return u.ToUserView()
+			}),
+			UnavailablePeriods: SliceToSlice(FilterSlice(unavailablePeriods, func(p HomeUnavailable) bool {
+				return p.HomeID == h.ID
+			}), func(in HomeUnavailable) PeriodView {
+				return in.ToPeriodView()
 			}),
 		}
 	})

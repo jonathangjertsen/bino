@@ -160,6 +160,9 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 	mux.Handle("POST /event/{event}/set-note", chainf(server.postEventSetNoteHandler, requiresLogin...))
 	mux.Handle("POST /home/{home}/set-capacity", chainf(server.setCapacityHandler, requiresLogin...))
 	mux.Handle("POST /home/{home}/add-preferred-species", chainf(server.addPreferredSpeciesHandler, requiresLogin...))
+	mux.Handle("POST /home/{home}/add-unavailable", chainf(server.addHomeUnavailablePeriodHandler, requiresLogin...))
+	mux.Handle("POST /home/{home}/set-note", chainf(server.homeSetNoteHandler, requiresLogin...))
+	mux.Handle("POST /period/{period}/delete", chainf(server.deleteHomeUnavailableHandler, requiresLogin...))
 	// Ajax
 	mux.Handle("POST /language", chainf(server.postLanguageHandler, requiresLogin...))
 	mux.Handle("DELETE /patient/{patient}/tag/{tag}", chainf(server.deletePatientTagHandler, requiresLogin...))

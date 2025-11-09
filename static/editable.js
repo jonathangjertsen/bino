@@ -5,27 +5,49 @@ document.addEventListener('click', e => {
   const el = e.target.closest('.editable');
   if (!el) return;
 
+  const large = el.classList.contains('editable-lg');
+
   const range = document.createRange();
   range.selectNodeContents(el);
   const action = el.dataset.action;
 
-  const form = document.createElement('form');
-  form.action = action;
-  form.method = 'POST';
-  form.classList.add('d-flex', 'form-control-sm', 'form-control-plaintext');
-
-  const input = document.createElement('input');
+  const input = document.createElement(large ? 'textarea' : 'input');
   input.name = 'value';
   input.value = el.textContent.trim();
   input.type = 'text';
-  input.classList.add('form-control', 'w-75');
+  input.classList.add('form-control');
+  input.style.fontSize = getComputedStyle(el).fontSize;
+  input.spellcheck = false;
+  input.autocomplete = false;
+  input.autocorrect = false;
+  input.autocapitalize = false;
+  if (large) {
+    input.rows = 5;
+  } else {
+    input.classList.add('w-75');
+  }
 
   const submit = document.createElement('button');
   submit.type = 'submit';
   submit.textContent = LN.GenericUpdate;
   submit.classList.add('btn', 'btn-primary');
+  if (large) {
+    submit.classList.add('w-100');
+  }
 
-  form.append(input, submit);
+  const form = document.createElement('form');
+  form.action = action;
+  form.method = 'POST';
+
+  if (large) {
+    const container = document.createElement('form-group');
+    container.classList.add('d-flex', 'form-control-sm', 'form-control-plaintext');
+    container.append(input);
+    form.append(container, submit);
+  } else {
+    form.classList.add('d-flex', 'form-control-sm', 'form-control-plaintext');
+    form.append(input, submit);
+  }
   originals.set(form, el.cloneNode(true));
   el.replaceWith(form);
   input.focus();

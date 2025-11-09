@@ -1,9 +1,16 @@
+//go:generate go tool go-enum --no-iota --values
 package main
 
 import (
 	"fmt"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+func FormID(prefix, field string, id int32) string {
+	return fmt.Sprintf("%s%s-%d", prefix, field, id)
+}
 
 // ---- Home
 
@@ -11,10 +18,14 @@ type HomeView struct {
 	Home Home
 
 	// Optional
-	Patients         []PatientView
-	Users            []UserView
-	PreferredSpecies []SpeciesView
+	Patients           []PatientView
+	Users              []UserView
+	PreferredSpecies   []SpeciesView
+	UnavailablePeriods []PeriodView
 }
+
+// ENUM(AvailableIndefinitely, AvailableUntil, UnavailableUntil, UnavailableIndefinitely)
+type Availability int
 
 func (hv HomeView) URL() string {
 	return fmt.Sprintf("/home/%d", hv.Home.ID)
@@ -22,10 +33,6 @@ func (hv HomeView) URL() string {
 
 func (hv HomeView) URLSuffix(suffix string) string {
 	return fmt.Sprintf("/home/%d/%s", hv.Home.ID, suffix)
-}
-
-func (hv HomeView) SetCapacityID(prefix string) string {
-	return fmt.Sprintf("%sset-capacity-%d", prefix, hv.Home.ID)
 }
 
 func (h HomeView) OccupancyClass() string {
@@ -42,6 +49,37 @@ func (h Home) ToHomeView() HomeView {
 	return HomeView{
 		Home: h,
 	}
+}
+
+func (hv HomeView) AvailabilityDate() (Availability, DateView) {
+	tomorrow := DateViewFromTime(time.Now().AddDate(0, 0, 1))
+	for _, pv := range hv.UnavailablePeriods {
+		if pv.From.Before(tomorrow) && tomorrow.Before(pv.To) {
+			if pv.To.Year > tomorrow.Year+2 {
+				return AvailabilityUnavailableIndefinitely, pv.To
+			}
+			return AvailabilityUnavailableUntil, pv.To
+		}
+		if tomorrow.Before(pv.From) {
+			return AvailabilityAvailableUntil, pv.From
+		}
+	}
+	return AvailabilityAvailableIndefinitely, tomorrow
+}
+
+func (hv HomeView) AvailabilityString(language *Language) (Availability, string) {
+	availability, dv := hv.AvailabilityDate()
+	switch availability {
+	case AvailabilityAvailableIndefinitely:
+		return availability, language.HomeAvailableIndefinitely
+	case AvailabilityAvailableUntil:
+		return availability, language.HomeAvailableUntil(dv)
+	case AvailabilityUnavailableIndefinitely:
+		return availability, language.HomeUnavailableIndefinitely
+	case AvailabilityUnavailableUntil:
+		return availability, language.HomeUnavailableUntil(dv)
+	}
+	return availability, language.HomeAvailableIndefinitely
 }
 
 // ---- Patient
@@ -232,4 +270,83 @@ func (in GetSpeciesWithLanguageRow) ToSpeciesView(preferred bool) SpeciesView {
 		Name:      in.Name,
 		Preferred: preferred,
 	}
+}
+
+// ---- Period
+
+type PeriodView struct {
+	ID     int32
+	HomeID int32
+	From   DateView
+	To     DateView
+	Note   string
+}
+
+func (pv PeriodView) DeleteURL() string {
+	return fmt.Sprintf("/period/%d/delete", pv.ID)
+}
+
+func (in HomeUnavailable) ToPeriodView() PeriodView {
+	return PeriodView{
+		ID:     in.ID,
+		HomeID: in.HomeID,
+		From:   DateViewFromPGDate(in.FromDate),
+		To:     DateViewFromPGDate(in.ToDate),
+		Note:   in.Note.String,
+	}
+}
+
+type DateView struct {
+	Year  int
+	Month time.Month
+	Day   int // 1-31
+}
+
+func DateViewFromPGDate(pg pgtype.Date) DateView {
+	if pg.Valid {
+		return DateViewFromTime(pg.Time)
+	}
+	return DateView{}
+}
+
+func DateViewFromTime(t time.Time) DateView {
+	if t.IsZero() {
+		return DateView{}
+	}
+	return DateView{
+		Year:  t.Year(),
+		Month: t.Month(),
+		Day:   t.Day(),
+	}
+}
+
+func (dv DateView) Valid() bool {
+	return dv.Day != 0 && dv.Month >= 1 && dv.Month <= 12 && dv.Year > 0 && dv.Year < 10000
+}
+
+func (dv DateView) ToTime() time.Time {
+	return time.Date(dv.Year, dv.Month, dv.Day, 0, 0, 0, 0, time.UTC)
+}
+
+func (dv DateView) ToPGDate() pgtype.Date {
+	return pgtype.Date{
+		Time:  dv.ToTime(),
+		Valid: dv.Valid(),
+	}
+}
+
+func (dv DateView) Before(other DateView) bool {
+	if dv.Year < other.Year {
+		return true
+	}
+	if dv.Year > other.Year {
+		return false
+	}
+	if dv.Month < other.Month {
+		return true
+	}
+	if dv.Month > other.Month {
+		return false
+	}
+	return dv.Day < other.Day
 }

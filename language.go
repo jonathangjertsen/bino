@@ -60,17 +60,21 @@ type Language struct {
 	CheckinPatientName     string
 	CheckinYouAreHomeless  string
 
-	DashboardNoPatientsInHome    string
-	DashboardGoToJournal         string
-	DashboardGoToPatientPage     string
-	DashboardCheckOut            string
-	DashboardSearch              string
-	DashboardSelectHome          string
-	DashboardSelectCheckout      string
-	DashboardSelectTag           string
-	DashboardSelectSpecies       string
-	DashboardNonPreferredSpecies string
-	DashboardOtherHome           string
+	DashboardNoPatientsInHome      string
+	DashboardGoToJournal           string
+	DashboardGoToPatientPage       string
+	DashboardCheckOut              string
+	DashboardSearch                string
+	DashboardSearchFilter          string
+	DashboardSearchShowMine        string
+	DashboardSearchShowFull        string
+	DashboardSearchShowUnavailable string
+	DashboardSelectHome            string
+	DashboardSelectCheckout        string
+	DashboardSelectTag             string
+	DashboardSelectSpecies         string
+	DashboardNonPreferredSpecies   string
+	DashboardOtherHome             string
 
 	ErrorPageHead         string
 	ErrorPageInstructions string
@@ -113,6 +117,8 @@ type Language struct {
 	GenericDelete   string
 	GenericDetails  string
 	GenericEmail    string
+	GenericFrom     string
+	GenericTo       string
 	GenericGoBack   string
 	GenericHome     string
 	GenericJournal  string
@@ -121,6 +127,7 @@ type Language struct {
 	GenericMoveTo   string
 	GenericName     string
 	GenericNone     string
+	GenericNever    string
 	GenericNote     string
 	GenericNotFound string
 	GenericSpecies  string
@@ -132,20 +139,26 @@ type Language struct {
 	GenericMessage  string
 	GenericURL      string
 
-	HomesArchiveHome       string
-	HomesAddToHome         string
-	HomesAddUserToHome     string
-	HomesCreateHome        string
-	HomesCreateHomeNote    string
-	HomesEmptyHome         string
-	HomesHomeName          string
-	HomesRemoveFromCurrent string
-	HomesViewHomes         string
-	HomesUnassignedUsers   string
-	HomesPatients          string
-	HomesUsers             string
-	HomeCapacity           string
-	HomePreferredSpecies   string
+	HomesArchiveHome               string
+	HomesAddToHome                 string
+	HomesAddUserToHome             string
+	HomesCreateHome                string
+	HomesCreateHomeNote            string
+	HomesEmptyHome                 string
+	HomesHomeName                  string
+	HomesRemoveFromCurrent         string
+	HomesViewHomes                 string
+	HomesUnassignedUsers           string
+	HomesPatients                  string
+	HomesUsers                     string
+	HomeCapacity                   string
+	HomePreferredSpecies           string
+	HomeAvailability               string
+	HomePeriodInvalid              string
+	HomeAvailableIndefinitely      string
+	HomeUnavailableIndefinitely    string
+	HomeUnavailableFromInstruction string
+	HomeUnavailableToInstruction   string
 
 	LanguageUpdateFailed string
 
@@ -168,6 +181,34 @@ type Language struct {
 
 	Status map[Status]string
 	Event  map[Event]string
+}
+
+func (l *Language) HomeUnavailableUntil(dv DateView) string {
+	switch l.ID {
+	case LanguageIDNO:
+		if dv.Year > time.Now().Year()+2 {
+			return fmt.Sprintf("Utilgjengelig på ubestemt tid.")
+		}
+		return fmt.Sprintf("Utilgjengelig til og med den %d. %s %d.", dv.Day, l.Months[dv.Month], dv.Year)
+	case LanguageIDEN:
+		fallthrough
+	default:
+		if dv.Year > time.Now().Year()+2 {
+			return fmt.Sprintf("Unavailable until further notice.")
+		}
+		return fmt.Sprintf("Unavailable until %s %d %d.", l.Months[dv.Month], dv.Day, dv.Year)
+	}
+}
+
+func (l *Language) HomeAvailableUntil(dv DateView) string {
+	switch l.ID {
+	case LanguageIDNO:
+		return fmt.Sprintf("Blir utilgjengelig den %d. %s %d.", dv.Day, l.Months[dv.Month], dv.Year)
+	case LanguageIDEN:
+		fallthrough
+	default:
+		return fmt.Sprintf("Becomes unavailable from %s %d %d.", l.Months[dv.Month], dv.Day, dv.Year)
+	}
 }
 
 func (l *Language) TODO(s string) string {
@@ -244,17 +285,21 @@ var NO = &Language{
 	CheckinPatientName:     "Pasientens navn",
 	CheckinYouAreHomeless:  "Du kan ikke sjekke inn pasienter ennå fordi du ikke er koblet til et rehabhjem.",
 
-	DashboardNoPatientsInHome:    "Ingen pasienter",
-	DashboardGoToJournal:         "Gå til pasientjournal i Google Drive",
-	DashboardGoToPatientPage:     "Gå til pasientside",
-	DashboardCheckOut:            "Sjekk ut",
-	DashboardSearch:              "Søk",
-	DashboardSelectHome:          "Velg rehabhjem",
-	DashboardSelectCheckout:      "Velg status",
-	DashboardSelectTag:           "Velg tagg",
-	DashboardSelectSpecies:       "Velg art",
-	DashboardNonPreferredSpecies: "Andre arter",
-	DashboardOtherHome:           "Andre rehabhjem",
+	DashboardNoPatientsInHome:      "Ingen pasienter",
+	DashboardGoToJournal:           "Gå til pasientjournal i Google Drive",
+	DashboardGoToPatientPage:       "Gå til pasientside",
+	DashboardCheckOut:              "Sjekk ut",
+	DashboardSearch:                "Søk i rehabhjem og pasienter",
+	DashboardSearchFilter:          "Filtrer rehabhjem",
+	DashboardSearchShowMine:        "Vis mitt rehabhjem",
+	DashboardSearchShowFull:        "Vis fulle rehabhjem",
+	DashboardSearchShowUnavailable: "Vis utilgjengelige rehabhjem",
+	DashboardSelectHome:            "Velg rehabhjem",
+	DashboardSelectCheckout:        "Velg status",
+	DashboardSelectTag:             "Velg tagg",
+	DashboardSelectSpecies:         "Velg art",
+	DashboardNonPreferredSpecies:   "Andre arter",
+	DashboardOtherHome:             "Andre rehabhjem",
 
 	ErrorPageHead:         "Feilmelding",
 	ErrorPageInstructions: "Det skjedde noe feil under lasting av siden. Feilen har blitt logget og vil bli undersøkt. Send melding til administrator for hjelp. Den tekniske feilmeldingen følger under.",
@@ -295,6 +340,8 @@ var NO = &Language{
 	GenericDelete:   "Slett",
 	GenericDetails:  "Detaljer",
 	GenericEmail:    "Email",
+	GenericFrom:     "Fra",
+	GenericTo:       "Til",
 	GenericGoBack:   "Tilbake",
 	GenericHome:     "Rehabhjem",
 	GenericJournal:  "Journal",
@@ -303,6 +350,7 @@ var NO = &Language{
 	GenericMoveTo:   "Flytt til",
 	GenericName:     "Navn",
 	GenericNone:     "Ingen",
+	GenericNever:    "Aldri",
 	GenericNote:     "Notis",
 	GenericNotFound: "Ikke funnet",
 	GenericSpecies:  "Art",
@@ -314,19 +362,25 @@ var NO = &Language{
 	GenericMessage:  "Melding",
 	GenericURL:      "URL",
 
-	HomesAddToHome:         "Legg til",
-	HomesArchiveHome:       "Arkiver rehabhjem",
-	HomesCreateHome:        "Opprett nytt rehabhjem",
-	HomesCreateHomeNote:    "Navnet er som regel navnet på en person, men det kan være flere personer i ett rehabhjem, og en person kan være del av flere rehabhjem.",
-	HomesEmptyHome:         "Det er ingen brukere i dette rehabhjemmet.",
-	HomesHomeName:          "Rehabhjem",
-	HomesRemoveFromCurrent: "Fjern fra dette rehabhjemmet",
-	HomesUnassignedUsers:   "Brukere som ikke er koblet til noe rehabhjem",
-	HomesViewHomes:         "Rehabhjem",
-	HomesPatients:          "Pasienter",
-	HomesUsers:             "Brukere",
-	HomeCapacity:           "Kapasitet",
-	HomePreferredSpecies:   "Favoritter",
+	HomesAddToHome:                 "Legg til",
+	HomesArchiveHome:               "Arkiver rehabhjem",
+	HomesCreateHome:                "Opprett nytt rehabhjem",
+	HomesCreateHomeNote:            "Navnet er som regel navnet på en person, men det kan være flere personer i ett rehabhjem, og en person kan være del av flere rehabhjem.",
+	HomesEmptyHome:                 "Det er ingen brukere i dette rehabhjemmet.",
+	HomesHomeName:                  "Rehabhjem",
+	HomesRemoveFromCurrent:         "Fjern fra dette rehabhjemmet",
+	HomesUnassignedUsers:           "Brukere som ikke er koblet til noe rehabhjem",
+	HomesViewHomes:                 "Rehabhjem",
+	HomesPatients:                  "Pasienter",
+	HomesUsers:                     "Brukere",
+	HomeCapacity:                   "Kapasitet",
+	HomePreferredSpecies:           "Favoritter",
+	HomeAvailability:               "Tilgjengelighet",
+	HomePeriodInvalid:              "Perioden er ugyldig.",
+	HomeAvailableIndefinitely:      "Tilgjengelig.",
+	HomeUnavailableIndefinitely:    "Utilgjengelig på ubestemt tid.",
+	HomeUnavailableFromInstruction: "Datoen du blir utilgjengelig.",
+	HomeUnavailableToInstruction:   "Siste dato du er utilgjengelig.",
 
 	LanguageUpdateFailed: "Kunne ikke oppdatere språk",
 
@@ -448,17 +502,21 @@ var EN = &Language{
 	CheckinPatientName:     "Name of the patient",
 	CheckinYouAreHomeless:  "You can't check in patients yet because you're not connected to a rehab home.",
 
-	DashboardNoPatientsInHome:    "No patients",
-	DashboardGoToJournal:         "Go to patient journal in Google Drive",
-	DashboardGoToPatientPage:     "Go to patient page",
-	DashboardCheckOut:            "Checkout",
-	DashboardSearch:              "Search",
-	DashboardSelectHome:          "Select home",
-	DashboardSelectCheckout:      "Select status",
-	DashboardSelectTag:           "Select tag",
-	DashboardSelectSpecies:       "Select species",
-	DashboardNonPreferredSpecies: "Other species",
-	DashboardOtherHome:           "Other homes",
+	DashboardNoPatientsInHome:      "No patients",
+	DashboardGoToJournal:           "Go to patient journal in Google Drive",
+	DashboardGoToPatientPage:       "Go to patient page",
+	DashboardCheckOut:              "Checkout",
+	DashboardSearch:                "Search in homes and patients",
+	DashboardSearchFilter:          "Filter homes",
+	DashboardSearchShowMine:        "Show my home",
+	DashboardSearchShowFull:        "Show full homes",
+	DashboardSearchShowUnavailable: "Show unavailable homes",
+	DashboardSelectHome:            "Select home",
+	DashboardSelectCheckout:        "Select status",
+	DashboardSelectTag:             "Select tag",
+	DashboardSelectSpecies:         "Select species",
+	DashboardNonPreferredSpecies:   "Other species",
+	DashboardOtherHome:             "Other homes",
 
 	ErrorPageHead:         "Error",
 	ErrorPageInstructions: "An error occurred while loading the page. The error has been logged and will be investigated. Send a message to the site admin for help. The technical error message is as follows.",
@@ -501,6 +559,8 @@ var EN = &Language{
 	GenericDelete:   "Delete",
 	GenericDetails:  "Details",
 	GenericEmail:    "Email",
+	GenericFrom:     "From",
+	GenericTo:       "To",
 	GenericGoBack:   "Go back",
 	GenericHome:     "Home",
 	GenericJournal:  "Journal",
@@ -509,6 +569,7 @@ var EN = &Language{
 	GenericMoveTo:   "Move to",
 	GenericName:     "Name",
 	GenericNone:     "None",
+	GenericNever:    "Never",
 	GenericNote:     "Note",
 	GenericNotFound: "Not found",
 	GenericSpecies:  "Species",
@@ -520,19 +581,25 @@ var EN = &Language{
 	GenericMessage:  "Message",
 	GenericURL:      "URL",
 
-	HomesAddToHome:         "Add",
-	HomesArchiveHome:       "Archive rehab home",
-	HomesCreateHome:        "Create new rehab home",
-	HomesCreateHomeNote:    "The name is usually that of a person, but there can be multiple people in a rehab home, and one person can be associated with several rehab homes.",
-	HomesEmptyHome:         "There are no users in this rehab home.",
-	HomesHomeName:          "Name",
-	HomesRemoveFromCurrent: "Remove from this rehab home",
-	HomesUnassignedUsers:   "Users that are not associated with any rehab homes",
-	HomesViewHomes:         "Rehab homes",
-	HomesPatients:          "Patients",
-	HomesUsers:             "Users",
-	HomeCapacity:           "Capacity",
-	HomePreferredSpecies:   "Favorites",
+	HomesAddToHome:                 "Add",
+	HomesArchiveHome:               "Archive rehab home",
+	HomesCreateHome:                "Create new rehab home",
+	HomesCreateHomeNote:            "The name is usually that of a person, but there can be multiple people in a rehab home, and one person can be associated with several rehab homes.",
+	HomesEmptyHome:                 "There are no users in this rehab home.",
+	HomesHomeName:                  "Name",
+	HomesRemoveFromCurrent:         "Remove from this rehab home",
+	HomesUnassignedUsers:           "Users that are not associated with any rehab homes",
+	HomesViewHomes:                 "Rehab homes",
+	HomesPatients:                  "Patients",
+	HomesUsers:                     "Users",
+	HomeCapacity:                   "Capacity",
+	HomePreferredSpecies:           "Favorites",
+	HomeAvailability:               "Availability",
+	HomePeriodInvalid:              "Invalid period.",
+	HomeAvailableIndefinitely:      "Available.",
+	HomeUnavailableIndefinitely:    "Unavailable until further notice.",
+	HomeUnavailableFromInstruction: "The date when you become unavailable.",
+	HomeUnavailableToInstruction:   "The last date when you are unavailable.",
 
 	LanguageUpdateFailed: "Failed to update language",
 
