@@ -1,7 +1,15 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    queries: "query.sql"
+    queries:
+    - "sql-event.sql"
+    - "sql-home.sql"
+    - "sql-invitation.sql"
+    - "sql-patient.sql"
+    - "sql-session.sql"
+    - "sql-species.sql"
+    - "sql-tags.sql"
+    - "sql-user.sql"
     schema: "migrations"
     gen:
       go:
