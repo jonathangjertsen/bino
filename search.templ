@@ -1,0 +1,63 @@
+package main
+
+templ SearchPage(data *CommonData, q string, matches []MatchView) {
+	@Layout(data) {
+        <div class="search">
+            <div class="card p-2 form-control">
+                <label for="live-q">{data.User.Language.GenericSearch}</label>
+                <input
+                    class="form-control input"
+                    id="live-q"
+                    name="q"
+                    hx-get="/search/live"
+                    hx-trigger="input changed, keyup[key=='Enter']"
+                    hx-target="#live-matches"
+                    hx-indicator=".htmx-indicator"
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    value={q}
+                >
+            </div>
+        </div>
+        <span class="htmx-indicator">
+            Searching...
+        </span>
+        @SearchMatches(data, q, matches)
+	}
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js" integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz" crossorigin="anonymous"></script>
+}
+
+templ SearchMatches(data *CommonData, q string, matches []MatchView) {
+    <div class="card p-2 matches" id="live-matches">
+        if len(matches) > 0 {
+            for _, match := range matches {
+                <div class="card">
+                    <div class="card-header">
+                        <a href={match.URL}>
+                            @Runs(match.HeaderRuns)
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <pre>
+                            @Runs(match.BodyRuns)
+                        </pre>
+                    </div>
+                </div>
+            }
+        } else {
+            <p>{data.User.Language.GenericNotFound}: <code>{q}</code></p>
+        }
+    </div>
+}
+
+
+templ Runs(runs []HighlightRun) {
+	for _, run := range runs {
+		if run.Hit {
+			<mark class="hl">{run.Text}</mark>
+		} else {
+			{run.Text}
+		}
+	}
+}

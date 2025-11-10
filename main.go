@@ -38,7 +38,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	worker := NewGDriveWorker(config.GoogleDrive, gdriveSA, cache)
+	worker := NewGDriveWorker(ctx, config.GoogleDrive, gdriveSA, cache)
 
 	go backgroundDeleteExpiredItems(ctx, queries)
 

@@ -76,6 +76,7 @@ templ Navbar(data *CommonData) {
                 @NavbarPageLink(data.User.Language.Calendar, "/calendar")
                 @NavbarPageLink(data.User.Language.FormerPatients, "/former-patients")
                 @NavbarPageLink(data.User.Language.AdminRoot, "/admin")
+                @FullTextSearch(data)
                 @LanguageSelect(data)
                 @SelfInfo(&data.User)
                 @AuthLogOut(&data.User)
@@ -98,6 +99,27 @@ templ LanguageSelect(data *CommonData) {
                     <option value={language} selected?={language == data.User.Language.ID}>{Languages[int32(language)].Emoji}</option>
                 }
             </select>
+        </form>
+    </div>
+}
+
+templ FullTextSearch(data *CommonData) {
+    <div class="b-navbar-item">
+        <form class="d-flex" action="/search" method="get">
+            <div class="input-group">
+                <input 
+                    id="search-q"
+                    class="form-input form-control"
+                    name="q"
+                    placeholder={data.User.Language.GenericSearch}
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                >
+                <div class="input-group-append">
+                    <button class="btn btn-success" type="submit" >🔍</button>
+                </div>
+            </div>
         </form>
     </div>
 }

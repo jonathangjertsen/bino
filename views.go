@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -394,4 +395,52 @@ type EventView struct {
 
 func (ev *EventView) SetNoteURL() string {
 	return fmt.Sprintf("/event/%d/set-note", ev.Row.ID)
+}
+
+// ---- Match
+
+type MatchView struct {
+	URL        string
+	HeaderRuns []HighlightRun
+	BodyRuns   []HighlightRun
+}
+
+func (in *SearchRow) ToMatchView() MatchView {
+	return MatchView{
+		URL:        "TODO",
+		HeaderRuns: ParseHeadline(in.HeaderHeadline),
+		BodyRuns:   ParseHeadline(in.BodyHeadline),
+	}
+}
+
+type HighlightRun struct {
+	Text string
+	Hit  bool
+}
+
+func ParseHeadline(s string) []HighlightRun {
+	const start = "[START]"
+	const stop = "[STOP]"
+	var out []HighlightRun
+	i := 0
+	for i < len(s) {
+		ix := strings.Index(s[i:], start)
+		if ix < 0 {
+			out = append(out, HighlightRun{Text: s[i:], Hit: false})
+			break
+		}
+		ix += i
+		if ix > i {
+			out = append(out, HighlightRun{Text: s[i:ix], Hit: false})
+		}
+		j := strings.Index(s[ix+len(start):], stop)
+		if j < 0 {
+			out = append(out, HighlightRun{Text: s[ix:], Hit: false})
+			break
+		}
+		j += ix + len(start)
+		out = append(out, HighlightRun{Text: s[ix+len(start) : j], Hit: true})
+		i = j + len(stop)
+	}
+	return out
 }

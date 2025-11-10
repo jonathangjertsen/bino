@@ -160,6 +160,8 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 	mux.Handle("GET /user/{user}", chainf(server.getUserHandler, requiresLogin...))
 	mux.Handle("GET /former-patients", chainf(server.formerPatientsHandler, requiresLogin...))
 	mux.Handle("GET /calendar", chainf(server.calendarHandler, requiresLogin...))
+	mux.Handle("GET /search", chainf(server.searchHandler, requiresLogin...))
+	mux.Handle("GET /search/live", chainf(server.searchLiveHandler, requiresLogin...))
 	// Forms
 	mux.Handle("POST /checkin", chainf(server.postCheckinHandler, requiresRehabber...))
 	mux.Handle("POST /privacy", chainf(server.postPrivacyHandler, requiresLogin...))

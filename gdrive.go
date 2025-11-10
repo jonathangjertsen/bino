@@ -5,11 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"regexp"
 	"slices"
+	"time"
 
 	"google.golang.org/api/docs/v1"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
+)
+
+var (
+	reDeleteImages = regexp.MustCompile(`<data:image/[a-zA-Z]+;base64,[^>]+>`)
 )
 
 type GDrive struct {
@@ -46,10 +52,13 @@ func NewGDriveWithServiceAccount(ctx context.Context, config GDriveConfig, queri
 }
 
 type GDriveItem struct {
-	ID          string
-	Name        string
-	Valid       bool
-	Permissions []GDrivePermission
+	ID    string
+	Name  string
+	Valid bool
+
+	// Optional
+	Permissions  []GDrivePermission
+	ModifiedTime time.Time
 }
 
 func (item *GDriveItem) FolderURL() string {
@@ -76,19 +85,26 @@ func GDriveItemFromFile(f *drive.File, p *drive.PermissionList) GDriveItem {
 	if f == nil {
 		return GDriveItem{}
 	}
-	return GDriveItem{
-		ID:    f.Id,
-		Name:  f.Name,
-		Valid: true,
-		Permissions: SliceToSlice(p.Permissions, func(p *drive.Permission) GDrivePermission {
+	var permissions []GDrivePermission
+	if p != nil {
+		permissions = SliceToSlice(p.Permissions, func(p *drive.Permission) GDrivePermission {
 			return GDrivePermission{
 				DisplayName: p.DisplayName,
 				Email:       p.EmailAddress,
 				Role:        p.Role,
 			}
-		}),
+		})
 	}
 
+	modifiedTime, _ := time.Parse(time.RFC3339, f.ModifiedTime)
+
+	return GDriveItem{
+		ID:           f.Id,
+		Name:         f.Name,
+		Valid:        true,
+		Permissions:  permissions,
+		ModifiedTime: modifiedTime,
+	}
 }
 
 type GDrivePermission struct {
@@ -151,6 +167,9 @@ func (g *GDrive) ReadDocument(id string) (GDriveJournal, error) {
 	if err != nil {
 		return GDriveJournal{}, err
 	}
+
+	content = reDeleteImages.ReplaceAll(content, []byte{})
+
 	return GDriveJournal{
 		Content: string(content),
 		Item:    item,

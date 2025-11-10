@@ -10,9 +10,15 @@ sql:
     - "sql-species.sql"
     - "sql-tag.sql"
     - "sql-user.sql"
+    - "sql-search.sql"
     schema: "migrations"
     gen:
       go:
         package: "main"
         out: "."
         sql_package: "pgx/v5"
+        overrides:
+          - db_type: regconfig
+            nullable: false
+            go_type:
+              type: string

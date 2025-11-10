@@ -292,6 +292,33 @@ func (q *Queries) GetPatientWithSpecies(ctx context.Context, arg GetPatientWithS
 	return i, err
 }
 
+const getPatientsByJournalURL = `-- name: GetPatientsByJournalURL :many
+SELECT
+  p.id
+FROM patient AS p
+WHERE p.journal_url LIKE CONCAT('%', $1::TEXT, '%')
+`
+
+func (q *Queries) GetPatientsByJournalURL(ctx context.Context, lookup string) ([]int32, error) {
+	rows, err := q.db.Query(ctx, getPatientsByJournalURL, lookup)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int32
+	for rows.Next() {
+		var id int32
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const movePatient = `-- name: MovePatient :exec
 UPDATE patient
 SET curr_home_id = $2

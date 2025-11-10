@@ -144,6 +144,7 @@ type Language struct {
 	GenericSuccess  string
 	GenericMessage  string
 	GenericURL      string
+	GenericSearch   string
 
 	HomesArchiveHome               string
 	HomesAddToHome                 string
@@ -396,6 +397,7 @@ var NO = &Language{
 	GenericSuccess:  "Handlingen ble utført.",
 	GenericMessage:  "Melding",
 	GenericURL:      "URL",
+	GenericSearch:   "Søk",
 
 	HomesAddToHome:                 "Legg til",
 	HomesArchiveHome:               "Arkiver rehabhjem",
@@ -628,6 +630,7 @@ var EN = &Language{
 	GenericSuccess:  "Success.",
 	GenericMessage:  "Message",
 	GenericURL:      "URL",
+	GenericSearch:   "Search",
 
 	HomesAddToHome:                 "Add",
 	HomesArchiveHome:               "Archive rehab home",

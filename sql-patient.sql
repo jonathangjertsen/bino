@@ -16,6 +16,13 @@ WHERE curr_home_id IS NOT NULL
 ORDER BY p.curr_home_id, p.sort_order, p.id
 ;
 
+-- name: GetPatientsByJournalURL :many
+SELECT
+  p.id
+FROM patient AS p
+WHERE p.journal_url LIKE CONCAT('%', @lookup::TEXT, '%')
+;
+
 -- name: GetFormerPatients :many
 SELECT
   p.id,

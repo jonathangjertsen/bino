@@ -2,15 +2,22 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
+	"strings"
+	"time"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/api/drive/v3"
 )
 
 const (
 	maxNConcurrentGDriveTaskRequests = 100
 	nWorkers                         = 1
+	timeFormatDriveQ                 = "2006-01-02T15:04:05"
 )
 
 // ENUM(
@@ -18,6 +25,7 @@ const (
 //	GetFile,
 //	InviteUser,
 //	CreateJournal,
+//	ListFiles,
 //
 // )
 type GDriveTaskRequestID int
@@ -66,6 +74,25 @@ func newGDriveTaskRequestInviteUser(id, email, role string) GDriveTaskRequest {
 	return req
 }
 
+type ListFilesParams struct {
+	Parent         string
+	ModifiedAfter  time.Time
+	ModifiedBefore time.Time
+	PageToken      string
+}
+
+type ListFilesResult struct {
+	Files         []GDriveItem
+	NextPageToken string
+}
+
+func newGDriveTaskRequestListFiles(params ListFilesParams) GDriveTaskRequest {
+	req := newGDriveTaskRequest()
+	req.Type = GDriveTaskRequestIDListFiles
+	req.Payload = params
+	return req
+}
+
 func newGDriveTaskRequestCreateJournal(vars GDriveTemplateVars) GDriveTaskRequest {
 	req := newGDriveTaskRequest()
 	req.Type = GDriveTaskRequestIDCreateJournal
@@ -88,12 +115,21 @@ func (req GDriveTaskRequest) decodeInviteUser() (payloadInviteUser, error) {
 	}
 	return inv, nil
 }
+
 func (req GDriveTaskRequest) decodeCreateJournal() (GDriveTemplateVars, error) {
 	vars, ok := req.Payload.(GDriveTemplateVars)
 	if !ok {
 		return GDriveTemplateVars{}, fmt.Errorf("decodeCreateJournal called on request with payload of type %T", req.Payload)
 	}
 	return vars, nil
+}
+
+func (req GDriveTaskRequest) decodeListFiles() (ListFilesParams, error) {
+	payload, ok := req.Payload.(ListFilesParams)
+	if !ok {
+		return ListFilesParams{}, fmt.Errorf("decodeListFiles called on request with payload of type %T", req.Payload)
+	}
+	return payload, nil
 }
 
 func (resp GDriveTaskResponse) decodeError() error {
@@ -141,13 +177,27 @@ func (resp GDriveTaskResponse) decodeCreateJournal() (GDriveItem, error) {
 	return item, nil
 }
 
+func (resp GDriveTaskResponse) decodeListFiles() (ListFilesResult, error) {
+	if err := resp.decodeError(); err != nil {
+		return ListFilesResult{}, err
+	}
+	if resp.Type != GDriveTaskRequestIDListFiles {
+		return ListFilesResult{}, fmt.Errorf("decodeListFiles called on response of type %s", resp.Type.String())
+	}
+	result, ok := resp.Payload.(ListFilesResult)
+	if !ok {
+		return ListFilesResult{}, fmt.Errorf("decodeListFiles called with bad payload type %T", resp.Payload)
+	}
+	return result, nil
+}
+
 type GDriveTaskResponse struct {
 	Type    GDriveTaskRequestID
 	Error   error
 	Payload any
 }
 
-func NewGDriveWorker(cfg GDriveConfig, g *GDrive, c *Cache) *GDriveWorker {
+func NewGDriveWorker(ctx context.Context, cfg GDriveConfig, g *GDrive, c *Cache) *GDriveWorker {
 	w := &GDriveWorker{
 		cfg: cfg,
 		g:   g,
@@ -155,10 +205,12 @@ func NewGDriveWorker(cfg GDriveConfig, g *GDrive, c *Cache) *GDriveWorker {
 		in:  make(chan GDriveTaskRequest, maxNConcurrentGDriveTaskRequests),
 	}
 
-	// Warm the cache on gdrive info
+	// Warm the cache on gdrive info, then start pollin
 	go func() {
 		c.Delete("gdrive-config-info")
 		_ = w.GetGDriveConfigInfo()
+
+		w.poller(ctx)
 	}()
 
 	// Workers
@@ -166,17 +218,79 @@ func NewGDriveWorker(cfg GDriveConfig, g *GDrive, c *Cache) *GDriveWorker {
 		go w.worker(i)
 	}
 
-	// Watcher
-	go w.watcher()
-
 	return w
 }
 
-func (w *GDriveWorker) watcher() {
+func (w *GDriveWorker) poller(ctx context.Context) {
 	for {
-		info := w.GetGDriveConfigInfo()
-		w.g.Drive.Files.Watch(info.JournalFolder.ID, &drive.Channel{})
+		if err := w.pollOnce(ctx); err != nil {
+			fmt.Printf("ERROR: %v\n", err)
+		}
+		time.Sleep(time.Minute * 10)
 	}
+}
+
+func (w *GDriveWorker) pollOnce(ctx context.Context) error {
+	res, err := w.ListFiles(ListFilesParams{
+		Parent: w.cfg.JournalFolder,
+	})
+	if err != nil {
+		return err
+	}
+	for _, file := range res.Files {
+		ids, err := w.g.Queries.GetPatientsByJournalURL(ctx, file.ID)
+		if err != nil {
+			fmt.Printf("%+v\n", err)
+			continue
+		}
+		var assocID int32
+		if len(ids) == 0 {
+			fmt.Printf("no patient found with journal = %s\n", file.Name)
+			continue
+		} else if len(ids) > 1 {
+			fmt.Printf("multiple patients found with journal = %s: %v", file.Name, ids)
+		}
+		assocID = ids[0]
+
+		updated, err := w.g.Queries.GetSearchUpdatedTime(ctx, GetSearchUpdatedTimeParams{
+			Namespace:    "journal",
+			AssociatedID: assocID,
+		})
+		if err != nil {
+			if !errors.Is(err, pgx.ErrNoRows) {
+				fmt.Printf("getting update time for %s: %v", file.Name, err)
+			}
+			updated = pgtype.Timestamptz{}
+		}
+
+		if updated.Valid && !updated.Time.Before(file.ModifiedTime) {
+			fmt.Printf("stored journal is up to date with file for %s (updated=%s, modified=%s)\n", file.Name, updated.Time, file.ModifiedTime)
+			continue
+		}
+		fmt.Printf("updated=%+v filemf=%+v\n", updated, file.ModifiedTime)
+
+		journal, err := w.g.ReadDocument(file.ID)
+		if err != nil {
+			fmt.Printf("%v\n", err)
+			continue
+		}
+		for _, id := range ids {
+			fmt.Printf("%s -> %v\n", file.Name, id)
+		}
+		if err := w.g.Queries.UpsertSearchEntry(ctx, UpsertSearchEntryParams{
+			Namespace:    "journal",
+			AssociatedID: assocID,
+			Updated:      pgtype.Timestamptz{Time: file.ModifiedTime, Valid: !file.ModifiedTime.IsZero()},
+			Header:       pgtype.Text{String: file.Name, Valid: true},
+			Body:         pgtype.Text{String: journal.Content, Valid: true},
+			Lang:         "norwegian",
+		}); err != nil {
+			fmt.Printf("%v inserting journal=%s\n", err, journal.Content)
+			continue
+		}
+	}
+
+	return nil
 }
 
 type GDriveConfigInfo struct {
@@ -226,6 +340,10 @@ func (w *GDriveWorker) CreateJournal(vars GDriveTemplateVars) (GDriveItem, error
 	return w.Exec(newGDriveTaskRequestCreateJournal(vars)).decodeCreateJournal()
 }
 
+func (w *GDriveWorker) ListFiles(params ListFilesParams) (ListFilesResult, error) {
+	return w.Exec(newGDriveTaskRequestListFiles(params)).decodeListFiles()
+}
+
 func (w *GDriveWorker) worker(workerID int) {
 	for {
 		req := <-w.in
@@ -244,6 +362,8 @@ func (w *GDriveWorker) handleRequest(req GDriveTaskRequest) GDriveTaskResponse {
 		return w.handleRequestInviteUser(req)
 	case GDriveTaskRequestIDCreateJournal:
 		return w.handleRequestCreateJournal(req)
+	case GDriveTaskRequestIDListFiles:
+		return w.handleRequestListFiles(req)
 	}
 	return w.errorResponse(req, fmt.Errorf("unknown request type"))
 }
@@ -298,6 +418,61 @@ func (w *GDriveWorker) handleRequestCreateJournal(req GDriveTaskRequest) GDriveT
 		return w.errorResponse(req, err)
 	}
 	return w.successResponse(req, item)
+}
+
+func (w *GDriveWorker) handleRequestListFiles(req GDriveTaskRequest) GDriveTaskResponse {
+	params, err := req.decodeListFiles()
+	if err != nil {
+		return w.errorResponse(req, err)
+	}
+
+	call := w.g.Drive.Files.List()
+
+	if w.g.DriveBase != "" {
+		call = call.
+			SupportsAllDrives(true)
+		call = call.DriveId(w.cfg.DriveBase)
+		call = call.IncludeItemsFromAllDrives(true)
+		call = call.Corpora("drive")
+	}
+
+	rules := []string{
+		"mimeType = 'application/vnd.google-apps.document'",
+		fmt.Sprintf("'%s' in parents", w.cfg.JournalFolder),
+	}
+
+	if !params.ModifiedAfter.IsZero() {
+		rules = append(rules, fmt.Sprintf("modifiedTime > '%s'", params.ModifiedAfter.Format(timeFormatDriveQ)))
+	}
+	if !params.ModifiedBefore.IsZero() {
+		rules = append(rules, fmt.Sprintf("modifiedTime < '%s'", params.ModifiedBefore.Format(timeFormatDriveQ)))
+	}
+
+	q := strings.Join(rules, " and ")
+	call = call.Q(q)
+
+	if params.PageToken != "" {
+		call = call.PageToken(params.PageToken)
+	}
+
+	call = call.OrderBy("modifiedTime desc")
+	call = call.Fields("files(id, name, modifiedTime)")
+
+	fileList, err := call.Do()
+	if err != nil {
+		return w.errorResponse(req, err)
+	}
+
+	return GDriveTaskResponse{
+		Type: GDriveTaskRequestIDListFiles,
+		Payload: ListFilesResult{
+			Files: SliceToSlice(fileList.Files, func(in *drive.File) GDriveItem {
+				return GDriveItemFromFile(in, nil)
+			}),
+			NextPageToken: fileList.NextPageToken,
+		},
+		Error: nil,
+	}
 }
 
 func (w *GDriveWorker) errorResponse(req GDriveTaskRequest, err error) GDriveTaskResponse {

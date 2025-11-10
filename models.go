@@ -93,6 +93,17 @@ type PatientTag struct {
 	TagID     int32
 }
 
+type Search struct {
+	Ns           string
+	AssociatedID int32
+	Updated      pgtype.Timestamptz
+	Header       pgtype.Text
+	Body         pgtype.Text
+	Lang         interface{}
+	FtsHeader    interface{}
+	FtsBody      interface{}
+}
+
 type Session struct {
 	ID        string
 	AppuserID int32
