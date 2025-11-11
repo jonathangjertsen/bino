@@ -94,14 +94,14 @@ type PatientTag struct {
 }
 
 type Search struct {
-	Ns           string
-	AssociatedID int32
-	Updated      pgtype.Timestamptz
-	Header       pgtype.Text
-	Body         pgtype.Text
-	Lang         interface{}
-	FtsHeader    interface{}
-	FtsBody      interface{}
+	Ns            string
+	Updated       pgtype.Timestamptz
+	Header        pgtype.Text
+	Body          pgtype.Text
+	Lang          interface{}
+	FtsHeader     interface{}
+	FtsBody       interface{}
+	AssociatedUrl pgtype.Text
 }
 
 type Session struct {

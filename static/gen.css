@@ -12211,4 +12211,28 @@ mark.hl {
   box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
 }
 
+.match-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 2em;
+}
+
+.matches .fragment {
+  position: relative;
+}
+.matches .fragment::after {
+  content: "·";
+  display: block;
+  text-align: center;
+  color: black;
+}
+.matches .fragment:last-of-type::after {
+  content: none;
+}
+.matches .fragment pre {
+  margin: 0.25rem 0;
+  white-space: pre-wrap;
+  font-family: inherit;
+}
+
 /*# sourceMappingURL=gen.css.map */

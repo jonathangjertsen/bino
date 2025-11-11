@@ -399,18 +399,99 @@ func (ev *EventView) SetNoteURL() string {
 
 // ---- Match
 
+// ENUM(journal, patient)
+type MatchType string
+
 type MatchView struct {
-	URL        string
-	HeaderRuns []HighlightRun
-	BodyRuns   []HighlightRun
+	URL           string
+	Type          MatchType
+	HeaderRuns    []HighlightRun
+	BodyFragments []HighlightFragment
 }
 
-func (in *SearchRow) ToMatchView() MatchView {
-	return MatchView{
-		URL:        "TODO",
-		HeaderRuns: ParseHeadline(in.HeaderHeadline),
-		BodyRuns:   ParseHeadline(in.BodyHeadline),
+type HighlightFragment struct {
+	Runs []HighlightRun
+}
+
+func SplitFragments(runs []HighlightRun) []HighlightFragment {
+	var frags []HighlightFragment
+	var current []HighlightRun
+
+	for _, r := range runs {
+		if strings.Contains(r.Text, "[CUT]") {
+			parts := strings.Split(r.Text, "[CUT]")
+			for i, part := range parts {
+				if part != "" {
+					current = append(current, HighlightRun{Text: part, Hit: r.Hit})
+				}
+				// every [CUT] ends the current fragment
+				if i < len(parts)-1 {
+					if len(current) > 0 {
+						frags = append(frags, HighlightFragment{Runs: current})
+						current = nil
+					}
+				}
+			}
+		} else {
+			current = append(current, r)
+		}
 	}
+
+	if len(current) > 0 {
+		frags = append(frags, HighlightFragment{Runs: current})
+	}
+
+	return frags
+}
+
+func (in *SearchBasicRow) ToMatchView() MatchView {
+	headerRuns := ParseHeadline(in.HeaderHeadline)
+	bodyRuns := ParseHeadline(in.BodyHeadline)
+
+	url := "TODO"
+	if in.AssociatedUrl.Valid {
+		url = in.AssociatedUrl.String
+	}
+
+	return MatchView{
+		URL:           url,
+		Type:          MatchType(in.Ns),
+		HeaderRuns:    headerRuns,
+		BodyFragments: SplitFragments(bodyRuns),
+	}
+}
+
+func (in *SearchAdvancedRow) ToMatchView(q string) MatchView {
+	headerRuns := ParseHeadline(in.HeaderHeadline)
+	if !hasHit(headerRuns) {
+		headerRuns = HighlightFallback(in.Header, q)
+	}
+
+	bodyRuns := ParseHeadline(in.BodyHeadline)
+	if !hasHit(bodyRuns) {
+		bodyRuns = HighlightFallback(in.Body, q)
+	}
+
+	url := "TODO"
+	if in.AssociatedUrl.Valid {
+		url = in.AssociatedUrl.String
+	}
+
+	return MatchView{
+		URL:           url,
+		Type:          MatchType(in.Ns),
+		HeaderRuns:    headerRuns,
+		BodyFragments: SplitFragments(bodyRuns),
+	}
+}
+
+func hasHit(runs []HighlightRun) bool {
+	for _, r := range runs {
+		if r.Hit {
+			return true
+		}
+	}
+	return false
 }
 
 type HighlightRun struct {
@@ -442,5 +523,57 @@ func ParseHeadline(s string) []HighlightRun {
 		out = append(out, HighlightRun{Text: s[ix+len(start) : j], Hit: true})
 		i = j + len(stop)
 	}
+	return out
+}
+
+func HighlightFallback(text, query string) []HighlightRun {
+	const context = 40 // number of chars of context on each side
+	lowerText := strings.ToLower(text)
+	lowerQuery := strings.ToLower(query)
+	var out []HighlightRun
+
+	pos := 0
+	for {
+		i := strings.Index(lowerText[pos:], lowerQuery)
+		if i < 0 {
+			break
+		}
+		i += pos
+		start := max(0, i-context)
+		end := min(len(text), i+len(query)+context)
+
+		// Add ellipsis if we skipped earlier text
+		if len(out) == 0 && start > 0 {
+			out = append(out, HighlightRun{Text: "[CUT]", Hit: false})
+		}
+
+		out = append(out,
+			HighlightRun{Text: text[start:i], Hit: false},
+			HighlightRun{Text: text[i : i+len(query)], Hit: true},
+		)
+
+		pos = end
+		if pos < len(text) {
+			out = append(out, HighlightRun{Text: text[i+len(query) : pos], Hit: false})
+		}
+
+		if pos < len(text) {
+			out = append(out, HighlightRun{Text: "[CUT]", Hit: false})
+		}
+
+		// Limit to a few snippets
+		if len(out) > 5 {
+			break
+		}
+	}
+
+	if len(out) == 0 {
+		// no match, take leading snippet
+		if len(text) > 2*context {
+			return []HighlightRun{{Text: text[:2*context] + "[CUT]", Hit: false}}
+		}
+		return []HighlightRun{{Text: text, Hit: false}}
+	}
+
 	return out
 }

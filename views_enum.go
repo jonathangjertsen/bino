@@ -71,3 +71,45 @@ func ParseAvailability(name string) (Availability, error) {
 	}
 	return Availability(0), fmt.Errorf("%s is %w", name, ErrInvalidAvailability)
 }
+
+const (
+	// MatchTypeJournal is a MatchType of type journal.
+	MatchTypeJournal MatchType = "journal"
+	// MatchTypePatient is a MatchType of type patient.
+	MatchTypePatient MatchType = "patient"
+)
+
+var ErrInvalidMatchType = errors.New("not a valid MatchType")
+
+// MatchTypeValues returns a list of the values for MatchType
+func MatchTypeValues() []MatchType {
+	return []MatchType{
+		MatchTypeJournal,
+		MatchTypePatient,
+	}
+}
+
+// String implements the Stringer interface.
+func (x MatchType) String() string {
+	return string(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x MatchType) IsValid() bool {
+	_, err := ParseMatchType(string(x))
+	return err == nil
+}
+
+var _MatchTypeValue = map[string]MatchType{
+	"journal": MatchTypeJournal,
+	"patient": MatchTypePatient,
+}
+
+// ParseMatchType attempts to convert a string to a MatchType.
+func ParseMatchType(name string) (MatchType, error) {
+	if x, ok := _MatchTypeValue[name]; ok {
+		return x, nil
+	}
+	return MatchType(""), fmt.Errorf("%s is %w", name, ErrInvalidMatchType)
+}

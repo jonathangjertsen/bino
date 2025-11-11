@@ -183,11 +183,15 @@ type Language struct {
 	UserHomes      string
 	UserIsHomeless string
 
+	SearchModeBasic    string
+	SearchModeAdvanced string
+
 	NavbarCalendar  string
 	NavbarDashboard string
 
-	Status map[Status]string
-	Event  map[Event]string
+	Status    map[Status]string
+	Event     map[Event]string
+	MatchType map[MatchType]string
 }
 
 func (l *Language) HomeUnavailableUntil(dv DateView) string {
@@ -438,6 +442,9 @@ var NO = &Language{
 	UserHomes:      "Tilkoblede rehabhjem",
 	UserIsHomeless: "Ingen tilkoblede rehabhjem",
 
+	SearchModeBasic:    "Raskt",
+	SearchModeAdvanced: "Grundig",
+
 	Status: map[Status]string{
 		StatusUnknown:                        "Ukjent",
 		StatusAdmitted:                       "I rehab",
@@ -466,6 +473,11 @@ var NO = &Language{
 		EventJournalCreated:                 "Opprettet journal i Google Drive",
 		EventJournalAttached:                "Koblet til journal i Google Drive",
 		EventJournalDetached:                "Koblet fra journal i Google Drive",
+	},
+
+	MatchType: map[MatchType]string{
+		MatchTypeJournal: "📝 Journal",
+		MatchTypePatient: "❤️‍🩹 Pasient",
 	},
 }
 
@@ -668,6 +680,9 @@ var EN = &Language{
 	UserHomes:      "Associated rehab homes",
 	UserIsHomeless: "No associated rehab homes",
 
+	SearchModeBasic:    "Fast",
+	SearchModeAdvanced: "Thorough",
+
 	Status: map[Status]string{
 		StatusUnknown:                        "Unknown",
 		StatusAdmitted:                       "In rehab",
@@ -696,6 +711,11 @@ var EN = &Language{
 		EventJournalCreated:                 "Created journal",
 		EventJournalAttached:                "Linked journal",
 		EventJournalDetached:                "Unlinked journal",
+	},
+
+	MatchType: map[MatchType]string{
+		MatchTypeJournal: "📝 Journal",
+		MatchTypePatient: "❤️‍🩹 Patient",
 	},
 }
 

@@ -243,18 +243,16 @@ func (w *GDriveWorker) pollOnce(ctx context.Context) error {
 			fmt.Printf("%+v\n", err)
 			continue
 		}
-		var assocID int32
-		if len(ids) == 0 {
-			fmt.Printf("no patient found with journal = %s\n", file.Name)
-			continue
-		} else if len(ids) > 1 {
-			fmt.Printf("multiple patients found with journal = %s: %v", file.Name, ids)
+		var namespace = "journal"
+		url := file.DocumentURL()
+		if len(ids) == 1 {
+			namespace = "patient"
+			url = PatientURL(ids[0])
 		}
-		assocID = ids[0]
 
 		updated, err := w.g.Queries.GetSearchUpdatedTime(ctx, GetSearchUpdatedTimeParams{
-			Namespace:    "journal",
-			AssociatedID: assocID,
+			Namespace:     url,
+			AssociatedUrl: pgtype.Text{String: url, Valid: true},
 		})
 		if err != nil {
 			if !errors.Is(err, pgx.ErrNoRows) {
@@ -278,12 +276,12 @@ func (w *GDriveWorker) pollOnce(ctx context.Context) error {
 			fmt.Printf("%s -> %v\n", file.Name, id)
 		}
 		if err := w.g.Queries.UpsertSearchEntry(ctx, UpsertSearchEntryParams{
-			Namespace:    "journal",
-			AssociatedID: assocID,
-			Updated:      pgtype.Timestamptz{Time: file.ModifiedTime, Valid: !file.ModifiedTime.IsZero()},
-			Header:       pgtype.Text{String: file.Name, Valid: true},
-			Body:         pgtype.Text{String: journal.Content, Valid: true},
-			Lang:         "norwegian",
+			Namespace:     namespace,
+			AssociatedUrl: pgtype.Text{String: url, Valid: true},
+			Updated:       pgtype.Timestamptz{Time: file.ModifiedTime, Valid: !file.ModifiedTime.IsZero()},
+			Header:        pgtype.Text{String: file.Name, Valid: true},
+			Body:          pgtype.Text{String: journal.Content, Valid: true},
+			Lang:          "norwegian",
 		}); err != nil {
 			fmt.Printf("%v inserting journal=%s\n", err, journal.Content)
 			continue

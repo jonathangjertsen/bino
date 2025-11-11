@@ -15,79 +15,239 @@ const getSearchUpdatedTime = `-- name: GetSearchUpdatedTime :one
 SELECT updated
 FROM search
 WHERE ns = $1
-  AND associated_id = $2
+  AND associated_url = $2
 `
 
 type GetSearchUpdatedTimeParams struct {
-	Namespace    string
-	AssociatedID int32
+	Namespace     string
+	AssociatedUrl pgtype.Text
 }
 
 func (q *Queries) GetSearchUpdatedTime(ctx context.Context, arg GetSearchUpdatedTimeParams) (pgtype.Timestamptz, error) {
-	row := q.db.QueryRow(ctx, getSearchUpdatedTime, arg.Namespace, arg.AssociatedID)
+	row := q.db.QueryRow(ctx, getSearchUpdatedTime, arg.Namespace, arg.AssociatedUrl)
 	var updated pgtype.Timestamptz
 	err := row.Scan(&updated)
 	return updated, err
 }
 
-const search = `-- name: Search :many
+const searchAdvanced = `-- name: SearchAdvanced :many
 WITH q AS (
-  SELECT websearch_to_tsquery($3, $4) AS qry
+  SELECT websearch_to_tsquery($8::regconfig, $9) AS qry
 )
 SELECT
-	(ts_rank(fts_header, q.qry) + ts_rank(fts_body, q.qry))::DOUBLE PRECISION AS rank,
-	s.header,
-	ts_headline('norwegian', s.header, q.qry, 'StartSel=[START],StopSel=[STOP],HighlightAll=true')::TEXT AS header_headline,
-	ts_headline('norwegian', s.body, q.qry, 'StartSel=[START],StopSel=[STOP],MaxFragments=5,MinWords=3,MaxWords=10')::TEXT AS body_headline,
-	s.associated_id,
-	s.updated
-FROM search AS s, q
-WHERE (
-	   q.qry @@s.fts_body
-	OR q.qry @@s.fts_header
-)
-ORDER BY RANK desc
-LIMIT $2
-OFFSET $1
+  i.r_fts_header, i.r_fts_body, i.r_sim_header, i.r_sim_body, i.r_ilike_header, i.r_ilike_body, i.r_recency, i.header, i.body, i.header_headline, i.body_headline, i.ns, i.associated_url, i.updated,
+  (
+      i.r_fts_header
+    + i.r_fts_body
+    + i.r_sim_header
+    + i.r_sim_body
+    + i.r_ilike_header
+    + i.r_ilike_body
+    + i.r_recency
+  )::real AS rank
+FROM (
+  SELECT
+    ($1::real   * ts_rank(s.fts_header, q.qry))::real AS r_fts_header,
+    ($2::real     * ts_rank(s.fts_body,   q.qry))::real AS r_fts_body,
+    ($3::real   * f.sim_header)::real                 AS r_sim_header,
+    ($4::real     * f.sim_body)::real                   AS r_sim_body,
+    ($5::real * f.ilike_header)::real               AS r_ilike_header,
+    ($6::real   * f.ilike_body)::real                 AS r_ilike_body,
+    ($7::real      * f.recency)::real                    AS r_recency,
+    COALESCE(s.header, '') AS header,
+    COALESCE(s.body, '') AS body,
+    ts_headline($8::regconfig, s.header, q.qry, 'StartSel=[START],StopSel=[STOP],HighlightAll=true')::text AS header_headline,
+    ts_headline($8::regconfig, s.body,   q.qry, 'StartSel=[START],StopSel=[STOP],MaxFragments=5,MinWords=3,MaxWords=10,FragmentDelimiter=[CUT]')::text AS body_headline,
+    s.ns,
+    s.associated_url,
+    s.updated
+  FROM search s
+  CROSS JOIN q
+  CROSS JOIN LATERAL (
+    SELECT
+      similarity(lower(s.header), lower($9)) AS sim_header,
+      similarity(lower(s.body),   lower($9)) AS sim_body,
+      CASE WHEN s.header ILIKE ('%' || $9 || '%') THEN 1 ELSE 0 END AS ilike_header,
+      CASE WHEN s.body   ILIKE ('%' || $9 || '%') THEN 1 ELSE 0 END AS ilike_body,
+      exp(
+        - GREATEST(0, EXTRACT(EPOCH FROM (now() - s.updated))) /
+          ($10::real * 86400.0)
+      ) AS recency
+  ) f
+  WHERE (
+        q.qry @@ s.fts_header
+     OR q.qry @@ s.fts_body
+     OR f.ilike_header = 1
+     OR f.ilike_body = 1
+     OR f.sim_header > $11::real
+     OR f.sim_body   > $11::real
+  )
+) i
+ORDER BY rank DESC
+LIMIT $13
+OFFSET $12
 `
 
-type SearchParams struct {
-	Offset pgtype.Int4
-	Limit  pgtype.Int4
-	Lang   string
-	Query  string
+type SearchAdvancedParams struct {
+	WFtsHeader          float32
+	WFtsBody            float32
+	WSimHeader          float32
+	WSimBody            float32
+	WIlikeHeader        float32
+	WIlikeBody          float32
+	WRecency            float32
+	Lang                string
+	Query               string
+	RecencyHalfLifeDays float32
+	Simthreshold        float32
+	Offset              int32
+	Limit               int32
 }
 
-type SearchRow struct {
-	Rank           float64
-	Header         pgtype.Text
+type SearchAdvancedRow struct {
+	RFtsHeader     float32
+	RFtsBody       float32
+	RSimHeader     float32
+	RSimBody       float32
+	RIlikeHeader   float32
+	RIlikeBody     float32
+	RRecency       float32
+	Header         string
+	Body           string
 	HeaderHeadline string
 	BodyHeadline   string
-	AssociatedID   int32
+	Ns             string
+	AssociatedUrl  pgtype.Text
 	Updated        pgtype.Timestamptz
+	Rank           float32
 }
 
-func (q *Queries) Search(ctx context.Context, arg SearchParams) ([]SearchRow, error) {
-	rows, err := q.db.Query(ctx, search,
+func (q *Queries) SearchAdvanced(ctx context.Context, arg SearchAdvancedParams) ([]SearchAdvancedRow, error) {
+	rows, err := q.db.Query(ctx, searchAdvanced,
+		arg.WFtsHeader,
+		arg.WFtsBody,
+		arg.WSimHeader,
+		arg.WSimBody,
+		arg.WIlikeHeader,
+		arg.WIlikeBody,
+		arg.WRecency,
+		arg.Lang,
+		arg.Query,
+		arg.RecencyHalfLifeDays,
+		arg.Simthreshold,
 		arg.Offset,
 		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SearchAdvancedRow
+	for rows.Next() {
+		var i SearchAdvancedRow
+		if err := rows.Scan(
+			&i.RFtsHeader,
+			&i.RFtsBody,
+			&i.RSimHeader,
+			&i.RSimBody,
+			&i.RIlikeHeader,
+			&i.RIlikeBody,
+			&i.RRecency,
+			&i.Header,
+			&i.Body,
+			&i.HeaderHeadline,
+			&i.BodyHeadline,
+			&i.Ns,
+			&i.AssociatedUrl,
+			&i.Updated,
+			&i.Rank,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchBasic = `-- name: SearchBasic :many
+WITH q AS (
+  SELECT websearch_to_tsquery($3::regconfig, $6) AS qry
+)
+SELECT
+  i.r_fts_header, i.r_fts_body, i.header_headline, i.body_headline, i.ns, i.associated_url, i.updated,
+  (
+      i.r_fts_header
+    + i.r_fts_body
+  )::real AS rank
+FROM (
+  SELECT
+    ($1::real   * ts_rank(s.fts_header, q.qry))::real AS r_fts_header,
+    ($2::real     * ts_rank(s.fts_body,   q.qry))::real AS r_fts_body,
+    ts_headline($3::regconfig, s.header, q.qry, 'StartSel=[START],StopSel=[STOP],HighlightAll=true')::text AS header_headline,
+    ts_headline($3::regconfig, s.body,   q.qry, 'StartSel=[START],StopSel=[STOP],MaxFragments=5,MinWords=3,MaxWords=10,FragmentDelimiter=[CUT]')::text AS body_headline,
+    s.ns,
+    s.associated_url,
+    s.updated
+  FROM search s
+  CROSS JOIN q
+  WHERE (
+        q.qry @@ s.fts_header
+     OR q.qry @@ s.fts_body
+  )
+) i
+ORDER BY rank DESC
+LIMIT $5
+OFFSET $4
+`
+
+type SearchBasicParams struct {
+	WFtsHeader float32
+	WFtsBody   float32
+	Lang       string
+	Offset     int32
+	Limit      int32
+	Query      string
+}
+
+type SearchBasicRow struct {
+	RFtsHeader     float32
+	RFtsBody       float32
+	HeaderHeadline string
+	BodyHeadline   string
+	Ns             string
+	AssociatedUrl  pgtype.Text
+	Updated        pgtype.Timestamptz
+	Rank           float32
+}
+
+func (q *Queries) SearchBasic(ctx context.Context, arg SearchBasicParams) ([]SearchBasicRow, error) {
+	rows, err := q.db.Query(ctx, searchBasic,
+		arg.WFtsHeader,
+		arg.WFtsBody,
 		arg.Lang,
+		arg.Offset,
+		arg.Limit,
 		arg.Query,
 	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []SearchRow
+	var items []SearchBasicRow
 	for rows.Next() {
-		var i SearchRow
+		var i SearchBasicRow
 		if err := rows.Scan(
-			&i.Rank,
-			&i.Header,
+			&i.RFtsHeader,
+			&i.RFtsBody,
 			&i.HeaderHeadline,
 			&i.BodyHeadline,
-			&i.AssociatedID,
+			&i.Ns,
+			&i.AssociatedUrl,
 			&i.Updated,
+			&i.Rank,
 		); err != nil {
 			return nil, err
 		}
@@ -100,7 +260,7 @@ func (q *Queries) Search(ctx context.Context, arg SearchParams) ([]SearchRow, er
 }
 
 const upsertSearchEntry = `-- name: UpsertSearchEntry :exec
-INSERT INTO search (ns, associated_id, updated, header, body, lang)
+INSERT INTO search (ns, associated_url, updated, header, body, lang)
 VALUES (
     $1,
     $2,
@@ -109,26 +269,27 @@ VALUES (
     $5,
     $6
 )
-ON CONFLICT (ns, associated_id) DO UPDATE SET
-    updated = EXCLUDED.updated,
-    header  = EXCLUDED.header,
-    body    = EXCLUDED.body,
-    lang    = EXCLUDED.lang
+ON CONFLICT (ns, associated_url) DO UPDATE SET
+    updated        = EXCLUDED.updated,
+    header         = EXCLUDED.header,
+    body           = EXCLUDED.body,
+    lang           = EXCLUDED.lang,
+    associated_url = EXCLUDED.associated_url
 `
 
 type UpsertSearchEntryParams struct {
-	Namespace    string
-	AssociatedID int32
-	Updated      pgtype.Timestamptz
-	Header       pgtype.Text
-	Body         pgtype.Text
-	Lang         interface{}
+	Namespace     string
+	AssociatedUrl pgtype.Text
+	Updated       pgtype.Timestamptz
+	Header        pgtype.Text
+	Body          pgtype.Text
+	Lang          interface{}
 }
 
 func (q *Queries) UpsertSearchEntry(ctx context.Context, arg UpsertSearchEntryParams) error {
 	_, err := q.db.Exec(ctx, upsertSearchEntry,
 		arg.Namespace,
-		arg.AssociatedID,
+		arg.AssociatedUrl,
 		arg.Updated,
 		arg.Header,
 		arg.Body,

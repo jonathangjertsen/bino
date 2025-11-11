@@ -1,58 +1,77 @@
 package main
 
-templ SearchPage(data *CommonData, q string, matches []MatchView) {
+templ SearchPage(data *CommonData, q string, matches []MatchView, fallbackMsg string) {
 	@Layout(data) {
         <div class="search">
-            <div class="card p-2 form-control">
+            <form
+                id="search-form"
+                class="card p-2 form-control"
+                hx-get="/search/live"
+                hx-trigger="input changed delay:300ms"
+                hx-target="#live-matches"
+                hx-indicator=".htmx-indicator"
+                autocomplete="off"
+            >
                 <label for="live-q">{data.User.Language.GenericSearch}</label>
                 <input
                     class="form-control input"
+                    type="search"
                     id="live-q"
                     name="q"
-                    hx-get="/search/live"
-                    hx-trigger="input changed, keyup[key=='Enter']"
-                    hx-target="#live-matches"
-                    hx-indicator=".htmx-indicator"
-                    autocomplete="off"
                     autocorrect="off"
                     autocapitalize="off"
                     value={q}
                 >
-            </div>
+                <div class="mt-2 d-none">
+                    <label><input type="radio" name="mode" value="basic"> {data.User.Language.SearchModeBasic}</label>
+                    <label><input type="radio" name="mode" value="advanced" checked> {data.User.Language.SearchModeAdvanced}</label>
+                </div>
+                <!-- Add more named inputs here; they will be sent automatically -->
+            </form>
         </div>
-        <span class="htmx-indicator">
-            Searching...
-        </span>
-        @SearchMatches(data, q, matches)
+        <span class="htmx-indicator">Searching...</span>
+        @SearchMatches(data, q, matches, fallbackMsg)
 	}
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js" integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz" crossorigin="anonymous"></script>
 }
 
-templ SearchMatches(data *CommonData, q string, matches []MatchView) {
+templ SearchMatches(data *CommonData, q string, matches []MatchView, fallbackMsg string) {
     <div class="card p-2 matches" id="live-matches">
         if len(matches) > 0 {
             for _, match := range matches {
                 <div class="card">
-                    <div class="card-header">
-                        <a href={match.URL}>
-                            @Runs(match.HeaderRuns)
-                        </a>
+                    <div class="card-header match-header">
+                        <div class="name">
+                            <a href={match.URL}>
+                                @Runs(match.HeaderRuns, false)
+                            </a>
+                        </div>
+                        <div class="type">
+                            {data.User.Language.MatchType[match.Type]}
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <pre>
-                            @Runs(match.BodyRuns)
-                        </pre>
+                    <div>
+                        for _, frag := range match.BodyFragments {
+                            <div class="fragment">
+                                <pre>
+                                    @Runs(frag.Runs, true)
+                                </pre>
+                            </div>
+                        }
                     </div>
                 </div>
             }
         } else {
-            <p>{data.User.Language.GenericNotFound}: <code>{q}</code></p>
+            <p><code>{q}</code>: {fallbackMsg}</p>
         }
     </div>
 }
 
 
-templ Runs(runs []HighlightRun) {
+templ Runs(runs []HighlightRun, ellipsis bool) {
+    if ellipsis {
+        …
+    }
 	for _, run := range runs {
 		if run.Hit {
 			<mark class="hl">{run.Text}</mark>
@@ -60,4 +79,7 @@ templ Runs(runs []HighlightRun) {
 			{run.Text}
 		}
 	}
+    if ellipsis {
+        …
+    }
 }

@@ -16,6 +16,7 @@ import (
 
 var (
 	reDeleteImages = regexp.MustCompile(`<data:image/[a-zA-Z]+;base64,[^>]+>`)
+	reUnbold       = regexp.MustCompile(`\*\*(.*?)\*\*`)
 )
 
 type GDrive struct {
@@ -169,6 +170,7 @@ func (g *GDrive) ReadDocument(id string) (GDriveJournal, error) {
 	}
 
 	content = reDeleteImages.ReplaceAll(content, []byte{})
+	content = reUnbold.ReplaceAll(content, []byte("$1"))
 
 	return GDriveJournal{
 		Content: string(content),
