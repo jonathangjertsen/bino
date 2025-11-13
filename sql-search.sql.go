@@ -8,8 +8,26 @@ package main
 import (
 	"context"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const deleteSearchEntry = `-- name: DeleteSearchEntry :exec
+DELETE
+FROM search
+WHERE ns = $1
+  AND associated_url = $2
+`
+
+type DeleteSearchEntryParams struct {
+	Namespace     string
+	AssociatedUrl pgtype.Text
+}
+
+func (q *Queries) DeleteSearchEntry(ctx context.Context, arg DeleteSearchEntryParams) error {
+	_, err := q.db.Exec(ctx, deleteSearchEntry, arg.Namespace, arg.AssociatedUrl)
+	return err
+}
 
 const getSearchUpdatedTime = `-- name: GetSearchUpdatedTime :one
 SELECT updated
@@ -32,10 +50,10 @@ func (q *Queries) GetSearchUpdatedTime(ctx context.Context, arg GetSearchUpdated
 
 const searchAdvanced = `-- name: SearchAdvanced :many
 WITH q AS (
-  SELECT websearch_to_tsquery($8::regconfig, $9) AS qry
+  SELECT websearch_to_tsquery($8::regconfig, $9::text) AS qry
 )
 SELECT
-  i.r_fts_header, i.r_fts_body, i.r_sim_header, i.r_sim_body, i.r_ilike_header, i.r_ilike_body, i.r_recency, i.header, i.body, i.header_headline, i.body_headline, i.ns, i.associated_url, i.updated,
+  i.r_fts_header, i.r_fts_body, i.r_sim_header, i.r_sim_body, i.r_ilike_header, i.r_ilike_body, i.r_recency, i.header, i.body, i.header_headline, i.body_headline, i.ns, i.associated_url, i.created, i.updated, i.extra_data,
   (
       i.r_fts_header
     + i.r_fts_body
@@ -60,7 +78,9 @@ FROM (
     ts_headline($8::regconfig, s.body,   q.qry, 'StartSel=[START],StopSel=[STOP],MaxFragments=5,MinWords=3,MaxWords=10,FragmentDelimiter=[CUT]')::text AS body_headline,
     s.ns,
     s.associated_url,
-    s.updated
+    s.created,
+    s.updated,
+    s.extra_data
   FROM search s
   CROSS JOIN q
   CROSS JOIN LATERAL (
@@ -70,22 +90,24 @@ FROM (
       CASE WHEN s.header ILIKE ('%' || $9 || '%') THEN 1 ELSE 0 END AS ilike_header,
       CASE WHEN s.body   ILIKE ('%' || $9 || '%') THEN 1 ELSE 0 END AS ilike_body,
       exp(
-        - GREATEST(0, EXTRACT(EPOCH FROM (now() - s.updated))) /
+        - GREATEST(0, EXTRACT(EPOCH FROM (now() - s.created))) /
           ($10::real * 86400.0)
       ) AS recency
   ) f
-  WHERE (
-        q.qry @@ s.fts_header
-     OR q.qry @@ s.fts_body
-     OR f.ilike_header = 1
-     OR f.ilike_body = 1
-     OR f.sim_header > $11::real
-     OR f.sim_body   > $11::real
+  WHERE search_match_advanced(
+    s,
+    q.qry,
+    $9,
+    $11::real,
+    $12::timestamptz,
+    $13::timestamptz,
+    $14::timestamptz,
+    $15::timestamptz
   )
 ) i
 ORDER BY rank DESC
-LIMIT $13
-OFFSET $12
+LIMIT $17
+OFFSET $16
 `
 
 type SearchAdvancedParams struct {
@@ -100,6 +122,10 @@ type SearchAdvancedParams struct {
 	Query               string
 	RecencyHalfLifeDays float32
 	Simthreshold        float32
+	MinCreated          pgtype.Timestamptz
+	MaxCreated          pgtype.Timestamptz
+	MinUpdated          pgtype.Timestamptz
+	MaxUpdated          pgtype.Timestamptz
 	Offset              int32
 	Limit               int32
 }
@@ -118,7 +144,9 @@ type SearchAdvancedRow struct {
 	BodyHeadline   string
 	Ns             string
 	AssociatedUrl  pgtype.Text
+	Created        pgtype.Timestamptz
 	Updated        pgtype.Timestamptz
+	ExtraData      pgtype.Text
 	Rank           float32
 }
 
@@ -135,6 +163,10 @@ func (q *Queries) SearchAdvanced(ctx context.Context, arg SearchAdvancedParams) 
 		arg.Query,
 		arg.RecencyHalfLifeDays,
 		arg.Simthreshold,
+		arg.MinCreated,
+		arg.MaxCreated,
+		arg.MinUpdated,
+		arg.MaxUpdated,
 		arg.Offset,
 		arg.Limit,
 	)
@@ -159,7 +191,9 @@ func (q *Queries) SearchAdvanced(ctx context.Context, arg SearchAdvancedParams) 
 			&i.BodyHeadline,
 			&i.Ns,
 			&i.AssociatedUrl,
+			&i.Created,
 			&i.Updated,
+			&i.ExtraData,
 			&i.Rank,
 		); err != nil {
 			return nil, err
@@ -172,12 +206,56 @@ func (q *Queries) SearchAdvanced(ctx context.Context, arg SearchAdvancedParams) 
 	return items, nil
 }
 
+const searchAdvancedCount = `-- name: SearchAdvancedCount :one
+WITH q AS (
+  SELECT websearch_to_tsquery($7::regconfig, $1::text) AS qry
+)
+SELECT COUNT(*)::int AS n
+FROM search s
+CROSS JOIN q
+WHERE search_match_advanced(
+  s,
+  q.qry,
+  $1,
+  $2::real,
+  $3::timestamptz,
+  $4::timestamptz,
+  $5::timestamptz,
+  $6::timestamptz
+)
+`
+
+type SearchAdvancedCountParams struct {
+	Query        string
+	Simthreshold float32
+	MinCreated   pgtype.Timestamptz
+	MaxCreated   pgtype.Timestamptz
+	MinUpdated   pgtype.Timestamptz
+	MaxUpdated   pgtype.Timestamptz
+	Lang         string
+}
+
+func (q *Queries) SearchAdvancedCount(ctx context.Context, arg SearchAdvancedCountParams) (int32, error) {
+	row := q.db.QueryRow(ctx, searchAdvancedCount,
+		arg.Query,
+		arg.Simthreshold,
+		arg.MinCreated,
+		arg.MaxCreated,
+		arg.MinUpdated,
+		arg.MaxUpdated,
+		arg.Lang,
+	)
+	var n int32
+	err := row.Scan(&n)
+	return n, err
+}
+
 const searchBasic = `-- name: SearchBasic :many
 WITH q AS (
-  SELECT websearch_to_tsquery($3::regconfig, $6) AS qry
+  SELECT websearch_to_tsquery($3::regconfig, $6::text) AS qry
 )
 SELECT
-  i.r_fts_header, i.r_fts_body, i.header_headline, i.body_headline, i.ns, i.associated_url, i.updated,
+  i.r_fts_header, i.r_fts_body, i.header_headline, i.body_headline, i.ns, i.associated_url, i.created, i.updated, i.extra_data,
   (
       i.r_fts_header
     + i.r_fts_body
@@ -190,13 +268,12 @@ FROM (
     ts_headline($3::regconfig, s.body,   q.qry, 'StartSel=[START],StopSel=[STOP],MaxFragments=5,MinWords=3,MaxWords=10,FragmentDelimiter=[CUT]')::text AS body_headline,
     s.ns,
     s.associated_url,
-    s.updated
+    s.created,
+    s.updated,
+    s.extra_data
   FROM search s
   CROSS JOIN q
-  WHERE (
-        q.qry @@ s.fts_header
-     OR q.qry @@ s.fts_body
-  )
+  WHERE search_match_basic(s, q.qry)
 ) i
 ORDER BY rank DESC
 LIMIT $5
@@ -219,7 +296,9 @@ type SearchBasicRow struct {
 	BodyHeadline   string
 	Ns             string
 	AssociatedUrl  pgtype.Text
+	Created        pgtype.Timestamptz
 	Updated        pgtype.Timestamptz
+	ExtraData      pgtype.Text
 	Rank           float32
 }
 
@@ -246,7 +325,9 @@ func (q *Queries) SearchBasic(ctx context.Context, arg SearchBasicParams) ([]Sea
 			&i.BodyHeadline,
 			&i.Ns,
 			&i.AssociatedUrl,
+			&i.Created,
 			&i.Updated,
+			&i.ExtraData,
 			&i.Rank,
 		); err != nil {
 			return nil, err
@@ -259,41 +340,137 @@ func (q *Queries) SearchBasic(ctx context.Context, arg SearchBasicParams) ([]Sea
 	return items, nil
 }
 
+const searchBasicCount = `-- name: SearchBasicCount :one
+WITH q AS (
+  SELECT websearch_to_tsquery($1::regconfig, $2::text) AS qry
+)
+SELECT COUNT(*)::int AS n
+FROM search s
+CROSS JOIN q
+WHERE search_match_basic(s, q.qry)
+`
+
+type SearchBasicCountParams struct {
+	Lang  string
+	Query string
+}
+
+func (q *Queries) SearchBasicCount(ctx context.Context, arg SearchBasicCountParams) (int32, error) {
+	row := q.db.QueryRow(ctx, searchBasicCount, arg.Lang, arg.Query)
+	var n int32
+	err := row.Scan(&n)
+	return n, err
+}
+
+const updateExtraData = `-- name: UpdateExtraData :execresult
+UPDATE search
+SET extra_data = $1
+WHERE ns = $2
+  AND associated_url = $3
+`
+
+type UpdateExtraDataParams struct {
+	ExtraData     pgtype.Text
+	Namespace     string
+	AssociatedUrl pgtype.Text
+}
+
+func (q *Queries) UpdateExtraData(ctx context.Context, arg UpdateExtraDataParams) (pgconn.CommandTag, error) {
+	return q.db.Exec(ctx, updateExtraData, arg.ExtraData, arg.Namespace, arg.AssociatedUrl)
+}
+
 const upsertSearchEntry = `-- name: UpsertSearchEntry :exec
-INSERT INTO search (ns, associated_url, updated, header, body, lang)
+INSERT INTO search (ns, associated_url, created, updated, header, body, lang, extra_data, skipped)
 VALUES (
     $1,
     $2,
     $3,
     $4,
     $5,
-    $6
+    $6,
+    $7,
+    $8,
+    FALSE
 )
 ON CONFLICT (ns, associated_url) DO UPDATE SET
+    created        = EXCLUDED.created,
     updated        = EXCLUDED.updated,
     header         = EXCLUDED.header,
     body           = EXCLUDED.body,
     lang           = EXCLUDED.lang,
-    associated_url = EXCLUDED.associated_url
+    associated_url = EXCLUDED.associated_url,
+    extra_data     = EXCLUDED.extra_data,
+    skipped        = EXCLUDED.skipped
 `
 
 type UpsertSearchEntryParams struct {
 	Namespace     string
 	AssociatedUrl pgtype.Text
+	Created       pgtype.Timestamptz
 	Updated       pgtype.Timestamptz
 	Header        pgtype.Text
 	Body          pgtype.Text
 	Lang          interface{}
+	ExtraData     pgtype.Text
 }
 
 func (q *Queries) UpsertSearchEntry(ctx context.Context, arg UpsertSearchEntryParams) error {
 	_, err := q.db.Exec(ctx, upsertSearchEntry,
 		arg.Namespace,
 		arg.AssociatedUrl,
+		arg.Created,
 		arg.Updated,
 		arg.Header,
 		arg.Body,
 		arg.Lang,
+		arg.ExtraData,
+	)
+	return err
+}
+
+const upsertSkippedSearchEntry = `-- name: UpsertSkippedSearchEntry :exec
+INSERT INTO search (ns, associated_url, created, updated, header, body, lang, extra_data, skipped)
+VALUES (
+  $1,
+  $2,
+  $3,
+  $4,
+  $5,
+  NULL,
+  $6,
+  $7,
+  TRUE
+)
+ON CONFLICT (ns, associated_url) DO UPDATE SET
+    created        = EXCLUDED.created,
+    updated        = EXCLUDED.updated,
+    header         = EXCLUDED.header,
+    body           = EXCLUDED.body,
+    lang           = EXCLUDED.lang,
+    associated_url = EXCLUDED.associated_url,
+    extra_data     = EXCLUDED.extra_data,
+    skipped        = EXCLUDED.skipped
+`
+
+type UpsertSkippedSearchEntryParams struct {
+	Namespace     string
+	AssociatedUrl pgtype.Text
+	Created       pgtype.Timestamptz
+	Updated       pgtype.Timestamptz
+	Header        pgtype.Text
+	Lang          interface{}
+	ExtraData     pgtype.Text
+}
+
+func (q *Queries) UpsertSkippedSearchEntry(ctx context.Context, arg UpsertSkippedSearchEntryParams) error {
+	_, err := q.db.Exec(ctx, upsertSkippedSearchEntry,
+		arg.Namespace,
+		arg.AssociatedUrl,
+		arg.Created,
+		arg.Updated,
+		arg.Header,
+		arg.Lang,
+		arg.ExtraData,
 	)
 	return err
 }

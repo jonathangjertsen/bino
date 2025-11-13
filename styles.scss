@@ -585,14 +585,20 @@ mark.hl {
     display: flex;
     justify-content: space-between;
     gap: 2em;
+    padding: 0.2rem !important;
+}
+
+.match-name {
+    align-content: center;
 }
 
 .matches {
+  min-width: 600px;
   .fragment {
     position: relative;
 
     &::after {
-      content: "·";
+      content: "—";
       display: block;
       text-align: center;
       color: black;
@@ -608,4 +614,13 @@ mark.hl {
       font-family: inherit;
     }
   }
+}
+
+.search-header {
+    color: $dark;
+}
+
+.micro {
+    font-size: 0.75em;
+    font-weight: lighter;
 }

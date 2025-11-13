@@ -2,6 +2,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -407,6 +408,16 @@ type MatchView struct {
 	Type          MatchType
 	HeaderRuns    []HighlightRun
 	BodyFragments []HighlightFragment
+
+	ExtraData string
+}
+
+func parseJSON[T any](extraData string) *T {
+	var out T
+	if err := json.Unmarshal([]byte(extraData), &out); err != nil {
+		return nil
+	}
+	return &out
 }
 
 type HighlightFragment struct {
@@ -448,16 +459,12 @@ func (in *SearchBasicRow) ToMatchView() MatchView {
 	headerRuns := ParseHeadline(in.HeaderHeadline)
 	bodyRuns := ParseHeadline(in.BodyHeadline)
 
-	url := "TODO"
-	if in.AssociatedUrl.Valid {
-		url = in.AssociatedUrl.String
-	}
-
 	return MatchView{
-		URL:           url,
+		URL:           in.AssociatedUrl.String,
 		Type:          MatchType(in.Ns),
 		HeaderRuns:    headerRuns,
 		BodyFragments: SplitFragments(bodyRuns),
+		ExtraData:     in.ExtraData.String,
 	}
 }
 
@@ -472,16 +479,12 @@ func (in *SearchAdvancedRow) ToMatchView(q string) MatchView {
 		bodyRuns = HighlightFallback(in.Body, q)
 	}
 
-	url := "TODO"
-	if in.AssociatedUrl.Valid {
-		url = in.AssociatedUrl.String
-	}
-
 	return MatchView{
-		URL:           url,
+		URL:           in.AssociatedUrl.String,
 		Type:          MatchType(in.Ns),
 		HeaderRuns:    headerRuns,
 		BodyFragments: SplitFragments(bodyRuns),
+		ExtraData:     in.ExtraData.String,
 	}
 }
 

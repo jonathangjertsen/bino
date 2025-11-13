@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -42,6 +43,10 @@ type GDriveTaskRequest struct {
 	Response chan GDriveTaskResponse
 	Type     GDriveTaskRequestID
 	Payload  any
+}
+
+func (gdtr GDriveTaskRequest) String() string {
+	return fmt.Sprintf("<GDriveTaskRequest of type %s>", gdtr.Type)
 }
 
 func newGDriveTaskRequest() GDriveTaskRequest {
@@ -197,6 +202,10 @@ type GDriveTaskResponse struct {
 	Payload any
 }
 
+func (gdtr GDriveTaskResponse) String() string {
+	return fmt.Sprintf("<GDriveTaskResponse of type %s>", gdtr.Type)
+}
+
 func NewGDriveWorker(ctx context.Context, cfg GDriveConfig, g *GDrive, c *Cache) *GDriveWorker {
 	w := &GDriveWorker{
 		cfg: cfg,
@@ -224,76 +233,161 @@ func NewGDriveWorker(ctx context.Context, cfg GDriveConfig, g *GDrive, c *Cache)
 func (w *GDriveWorker) poller(ctx context.Context) {
 	for {
 		if err := w.pollOnce(ctx); err != nil {
-			fmt.Printf("ERROR: %v\n", err)
+			log.Printf("ERROR: %v", err)
 		}
 		time.Sleep(time.Minute * 10)
 	}
 }
 
 func (w *GDriveWorker) pollOnce(ctx context.Context) error {
+	w.handleFiles(ctx, w.cfg.JournalFolder)
+	for _, folder := range w.cfg.ExtraJournalFolders {
+		w.handleFiles(ctx, folder)
+	}
+	return nil
+}
+
+func (w *GDriveWorker) handleFiles(ctx context.Context, folderID string) error {
+	folderItem, err := w.GetFile(folderID)
+	if err != nil {
+		return err
+	}
 	res, err := w.ListFiles(ListFilesParams{
-		Parent: w.cfg.JournalFolder,
+		Parent: folderID,
 	})
 	if err != nil {
 		return err
 	}
+	pageIdx := 0
+	fmt.Printf("nextPageToken=%s\n", res.NextPageToken)
+	for res.NextPageToken != "" {
+		if page, err := w.ListFiles(ListFilesParams{
+			Parent:    folderID,
+			PageToken: res.NextPageToken,
+		}); err == nil {
+			res.Files = append(res.Files, page.Files...)
+			res.NextPageToken = page.NextPageToken
+		} else {
+			log.Printf("getting page %d: %s", pageIdx, err.Error())
+			break
+		}
+	}
+
+	log.Printf("START: converting %d files for %s", len(res.Files), folderItem.Name)
+	defer log.Printf("DONE: converting files for %s", folderItem.Name)
 	for _, file := range res.Files {
 		ids, err := w.g.Queries.GetPatientsByJournalURL(ctx, file.ID)
 		if err != nil {
-			fmt.Printf("%+v\n", err)
+			log.Printf("Querying patients: %s", err)
 			continue
 		}
 		var namespace = "journal"
 		url := file.DocumentURL()
+		journalInfo := SearchJournalInfo{
+			FolderURL:   folderItem.FolderURL(),
+			FolderName:  folderItem.Name,
+			CreatedTime: file.CreatedTime.Unix(),
+		}
+		var extraData any
+		extraData = journalInfo
 		if len(ids) == 1 {
 			namespace = "patient"
 			url = PatientURL(ids[0])
+			extraData = SearchPatientInfo{
+				JournalInfo: journalInfo,
+				JournalURL:  file.DocumentURL(),
+			}
 		}
+		extraDataStr, err := json.Marshal(extraData)
+		if err != nil {
+			extraDataStr = []byte("")
+		}
+		extraDataField := pgtype.Text{String: string(extraDataStr), Valid: err == nil}
+		associatedURLField := pgtype.Text{String: url, Valid: true}
 
-		updated, err := w.g.Queries.GetSearchUpdatedTime(ctx, GetSearchUpdatedTimeParams{
-			Namespace:     url,
-			AssociatedUrl: pgtype.Text{String: url, Valid: true},
+		// TODO get info like whether it's skipped
+		updatedField, err := w.g.Queries.GetSearchUpdatedTime(ctx, GetSearchUpdatedTimeParams{
+			Namespace:     namespace,
+			AssociatedUrl: associatedURLField,
 		})
 		if err != nil {
 			if !errors.Is(err, pgx.ErrNoRows) {
-				fmt.Printf("getting update time for %s: %v", file.Name, err)
+				log.Printf("Getting update time for %s: %v", file.Name, err)
 			}
-			updated = pgtype.Timestamptz{}
+			updatedField = pgtype.Timestamptz{}
 		}
 
-		if updated.Valid && !updated.Time.Before(file.ModifiedTime) {
-			fmt.Printf("stored journal is up to date with file for %s (updated=%s, modified=%s)\n", file.Name, updated.Time, file.ModifiedTime)
-			continue
-		}
-		fmt.Printf("updated=%+v filemf=%+v\n", updated, file.ModifiedTime)
+		journalLogInfo := fmt.Sprintf("Journal '%s' (id=%s, url=%s)", file.Name, file.ID, url)
 
+		if updatedField.Valid {
+			if file.Trashed {
+				log.Printf("%s: Trashed, deleting from search", journalLogInfo)
+				if err := w.g.Queries.DeleteSearchEntry(ctx, DeleteSearchEntryParams{
+					Namespace:     namespace,
+					AssociatedUrl: pgtype.Text{String: url, Valid: true},
+				}); err != nil {
+					log.Printf("%s: Failed to delete search entry: %v", journalLogInfo, err)
+				}
+				continue
+			} else {
+				if file.ModifiedTime.After(updatedField.Time) {
+					log.Printf("%s: Out of date\n", journalLogInfo)
+				} else {
+					if extraDataField.Valid {
+						tag, err := w.g.Queries.UpdateExtraData(ctx, UpdateExtraDataParams{
+							ExtraData:     extraDataField,
+							Namespace:     namespace,
+							AssociatedUrl: pgtype.Text{String: url, Valid: true},
+						})
+						if err != nil {
+							log.Printf("%s: Updating extra data: %v", journalLogInfo, err.Error())
+						} else if tag.RowsAffected() > 0 {
+							log.Printf("%s: Updated extra data: '%s'", journalLogInfo, extraDataStr)
+						}
+					}
+					// log.Printf("%s: Up to date, skipping\n", journalLogInfo)
+					continue
+				}
+			}
+		} else {
+			if file.Trashed {
+				log.Printf("%s: Trashed, skipping", journalLogInfo)
+				continue
+			}
+			log.Printf("%s: No search entry found (file modified=%s)\n", journalLogInfo, file.ModifiedTime)
+		}
+
+		log.Printf("Reading %s", journalLogInfo)
 		journal, err := w.g.ReadDocument(file.ID)
 		if err != nil {
-			fmt.Printf("%v\n", err)
+			log.Printf("Reading %s: %s", journalLogInfo, err.Error())
 			continue
 		}
-		for _, id := range ids {
-			fmt.Printf("%s -> %v\n", file.Name, id)
+		if file.CreatedTime.IsZero() {
+			file.CreatedTime = file.ModifiedTime
 		}
+
 		if err := w.g.Queries.UpsertSearchEntry(ctx, UpsertSearchEntryParams{
 			Namespace:     namespace,
-			AssociatedUrl: pgtype.Text{String: url, Valid: true},
+			AssociatedUrl: associatedURLField,
 			Updated:       pgtype.Timestamptz{Time: file.ModifiedTime, Valid: !file.ModifiedTime.IsZero()},
+			Created:       pgtype.Timestamptz{Time: file.CreatedTime, Valid: true},
 			Header:        pgtype.Text{String: file.Name, Valid: true},
 			Body:          pgtype.Text{String: journal.Content, Valid: true},
 			Lang:          "norwegian",
+			ExtraData:     extraDataField,
 		}); err != nil {
-			fmt.Printf("%v inserting journal=%s\n", err, journal.Content)
+			log.Printf("Inserting search entry for %s: %s", journalLogInfo, err.Error())
 			continue
 		}
 	}
-
 	return nil
 }
 
 type GDriveConfigInfo struct {
 	JournalFolder GDriveItem
 	TemplateDoc   GDriveJournal
+	ExtraFolders  []GDriveItem
 }
 
 func (w *GDriveWorker) GetGDriveConfigInfo() GDriveConfigInfo {
@@ -314,6 +408,19 @@ func (w *GDriveWorker) GetGDriveConfigInfo() GDriveConfigInfo {
 		if err := doc.Validate(); err != nil {
 			return err
 		}
+
+		for _, id := range w.cfg.ExtraJournalFolders {
+			folder, err := w.g.GetFile(id)
+			if err != nil {
+				log.Printf("error getting extra folder %s: %v", id, err)
+				continue
+			}
+			configInfo.ExtraFolders = append(
+				configInfo.ExtraFolders,
+				folder,
+			)
+		}
+
 		log.Printf("Fetched GDrive Config info")
 
 		return nil
@@ -345,10 +452,10 @@ func (w *GDriveWorker) ListFiles(params ListFilesParams) (ListFilesResult, error
 func (w *GDriveWorker) worker(workerID int) {
 	for {
 		req := <-w.in
-		log.Printf("Worker %d received request: %+v", workerID, req)
+		log.Printf("Worker %d received request: %s", workerID, req)
 		resp := w.handleRequest(req)
 		req.Response <- resp
-		log.Printf("Worker %d sent back response: %+v", workerID, resp)
+		log.Printf("Worker %d sent back response: %s", workerID, resp)
 	}
 }
 
@@ -436,7 +543,7 @@ func (w *GDriveWorker) handleRequestListFiles(req GDriveTaskRequest) GDriveTaskR
 
 	rules := []string{
 		"mimeType = 'application/vnd.google-apps.document'",
-		fmt.Sprintf("'%s' in parents", w.cfg.JournalFolder),
+		fmt.Sprintf("'%s' in parents", params.Parent),
 	}
 
 	if !params.ModifiedAfter.IsZero() {
@@ -454,7 +561,7 @@ func (w *GDriveWorker) handleRequestListFiles(req GDriveTaskRequest) GDriveTaskR
 	}
 
 	call = call.OrderBy("modifiedTime desc")
-	call = call.Fields("files(id, name, modifiedTime)")
+	call = call.Fields("files(id, name, modifiedTime, createdTime, trashed), nextPageToken")
 
 	fileList, err := call.Do()
 	if err != nil {

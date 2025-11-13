@@ -102,6 +102,9 @@ type Search struct {
 	FtsHeader     interface{}
 	FtsBody       interface{}
 	AssociatedUrl pgtype.Text
+	ExtraData     pgtype.Text
+	Skipped       bool
+	Created       pgtype.Timestamptz
 }
 
 type Session struct {

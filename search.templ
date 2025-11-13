@@ -1,6 +1,6 @@
 package main
 
-templ SearchPage(data *CommonData, q string, matches []MatchView, fallbackMsg string) {
+templ SearchPage(data *CommonData, result SearchResult, fallbackMsg string) {
 	@Layout(data) {
         <div class="search">
             <form
@@ -9,7 +9,7 @@ templ SearchPage(data *CommonData, q string, matches []MatchView, fallbackMsg st
                 hx-get="/search/live"
                 hx-trigger="input changed delay:300ms"
                 hx-target="#live-matches"
-                hx-indicator=".htmx-indicator"
+                hx-swap="outerHTML"
                 autocomplete="off"
             >
                 <label for="live-q">{data.User.Language.GenericSearch}</label>
@@ -20,7 +20,7 @@ templ SearchPage(data *CommonData, q string, matches []MatchView, fallbackMsg st
                     name="q"
                     autocorrect="off"
                     autocapitalize="off"
-                    value={q}
+                    value={result.Query.Query}
                 >
                 <div class="mt-2 d-none">
                     <label><input type="radio" name="mode" value="basic"> {data.User.Language.SearchModeBasic}</label>
@@ -29,25 +29,37 @@ templ SearchPage(data *CommonData, q string, matches []MatchView, fallbackMsg st
                 <!-- Add more named inputs here; they will be sent automatically -->
             </form>
         </div>
-        <span class="htmx-indicator">Searching...</span>
-        @SearchMatches(data, q, matches, fallbackMsg)
+        @SearchMatches(data, result, fallbackMsg)
 	}
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js" integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz" crossorigin="anonymous"></script>
 }
 
-templ SearchMatches(data *CommonData, q string, matches []MatchView, fallbackMsg string) {
-    <div class="card p-2 matches" id="live-matches">
-        if len(matches) > 0 {
-            for _, match := range matches {
+templ SearchMatches(data *CommonData, result SearchResult, fallbackMsg string) {
+    <div class="card p-2 matches mt-2" id="live-matches">
+        <div class="search-header p-0 m-0">
+            <p class="p-0 m-0">
+            Fant <strong>{result.TotalMatches}</strong> resultater på {result.Milliseconds} ms.
+            if int32(len(result.PageMatches)) < result.TotalMatches {
+                Viser <strong>{result.Offset}</strong> til <strong>{result.Offset+int32(len(result.PageMatches))}</strong>
+            }
+            </p>
+        </div>
+        if len(result.PageMatches) > 0 {
+            for _, match := range result.PageMatches {
                 <div class="card">
                     <div class="card-header match-header">
-                        <div class="name">
+                        <div class="match-name">
                             <a href={match.URL}>
                                 @Runs(match.HeaderRuns, false)
                             </a>
                         </div>
-                        <div class="type">
-                            {data.User.Language.MatchType[match.Type]}
+                        <div class="match-meta">
+                            <div class="match-type d-flex justify-content-end">
+                                {data.User.Language.MatchType[match.Type]}
+                            </div>
+                            <div class="match-extra-info">
+                                @match.ExtraInfo()
+                            </div>
                         </div>
                     </div>
                     <div>
@@ -62,7 +74,7 @@ templ SearchMatches(data *CommonData, q string, matches []MatchView, fallbackMsg
                 </div>
             }
         } else {
-            <p><code>{q}</code>: {fallbackMsg}</p>
+            <p><code>{result.Query.Query}</code>: {fallbackMsg}</p>
         }
     </div>
 }
@@ -76,10 +88,27 @@ templ Runs(runs []HighlightRun, ellipsis bool) {
 		if run.Hit {
 			<mark class="hl">{run.Text}</mark>
 		} else {
-			{run.Text}
+			<span class="nohl">{run.Text}</span>
 		}
 	}
     if ellipsis {
         …
+    }
+}
+
+templ (mv *MatchView) ExtraInfo() {
+    switch mv.Type {
+        case MatchTypePatient:
+            if info := parseJSON[SearchPatientInfo](mv.ExtraData); info != nil {
+                <span class="micro">
+                    <a href={info.JournalURL}>Gå til journal</a> i <a href={info.JournalInfo.FolderURL}>{info.JournalInfo.FolderName}</a>
+                </span>
+            }
+        case MatchTypeJournal:
+            if info := parseJSON[SearchJournalInfo](mv.ExtraData); info != nil {
+                <span class="micro">
+                    <a href={info.FolderURL}>{info.FolderName}</a>
+                </span>
+            }
     }
 }

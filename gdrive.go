@@ -31,6 +31,7 @@ type GDriveConfig struct {
 	DriveBase                 string
 	JournalFolder             string
 	TemplateFile              string
+	ExtraJournalFolders       []string
 }
 
 func NewGDriveWithServiceAccount(ctx context.Context, config GDriveConfig, queries *Queries) (*GDrive, error) {
@@ -60,10 +61,16 @@ type GDriveItem struct {
 	// Optional
 	Permissions  []GDrivePermission
 	ModifiedTime time.Time
+	Trashed      bool
+	CreatedTime  time.Time
+}
+
+func GDriveFolderURL(id string) string {
+	return "https://drive.google.com/drive/folders/" + id
 }
 
 func (item *GDriveItem) FolderURL() string {
-	return "https://drive.google.com/drive/folders/" + item.ID
+	return GDriveFolderURL(item.ID)
 }
 
 func (item *GDriveItem) DocumentURL() string {
@@ -98,6 +105,7 @@ func GDriveItemFromFile(f *drive.File, p *drive.PermissionList) GDriveItem {
 	}
 
 	modifiedTime, _ := time.Parse(time.RFC3339, f.ModifiedTime)
+	createdTime, _ := time.Parse(time.RFC3339, f.CreatedTime)
 
 	return GDriveItem{
 		ID:           f.Id,
@@ -105,6 +113,8 @@ func GDriveItemFromFile(f *drive.File, p *drive.PermissionList) GDriveItem {
 		Valid:        true,
 		Permissions:  permissions,
 		ModifiedTime: modifiedTime,
+		CreatedTime:  createdTime,
+		Trashed:      f.Trashed,
 	}
 }
 

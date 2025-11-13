@@ -1,0 +1,3 @@
+-- +migrate Up
+ALTER TABLE search DROP COLUMN skipped;
+ALTER TABLE search ADD COLUMN skipped BOOLEAN NOT NULL DEFAULT FALSE;

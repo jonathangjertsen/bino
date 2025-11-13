@@ -114,6 +114,8 @@ type Language struct {
 	GDriveSelectExistingJournalInstruction string
 	GDriveNoJournalForPatient              string
 	GDriveCreateJournalFailed              string
+	GDriveTemplateFile                     string
+	GDriveExtraDirs                        string
 
 	GenericAdd      string
 	GenericAge      string
@@ -350,7 +352,6 @@ var NO = &Language{
 
 	FormerPatients: "Tidligere pasienter",
 
-	GDriveBaseDir:                          "Journalmappe",
 	GDriveSelectFolder:                     "Velg mappe",
 	GDriveSelectedFolder:                   "Valgt",
 	GDriveSelectFolderInstruction:          "Her kan du velge hvilken mappe nye journaler skal opprettes i.",
@@ -371,6 +372,9 @@ var NO = &Language{
 	GDriveSelectExistingJournalInstruction: "Eller velg en eksisterende journal i Google Drive:",
 	GDriveNoJournalForPatient:              "Det er ikke koblet noen journal til pasienten.",
 	GDriveCreateJournalFailed:              "Pasienten ble lagt til, men kunne ikke opprette pasientjournal i Google Drive",
+	GDriveTemplateFile:                     "Nye journaler bruker denne malen:",
+	GDriveBaseDir:                          "Nye journaler vil bli opprettet i denne mappen:",
+	GDriveExtraDirs:                        "I tillegg er journaler i disse mappene inkludert i søk:",
 
 	GenericAdd:      "Legg til",
 	GenericAge:      "Alder",
@@ -589,7 +593,6 @@ var EN = &Language{
 
 	FormerPatients: "Former patients",
 
-	GDriveBaseDir:                          "Select journal folder",
 	GDriveSelectFolder:                     "Select folder",
 	GDriveSelectedFolder:                   "Selected",
 	GDriveSelectFolderInstruction:          "Select the folder in which new patient journals will be created.",
@@ -612,6 +615,9 @@ var EN = &Language{
 	GDriveSelectExistingJournalInstruction: "Or connect an existing journal in Google Drive:",
 	GDriveNoJournalForPatient:              "No journal found",
 	GDriveCreateJournalFailed:              "Patient was added, I couldn't create the journal in Google Drive",
+	GDriveTemplateFile:                     "New files will be created based on this template:",
+	GDriveBaseDir:                          "New files will be created in this folder:",
+	GDriveExtraDirs:                        "In addition, these folders are included in the document search:",
 
 	GenericAdd:      "Add",
 	GenericAge:      "Age",
