@@ -238,22 +238,28 @@ func (user GetUserRow) ToUserView() UserView {
 // ---- Invitation
 
 type InvitationView struct {
-	ID      string
-	Email   string
-	Created time.Time
-	Expires time.Time
+	ID          string
+	Email       string
+	Created     time.Time
+	Expires     time.Time
+	AccessLevel AccessLevel
+	HomeID      int32
+	HomeName    string
 }
 
 func (inv InvitationView) DeleteURL() string {
 	return fmt.Sprintf("/invite/%s/delete", inv.ID)
 }
 
-func (inv Invitation) ToInvitationView() InvitationView {
+func (inv GetInvitationsRow) ToInvitationView() InvitationView {
 	return InvitationView{
-		ID:      inv.ID,
-		Email:   inv.Email.String,
-		Expires: inv.Expires.Time,
-		Created: inv.Created.Time,
+		ID:          inv.ID,
+		Email:       inv.Email.String,
+		Expires:     inv.Expires.Time,
+		Created:     inv.Created.Time,
+		AccessLevel: AccessLevel(inv.AccessLevel),
+		HomeID:      inv.Home.Int32,
+		HomeName:    inv.HomeName.String,
 	}
 }
 
@@ -408,6 +414,8 @@ type MatchView struct {
 	Type          MatchType
 	HeaderRuns    []HighlightRun
 	BodyFragments []HighlightFragment
+	Rank          float32
+	RankParts     map[string]float32
 
 	ExtraData string
 }
@@ -465,6 +473,7 @@ func (in *SearchBasicRow) ToMatchView() MatchView {
 		HeaderRuns:    headerRuns,
 		BodyFragments: SplitFragments(bodyRuns),
 		ExtraData:     in.ExtraData.String,
+		Rank:          in.Rank,
 	}
 }
 
@@ -485,6 +494,16 @@ func (in *SearchAdvancedRow) ToMatchView(q string) MatchView {
 		HeaderRuns:    headerRuns,
 		BodyFragments: SplitFragments(bodyRuns),
 		ExtraData:     in.ExtraData.String,
+		Rank:          in.Rank,
+		RankParts: map[string]float32{
+			"FTSBody":     in.RFtsBody,
+			"FTSHeader":   in.RFtsHeader,
+			"Recency":     in.RRecency,
+			"ILIKEBody":   in.RIlikeBody,
+			"ILIKEHeader": in.RIlikeHeader,
+			"SimBody":     in.RSimBody,
+			"SimHeader":   in.RSimHeader,
+		},
 	}
 }
 

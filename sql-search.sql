@@ -30,7 +30,7 @@ VALUES (
   @created,
   @updated,
   @header,
-  NULL,
+  @body,
   @lang,
   @extra_data,
   TRUE
@@ -46,9 +46,13 @@ ON CONFLICT (ns, associated_url) DO UPDATE SET
     skipped        = EXCLUDED.skipped
 ;
 
--- name: UpdateExtraData :execresult
+-- name: UpdateSearchMetadata :execresult
 UPDATE search
-SET extra_data = @extra_data
+SET
+  extra_data = @extra_data,
+  created = @created,
+  updated = @updated,
+  header = @header
 WHERE ns = @namespace
   AND associated_url = @associated_url
 ;

@@ -56,10 +56,12 @@ type HomeUnavailable struct {
 }
 
 type Invitation struct {
-	ID      string
-	Email   pgtype.Text
-	Expires pgtype.Timestamptz
-	Created pgtype.Timestamptz
+	ID          string
+	Email       pgtype.Text
+	Expires     pgtype.Timestamptz
+	Created     pgtype.Timestamptz
+	AccessLevel int32
+	Home        pgtype.Int4
 }
 
 // Each row represents a patient

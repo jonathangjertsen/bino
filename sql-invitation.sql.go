@@ -56,26 +56,49 @@ func (q *Queries) GetInvitation(ctx context.Context, email pgtype.Text) (string,
 }
 
 const getInvitations = `-- name: GetInvitations :many
-SELECT id, email, expires, created
+SELECT invitation.id, email, expires, created, access_level, home, home.id, name, capacity, note, home.name AS home_name
 FROM invitation
+LEFT JOIN home
+  ON home.id = invitation.home
 WHERE expires > NOW()
 ORDER BY created DESC
 `
 
-func (q *Queries) GetInvitations(ctx context.Context) ([]Invitation, error) {
+type GetInvitationsRow struct {
+	ID          string
+	Email       pgtype.Text
+	Expires     pgtype.Timestamptz
+	Created     pgtype.Timestamptz
+	AccessLevel int32
+	Home        pgtype.Int4
+	ID_2        pgtype.Int4
+	Name        pgtype.Text
+	Capacity    pgtype.Int4
+	Note        pgtype.Text
+	HomeName    pgtype.Text
+}
+
+func (q *Queries) GetInvitations(ctx context.Context) ([]GetInvitationsRow, error) {
 	rows, err := q.db.Query(ctx, getInvitations)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Invitation
+	var items []GetInvitationsRow
 	for rows.Next() {
-		var i Invitation
+		var i GetInvitationsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Email,
 			&i.Expires,
 			&i.Created,
+			&i.AccessLevel,
+			&i.Home,
+			&i.ID_2,
+			&i.Name,
+			&i.Capacity,
+			&i.Note,
+			&i.HomeName,
 		); err != nil {
 			return nil, err
 		}

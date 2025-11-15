@@ -7,7 +7,7 @@ templ SearchPage(data *CommonData, result SearchResult, fallbackMsg string) {
                 id="search-form"
                 class="card p-2 form-control"
                 hx-get="/search/live"
-                hx-trigger="input changed delay:300ms"
+                hx-trigger="change, input changed"
                 hx-target="#live-matches"
                 hx-swap="outerHTML"
                 autocomplete="off"
@@ -22,16 +22,33 @@ templ SearchPage(data *CommonData, result SearchResult, fallbackMsg string) {
                     autocapitalize="off"
                     value={result.Query.Query}
                 >
-                <div class="mt-2 d-none">
-                    <label><input type="radio" name="mode" value="basic"> {data.User.Language.SearchModeBasic}</label>
-                    <label><input type="radio" name="mode" value="advanced" checked> {data.User.Language.SearchModeAdvanced}</label>
+                <div class="mt-2">
+                    <label><input type="radio" name="mode" value="basic" checked?={result.Query.Mode=="basic"}> {data.User.Language.SearchModeBasic}</label>
+                    <label><input type="radio" name="mode" value="advanced" checked?={result.Query.Mode=="advanced"}> {data.User.Language.SearchModeAdvanced}</label>
                 </div>
-                <!-- Add more named inputs here; they will be sent automatically -->
+                <div class="search-advanced-options" data-show={result.Query.Mode=="advanced"}>
+                    <div class="d-flex justify-content-between form-control-sm form-control-plaintext">
+                        <label class="me-2 align-self-center">{data.User.Language.SearchFilterCreated}</label>
+                        <label for="created-from" class="input-group-text short-label">{data.User.Language.GenericFrom}</label>
+                        <input autocomplete="off" type="date" class="form-control search-created-filter" id="created-from" name="created-from"></input>
+                        <label for="created-to" class="input-group-text short-label">{data.User.Language.GenericTo}</label>
+                        <input autocomplete="off" type="date" class="form-control search-created-filter" id="created-to" name="created-to"></input>
+                        <button class="btn btn-secondary search-filter-clear-created" type="button">{data.User.Language.SearchFilterClear}</button>
+                    </div>
+
+                    <div class="mt-2">
+                        <label>{data.User.Language.SearchTimePreference}</label>
+                        <label><input type="radio" name="time-preference" value={TimePreferenceNone.String()} checked?={result.Query.TimePreference==TimePreferenceNone}> {data.User.Language.SearchTimePreferenceNone}</label>
+                        <label><input type="radio" name="time-preference" value={TimePreferenceNewer.String()} checked?={result.Query.TimePreference==TimePreferenceNewer}> {data.User.Language.SearchTimePreferenceNewer}</label>
+                        <label><input type="radio" name="time-preference" value={TimePreferenceOlder.String()} checked?={result.Query.TimePreference==TimePreferenceOlder}> {data.User.Language.SearchTimePreferenceOlder}</label>
+                    </div>
+                </div>
             </form>
         </div>
         @SearchMatches(data, result, fallbackMsg)
 	}
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js" integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz" crossorigin="anonymous"></script>
+    <script src={data.StaticFile("search.js")}></script>
 }
 
 templ SearchMatches(data *CommonData, result SearchResult, fallbackMsg string) {
@@ -64,13 +81,23 @@ templ SearchMatches(data *CommonData, result SearchResult, fallbackMsg string) {
                     </div>
                     <div>
                         for _, frag := range match.BodyFragments {
-                            <div class="fragment">
+                            <div class="fragment shadow-sm">
                                 <pre>
                                     @Runs(frag.Runs, true)
                                 </pre>
                             </div>
                         }
                     </div>
+                    if result.Query.DebugRank {
+                        <div class="rankings micro align-self-end">
+                            Rank: {match.Rank}
+                            <ul>
+                                for key, r := range match.RankParts {
+                                    <ul>{key}: {r}</ul>
+                                }
+                            </ul>
+                        </div>
+                    }
                 </div>
             }
         } else {
@@ -85,14 +112,18 @@ templ Runs(runs []HighlightRun, ellipsis bool) {
         …
     }
 	for _, run := range runs {
-		if run.Hit {
-			<mark class="hl">{run.Text}</mark>
-		} else {
-			<span class="nohl">{run.Text}</span>
-		}
+		@run.Component()
 	}
     if ellipsis {
         …
+    }
+}
+
+templ (r *HighlightRun) Component() {
+    if r.Hit {
+        <mark class="hl">{r.Text}</mark>
+    } else {
+        <span class="nohl">{r.Text}</span>
     }
 }
 

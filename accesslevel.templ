@@ -1,0 +1,53 @@
+package main
+
+templ AccessLevelPage(data *CommonData) {
+    @Layout(data) {
+        <div class="card p-2">
+            <p>{data.User.Language.CapabilitiesYourAccessLevelIs} <strong>{int(data.User.AccessLevel)} - {data.User.Language.AccessLevels[data.User.AccessLevel]}</strong></p>
+            <p>{data.User.Language.CapabilitiesExplanation}</p>
+            <h3>{data.User.Language.AccessLevels[AccessLevelNone]}</h3>
+            <ul>
+                for _, cap := range AccessLevelToCapabilities.None {
+                    <li>{data.User.Language.Capabilities[cap]}</li>
+                }
+            </ul>
+            <h3>{data.User.Language.AccessLevels[AccessLevelRehabber]}</h3>
+            <ul>
+                for _, cap := range AccessLevelToCapabilities.Rehabber {
+                    <li>{data.User.Language.Capabilities[cap]}</li>
+                }
+            </ul>
+            <h3>{data.User.Language.AccessLevels[AccessLevelCoordinator]}</h3>
+            <ul>
+                for _, cap := range AccessLevelToCapabilities.Coordinator {
+                    <li>{data.User.Language.Capabilities[cap]}</li>
+                }
+            </ul>
+            <h3>{data.User.Language.AccessLevels[AccessLevelAdmin]}</h3>
+            <ul>
+                for _, cap := range AccessLevelToCapabilities.Admin {
+                    <li>{data.User.Language.Capabilities[cap]}</li>
+                }
+            </ul>
+        </div>
+    }
+}
+
+
+templ UnauthorizedPage(data *CommonData, err error, referer string) {
+	@Layout(data) {
+        <a href={referer}>{data.User.Language.GenericGoBack}</a>
+        <h1>{data.User.Language.ErrorPageHead}</h1>
+        <div class="card b-card">
+            <p>{data.User.Language.ErrorPageInstructions}</p>
+            <pre>
+                if err != nil {
+                    {err.Error()}
+                }
+            </pre>
+            <p>
+            <a href="/access">{data.User.Language.CapabilitiesLink}</a>
+            </p>
+        </div>
+    }
+}

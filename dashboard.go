@@ -10,21 +10,22 @@ import (
 )
 
 type DashboardData struct {
-	PreferredHomeView   HomeView
-	NonPreferredSpecies []SpeciesView
-	Tags                []GetTagsWithLanguageCheckinRow
-	Homes               []HomeView
+	PreferredHomeView      HomeView
+	DefaultSelectedSpecies int32
+	NonPreferredSpecies    []SpeciesView
+	Tags                   []GetTagsWithLanguageCheckinRow
+	Homes                  []HomeView
 }
 
 func (r GetTagsWithLanguageCheckinRow) HTMLID() string {
 	return fmt.Sprintf("patient-label-%d", r.TagID)
 }
 
-func (server *Server) getSpeciesForUser(ctx context.Context) ([]SpeciesView, []SpeciesView, error) {
+func (server *Server) getSpeciesForUser(ctx context.Context, user int32) ([]SpeciesView, []SpeciesView, error) {
 	commonData := MustLoadCommonData(ctx)
 
 	preferredSpeciesRows, err := server.Queries.GetPreferredSpeciesForHome(ctx, GetPreferredSpeciesForHomeParams{
-		HomeID:     commonData.User.PreferredHome.ID,
+		HomeID:     user,
 		LanguageID: commonData.Lang32(),
 	})
 	if err != nil {
@@ -52,7 +53,7 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	commonData := MustLoadCommonData(ctx)
 
-	preferredSpecies, otherSpecies, err := server.getSpeciesForUser(ctx)
+	preferredSpecies, otherSpecies, err := server.getSpeciesForUser(ctx, commonData.User.PreferredHome.ID)
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return
@@ -135,11 +136,17 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	preferredHomeView.PreferredSpecies = preferredSpecies
 
+	defaultSpecies := int32(1)
+	if len(preferredSpecies) > 0 {
+		defaultSpecies = preferredSpecies[0].ID
+	}
+
 	_ = DashboardPage(commonData, &DashboardData{
-		NonPreferredSpecies: otherSpecies,
-		Tags:                tags,
-		PreferredHomeView:   preferredHomeView,
-		Homes:               homeViews,
+		NonPreferredSpecies:    otherSpecies,
+		DefaultSelectedSpecies: defaultSpecies,
+		Tags:                   tags,
+		PreferredHomeView:      preferredHomeView,
+		Homes:                  homeViews,
 	}).Render(r.Context(), w)
 }
 

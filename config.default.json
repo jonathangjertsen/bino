@@ -8,19 +8,21 @@
     },
     "Auth": {
         "SessionKeyLocation": "secret/session_key",
-        "GooglePickerKeyLocation": "secret/google_picker_key",
         "OAuthCredentialsLocation": "secret/oauth.json",
-        "ClientID": "YOUR-CLIENT-ID.apps.googleusercontent.com"
+        "ClientID": "<your-client-id>.apps.googleusercontent.com",
+        "OAuthRedirectURI": "<base-url>./oauth2/callback"
     },
     "Privacy": {
         "LogDeletionPolicy": 3,
-        "RevokeConsentPolicy": 3
+        "RevokeConsentPolicy": 14
     },
     "GoogleDrive": {
         "ServiceAccountKeyLocation": "secret/serviceaccount.json",
-        "DriveBase": "ID of the shared drive in which to search for a journal folder",
-        "JournalFolder": "ID of the folder where the journals live",
-        "TemplateFile": "ID of the template file"
+        "DriveBase": "<ID>",
+        "JournalFolder": "<ID>",
+        "TemplateFile": "<ID>",
+        "ExtraJournalFolders": [
+        ]
     },
     "DB": {
         "URL": "localhost",
@@ -28,5 +30,5 @@
         "CacheFile": "cache.db"
     },
     "SystemLanguage": 1,
-    "SystemBaseURL": "bino.fugleadvokatene.no"
+    "SystemBaseURL": "bino.<your-domain>"
 }

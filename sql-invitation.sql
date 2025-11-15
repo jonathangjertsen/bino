@@ -6,8 +6,10 @@ WHERE email = $1
 ;
 
 -- name: GetInvitations :many
-SELECT *
+SELECT *, home.name AS home_name
 FROM invitation
+LEFT JOIN home
+  ON home.id = invitation.home
 WHERE expires > NOW()
 ORDER BY created DESC
 ;

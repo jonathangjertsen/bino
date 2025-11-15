@@ -27,12 +27,14 @@ INSERT INTO appuser (
   display_name,
   google_sub,
   email, 
-  avatar_url
+  avatar_url,
+  access_level
 ) VALUES (
   $1,
   $2,
   $3,
-  $4
+  $4,
+  $5
 )
 RETURNING id
 `
@@ -42,6 +44,7 @@ type CreateUserParams struct {
 	GoogleSub   string
 	Email       string
 	AvatarUrl   pgtype.Text
+	AccessLevel int32
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int32, error) {
@@ -50,6 +53,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int32, 
 		arg.GoogleSub,
 		arg.Email,
 		arg.AvatarUrl,
+		arg.AccessLevel,
 	)
 	var id int32
 	err := row.Scan(&id)

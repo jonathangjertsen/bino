@@ -57,6 +57,13 @@ func (server *Server) renderError(w http.ResponseWriter, r *http.Request, common
 	logError(r, err)
 }
 
+func (server *Server) renderUnauthorized(w http.ResponseWriter, r *http.Request, commonData *CommonData, err error) {
+	ctx := r.Context()
+	w.WriteHeader(http.StatusInternalServerError)
+	_ = UnauthorizedPage(commonData, err, server.lastGoodURL(r)).Render(ctx, w)
+	logError(r, err)
+}
+
 func (server *Server) render404(w http.ResponseWriter, r *http.Request, commonData *CommonData, err error) {
 	ctx := r.Context()
 	w.WriteHeader(http.StatusNotFound)
@@ -71,7 +78,7 @@ func (server *Server) ensureAccess(w http.ResponseWriter, r *http.Request, al Ac
 	if !hasAccess {
 		w.WriteHeader(http.StatusUnauthorized)
 		err := errors.New(commonData.User.Language.AccessLevelBlocked(al))
-		_ = ErrorPage(
+		_ = UnauthorizedPage(
 			commonData,
 			err,
 			server.lastGoodURL(r),

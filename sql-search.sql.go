@@ -362,21 +362,35 @@ func (q *Queries) SearchBasicCount(ctx context.Context, arg SearchBasicCountPara
 	return n, err
 }
 
-const updateExtraData = `-- name: UpdateExtraData :execresult
+const updateSearchMetadata = `-- name: UpdateSearchMetadata :execresult
 UPDATE search
-SET extra_data = $1
-WHERE ns = $2
-  AND associated_url = $3
+SET
+  extra_data = $1,
+  created = $2,
+  updated = $3,
+  header = $4
+WHERE ns = $5
+  AND associated_url = $6
 `
 
-type UpdateExtraDataParams struct {
+type UpdateSearchMetadataParams struct {
 	ExtraData     pgtype.Text
+	Created       pgtype.Timestamptz
+	Updated       pgtype.Timestamptz
+	Header        pgtype.Text
 	Namespace     string
 	AssociatedUrl pgtype.Text
 }
 
-func (q *Queries) UpdateExtraData(ctx context.Context, arg UpdateExtraDataParams) (pgconn.CommandTag, error) {
-	return q.db.Exec(ctx, updateExtraData, arg.ExtraData, arg.Namespace, arg.AssociatedUrl)
+func (q *Queries) UpdateSearchMetadata(ctx context.Context, arg UpdateSearchMetadataParams) (pgconn.CommandTag, error) {
+	return q.db.Exec(ctx, updateSearchMetadata,
+		arg.ExtraData,
+		arg.Created,
+		arg.Updated,
+		arg.Header,
+		arg.Namespace,
+		arg.AssociatedUrl,
+	)
 }
 
 const upsertSearchEntry = `-- name: UpsertSearchEntry :exec
@@ -436,9 +450,9 @@ VALUES (
   $3,
   $4,
   $5,
-  NULL,
   $6,
   $7,
+  $8,
   TRUE
 )
 ON CONFLICT (ns, associated_url) DO UPDATE SET
@@ -458,6 +472,7 @@ type UpsertSkippedSearchEntryParams struct {
 	Created       pgtype.Timestamptz
 	Updated       pgtype.Timestamptz
 	Header        pgtype.Text
+	Body          pgtype.Text
 	Lang          interface{}
 	ExtraData     pgtype.Text
 }
@@ -469,6 +484,7 @@ func (q *Queries) UpsertSkippedSearchEntry(ctx context.Context, arg UpsertSkippe
 		arg.Created,
 		arg.Updated,
 		arg.Header,
+		arg.Body,
 		arg.Lang,
 		arg.ExtraData,
 	)

@@ -3,13 +3,16 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-// ENUM(None, Newer, Older)
+// ENUM(None = 0, Newer, Older)
 type TimePreference int
 
 const (
@@ -25,6 +28,7 @@ type SearchQuery struct {
 	MaxCreated     int64
 	MinUpdated     int64
 	MaxUpdated     int64
+	DebugRank      bool
 }
 
 type SearchSkipInfo struct {
@@ -32,14 +36,25 @@ type SearchSkipInfo struct {
 }
 
 type SearchJournalInfo struct {
-	FolderURL   string
-	FolderName  string
-	CreatedTime int64
+	FolderURL  string
+	FolderName string
+}
+
+func (sji *SearchJournalInfo) IndexableText() string {
+	return fmt.Sprintf(`
+
+FolderName = %s
+
+`, sji.FolderName)
 }
 
 type SearchPatientInfo struct {
 	JournalInfo SearchJournalInfo
 	JournalURL  string
+}
+
+func (spi *SearchPatientInfo) IndexableText() string {
+	return spi.JournalInfo.IndexableText()
 }
 
 func NewBasicSearchParams(q SearchQuery) SearchBasicParams {
@@ -57,9 +72,9 @@ func NewSearchAdvancedParams(q SearchQuery) SearchAdvancedParams {
 	wRecency := float32(0.0)
 	switch q.TimePreference {
 	case TimePreferenceNewer:
-		wRecency = 0.3
+		wRecency = 3.0
 	case TimePreferenceOlder:
-		wRecency = -0.3
+		wRecency = -3.0
 	case TimePreferenceNone:
 		wRecency = 0.0
 	}
@@ -67,14 +82,14 @@ func NewSearchAdvancedParams(q SearchQuery) SearchAdvancedParams {
 	return SearchAdvancedParams{
 		Lang:                "norwegian",
 		Query:               q.Query,
-		WFtsHeader:          1.0,
-		WFtsBody:            1.0,
+		WFtsHeader:          10.0,
+		WFtsBody:            10.0,
 		WSimHeader:          0.4,
-		WSimBody:            0.2,
-		WIlikeHeader:        0.3,
-		WIlikeBody:          0.1,
+		WSimBody:            20.2,
+		WIlikeHeader:        3,
+		WIlikeBody:          1,
 		WRecency:            wRecency,
-		Simthreshold:        0.25,
+		Simthreshold:        0.1,
 		RecencyHalfLifeDays: 60,
 		Offset:              q.Page * pageSize,
 		Limit:               pageSize,
@@ -101,24 +116,50 @@ func (server *Server) doSearch(r *http.Request) (SearchResult, error) {
 	if len(q) < 3 {
 		return SearchResult{}, errors.New("too short")
 	}
-	mode, err := server.getFormValue(r, "mode")
-	if err != nil {
+	formValues := server.getOptionalFormValues(
+		r,
+		"mode",
+		"page",
+		"created-from",
+		"created-to",
+		"updated-from",
+		"updated-to",
+		"time-preference",
+		"debug-rank",
+	)
+
+	mode := formValues["mode"]
+	if mode == "" {
 		mode = "basic"
 	}
-	page, err := server.getFormID(r, "page")
+	page, err := strconv.Atoi(formValues["page"])
 	if err != nil {
 		page = 0
 	}
-
+	minCreated, maxCreated, minUpdated, maxUpdated := int64(0), int64(0), int64(0), int64(0)
+	if t, err := time.Parse(formValues["created-from"], time.DateOnly); err == nil {
+		minCreated = t.Unix()
+	}
+	if t, err := time.Parse(formValues["created-to"], time.DateOnly); err == nil {
+		maxCreated = t.Unix()
+	}
+	if t, err := time.Parse(formValues["updated-from"], time.DateOnly); err == nil {
+		minUpdated = t.Unix()
+	}
+	if t, err := time.Parse(formValues["updated-to"], time.DateOnly); err == nil {
+		maxUpdated = t.Unix()
+	}
+	timePref, _ := ParseTimePreference(strings.TrimSpace(formValues["time-preference"]))
 	query := SearchQuery{
 		Query:          q,
 		Mode:           mode,
-		Page:           page,
-		TimePreference: TimePreferenceNone,
-		MinCreated:     0,
-		MaxCreated:     0,
-		MinUpdated:     0,
-		MaxUpdated:     0,
+		Page:           int32(page),
+		TimePreference: timePref,
+		MinCreated:     minCreated,
+		MaxCreated:     maxCreated,
+		MinUpdated:     minUpdated,
+		MaxUpdated:     maxUpdated,
+		DebugRank:      formValues["debug-rank"] != "",
 	}
 
 	var matches []MatchView
@@ -178,7 +219,7 @@ func (server *Server) doSearch(r *http.Request) (SearchResult, error) {
 		PageMatches:  matches,
 		TotalMatches: totalMatches,
 		Offset:       offset,
-		Milliseconds: int(elapsed / time.Millisecond),
+		Milliseconds: int((elapsed + (time.Millisecond / 2)) / time.Millisecond),
 	}, nil
 }
 

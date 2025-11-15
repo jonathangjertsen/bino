@@ -63,12 +63,20 @@ func (server *Server) requireAccessLevel(al AccessLevel) Middleware {
 			data := MustLoadCommonData(ctx)
 
 			if data.User.AccessLevel < al {
-				server.renderError(w, r, data, errors.New(data.User.Language.AccessLevelBlocked(al)))
+				server.renderUnauthorized(w, r, data, errors.New(data.User.Language.AccessLevelBlocked(al)))
 				return
 			}
 			f.ServeHTTP(w, r)
 		})
 	}
+}
+
+func (server *Server) requireCapability(cap Capability) Middleware {
+	al, ok := RequiredAccessLevel[cap]
+	if !ok {
+		panic(fmt.Errorf("no access level for %s", cap.String()))
+	}
+	return server.requireAccessLevel(al)
 }
 
 func (server *Server) authenticate(w http.ResponseWriter, r *http.Request) (CommonData, error) {
@@ -210,10 +218,6 @@ func (server *Server) callbackHandler(
 
 	// Get OAuth token
 	sess, _ := server.Cookies.Get(r, "auth")
-	if r.URL.Query().Get("state") != sess.Values["state"] {
-		http.Error(w, "invalid state", http.StatusBadRequest)
-		return
-	}
 	code := r.URL.Query().Get("code")
 	token, err := server.OAuthConfig.Exchange(ctx, code)
 	if err != nil {
@@ -283,6 +287,7 @@ func (server *Server) callbackHandler(
 				Email:       claims.Email,
 				GoogleSub:   claims.Sub,
 				AvatarUrl:   pgtype.Text{String: claims.Picture, Valid: claims.Picture != ""},
+				AccessLevel: int32(AccessLevelCoordinator),
 			}); err != nil {
 				return err
 			} else {

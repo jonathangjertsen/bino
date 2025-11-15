@@ -42,6 +42,7 @@ type AuthConfig struct {
 	SessionKeyLocation       string
 	OAuthCredentialsLocation string
 	ClientID                 string
+	OAuthRedirectURI         string
 }
 
 type HTTPConfig struct {
@@ -103,6 +104,12 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 	cookies.Options.SameSite = http.SameSiteLaxMode
 	cookies.Options.Secure = true
 
+	redirectURI := config.Auth.OAuthRedirectURI
+	if redirectURI == "" {
+		redirectURI = c.Web.RedirectURIs[0]
+	}
+	fmt.Printf("using redirect URL: %s\n", redirectURI)
+
 	server := &Server{
 		Conn:         conn,
 		Queries:      queries,
@@ -112,7 +119,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 		OAuthConfig: &oauth2.Config{
 			ClientID:     c.Web.ClientID,
 			ClientSecret: c.Web.ClientSecret,
-			RedirectURL:  c.Web.RedirectURIs[0],
+			RedirectURL:  redirectURI,
 			Endpoint:     google.Endpoint,
 			Scopes:       ProfileScopes,
 		},
@@ -137,10 +144,17 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 	requiresAdmin := slices.Clone(requiresLogin)
 	requiresAdmin = append(requiresAdmin, server.requireAccessLevel(AccessLevelAdmin))
 
+	loggedInHandler := func(handler http.HandlerFunc, cap Capability) http.Handler {
+		requirements := slices.Clone(requiresLogin)
+		requirements = append(requirements, server.requireCapability(cap))
+		return chainf(handler, requirements...)
+	}
+
 	//// PUBLIC
 	// Pages
 	mux.Handle("GET /{$}", chainf(server.dashboardHandler, requiresLogin...))   // TODO should show something public for logged-out
 	mux.Handle("GET /privacy", chainf(server.privacyHandler, requiresLogin...)) // TODO should be public
+	mux.Handle("GET /access", chainf(server.accessHandler, requiresLogin...))
 	// Static content
 	staticDir := fmt.Sprintf("/static/%s/", buildKey)
 	mux.Handle("GET "+staticDir, http.StripPrefix(staticDir, http.FileServer(http.Dir("static"))))
@@ -155,64 +169,64 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 
 	//// LOGGED-IN USER / REHABBER
 	// Pages
-	mux.Handle("GET /patient/{patient}", chainf(server.getPatientHandler, requiresLogin...))
-	mux.Handle("GET /home/{home}", chainf(server.getHomeHandler, requiresLogin...))
-	mux.Handle("GET /user/{user}", chainf(server.getUserHandler, requiresLogin...))
-	mux.Handle("GET /former-patients", chainf(server.formerPatientsHandler, requiresLogin...))
-	mux.Handle("GET /calendar", chainf(server.calendarHandler, requiresLogin...))
-	mux.Handle("GET /search", chainf(server.searchHandler, requiresLogin...))
-	mux.Handle("GET /search/live", chainf(server.searchLiveHandler, requiresLogin...))
+	mux.Handle("GET /patient/{patient}", loggedInHandler(server.getPatientHandler, CapViewAllActivePatients))
+	mux.Handle("GET /home/{home}", loggedInHandler(server.getHomeHandler, CapViewAllHomes))
+	mux.Handle("GET /user/{user}", loggedInHandler(server.getUserHandler, CapViewAllHomes))
+	mux.Handle("GET /former-patients", loggedInHandler(server.formerPatientsHandler, CapViewAllFormerPatients))
+	mux.Handle("GET /calendar", loggedInHandler(server.calendarHandler, CapViewCalendar))
+	mux.Handle("GET /search", loggedInHandler(server.searchHandler, CapSearch))
+	mux.Handle("GET /search/live", loggedInHandler(server.searchLiveHandler, CapSearch))
 	// Forms
-	mux.Handle("POST /checkin", chainf(server.postCheckinHandler, requiresRehabber...))
-	mux.Handle("POST /privacy", chainf(server.postPrivacyHandler, requiresLogin...))
-	mux.Handle("POST /patient/{patient}/move", chainf(server.movePatientHandler, requiresRehabber...))
-	mux.Handle("POST /patient/{patient}/checkout", chainf(server.postCheckoutHandler, requiresRehabber...))
-	mux.Handle("POST /patient/{patient}/set-name", chainf(server.postSetNameHandler, requiresRehabber...))
-	mux.Handle("POST /patient/{patient}/create-journal", chainf(server.createJournalHandler, requiresRehabber...))
-	mux.Handle("POST /patient/{patient}/attach-journal", chainf(server.attachJournalHandler, requiresRehabber...))
-	mux.Handle("POST /event/{event}/set-note", chainf(server.postEventSetNoteHandler, requiresRehabber...))
-	mux.Handle("POST /home/{home}/set-capacity", chainf(server.setCapacityHandler, requiresRehabber...))
-	mux.Handle("POST /home/{home}/add-preferred-species", chainf(server.addPreferredSpeciesHandler, requiresRehabber...))
-	mux.Handle("POST /home/{home}/add-unavailable", chainf(server.addHomeUnavailablePeriodHandler, requiresRehabber...))
-	mux.Handle("POST /home/{home}/set-note", chainf(server.homeSetNoteHandler, requiresRehabber...))
-	mux.Handle("POST /period/{period}/delete", chainf(server.deleteHomeUnavailableHandler, requiresRehabber...))
+	mux.Handle("POST /checkin", loggedInHandler(server.postCheckinHandler, CapCheckInPatient))
+	mux.Handle("POST /privacy", loggedInHandler(server.postPrivacyHandler, CapSetOwnPreferences))
+	mux.Handle("POST /patient/{patient}/move", loggedInHandler(server.movePatientHandler, CapManageOwnPatients))
+	mux.Handle("POST /patient/{patient}/checkout", loggedInHandler(server.postCheckoutHandler, CapManageOwnPatients))
+	mux.Handle("POST /patient/{patient}/set-name", loggedInHandler(server.postSetNameHandler, CapManageOwnPatients))
+	mux.Handle("POST /patient/{patient}/create-journal", loggedInHandler(server.createJournalHandler, CapCreatePatientJournal))
+	mux.Handle("POST /patient/{patient}/attach-journal", loggedInHandler(server.attachJournalHandler, CapManageOwnPatients))
+	mux.Handle("POST /event/{event}/set-note", loggedInHandler(server.postEventSetNoteHandler, CapManageOwnPatients))
+	mux.Handle("POST /home/{home}/set-capacity", loggedInHandler(server.setCapacityHandler, CapManageOwnHomes))
+	mux.Handle("POST /home/{home}/add-preferred-species", loggedInHandler(server.addPreferredSpeciesHandler, CapManageOwnHomes))
+	mux.Handle("POST /home/{home}/add-unavailable", loggedInHandler(server.addHomeUnavailablePeriodHandler, CapManageOwnHomes))
+	mux.Handle("POST /home/{home}/set-note", loggedInHandler(server.homeSetNoteHandler, CapManageOwnHomes))
+	mux.Handle("POST /period/{period}/delete", loggedInHandler(server.deleteHomeUnavailableHandler, CapManageOwnHomes))
 	// Ajax
-	mux.Handle("POST /language", chainf(server.postLanguageHandler, requiresLogin...))
-	mux.Handle("DELETE /patient/{patient}/tag/{tag}", chainf(server.deletePatientTagHandler, requiresRehabber...))
-	mux.Handle("POST /patient/{patient}/tag/{tag}", chainf(server.createPatientTagHandler, requiresRehabber...))
-	mux.Handle("POST /ajaxreorder", chainf(server.ajaxReorderHandler, requiresRehabber...))
-	mux.Handle("POST /ajaxtransfer", chainf(server.ajaxTransferHandler, requiresRehabber...))
-	mux.Handle("GET /calendar/away", chainf(server.ajaxCalendarAwayHandler, requiresRehabber...))
-	mux.Handle("GET /calendar/patientevents", chainf(server.ajaxCalendarPatientEventsHandler, requiresRehabber...))
+	mux.Handle("POST /language", loggedInHandler(server.postLanguageHandler, CapSetOwnPreferences))
+	mux.Handle("DELETE /patient/{patient}/tag/{tag}", loggedInHandler(server.deletePatientTagHandler, CapManageOwnPatients))
+	mux.Handle("POST /patient/{patient}/tag/{tag}", loggedInHandler(server.createPatientTagHandler, CapManageOwnPatients))
+	mux.Handle("POST /ajaxreorder", loggedInHandler(server.ajaxReorderHandler, CapManageOwnPatients))
+	mux.Handle("POST /ajaxtransfer", loggedInHandler(server.ajaxTransferHandler, CapManageOwnPatients))
+	mux.Handle("GET /calendar/away", loggedInHandler(server.ajaxCalendarAwayHandler, CapViewCalendar))
+	mux.Handle("GET /calendar/patientevents", loggedInHandler(server.ajaxCalendarPatientEventsHandler, CapViewCalendar))
 
 	//// CONTENT MANAGEMENT
 	// Pages
-	mux.Handle("GET /species", chainf(server.getSpeciesHandler, requiresCoordinator...))
-	mux.Handle("GET /tag", chainf(server.getTagHandler, requiresCoordinator...))
-	mux.Handle("GET /admin", chainf(server.adminRootHandler, requiresCoordinator...))
-	mux.Handle("GET /homes", chainf(server.getHomesHandler, requiresCoordinator...))
-	mux.Handle("GET /users", chainf(server.userAdminHandler, requiresCoordinator...))
+	mux.Handle("GET /species", loggedInHandler(server.getSpeciesHandler, CapManageSpecies))
+	mux.Handle("GET /tag", loggedInHandler(server.getTagHandler, CapManageTags))
+	mux.Handle("GET /admin", loggedInHandler(server.adminRootHandler, CapViewAdminTools))
+	mux.Handle("GET /homes", loggedInHandler(server.getHomesHandler, CapManageAllHomes))
+	mux.Handle("GET /users", loggedInHandler(server.userAdminHandler, CapManageUsers))
 	// Forms
-	mux.Handle("POST /homes", chainf(server.postHomeHandler, requiresCoordinator...))
-	mux.Handle("POST /homes/{home}/set-name", chainf(server.postHomeSetName, requiresCoordinator...))
+	mux.Handle("POST /homes", loggedInHandler(server.postHomeHandler, CapManageAllHomes))
+	mux.Handle("POST /homes/{home}/set-name", loggedInHandler(server.postHomeSetName, CapManageOwnHomes))
 	// Ajax
-	mux.Handle("POST /species", chainf(server.postSpeciesHandler, requiresCoordinator...))
-	mux.Handle("PUT /species", chainf(server.putSpeciesHandler, requiresCoordinator...))
-	mux.Handle("POST /tag", chainf(server.postTagHandler, requiresCoordinator...))
-	mux.Handle("PUT /tag", chainf(server.putTagHandler, requiresCoordinator...))
+	mux.Handle("POST /species", loggedInHandler(server.postSpeciesHandler, CapManageSpecies))
+	mux.Handle("PUT /species", loggedInHandler(server.putSpeciesHandler, CapManageSpecies))
+	mux.Handle("POST /tag", loggedInHandler(server.postTagHandler, CapManageTags))
+	mux.Handle("PUT /tag", loggedInHandler(server.putTagHandler, CapManageTags))
 
 	//// ADMIN
 	// Pages
-	mux.Handle("GET /gdrive", chainf(server.getGDriveHandler, requiresAdmin...))
-	mux.Handle("GET /user/{user}/confirm-scrub", chainf(server.userConfirmScrubHandler, requiresAdmin...))
-	mux.Handle("GET /user/{user}/confirm-nuke", chainf(server.userConfirmNukeHandler, requiresAdmin...))
+	mux.Handle("GET /gdrive", loggedInHandler(server.getGDriveHandler, CapViewGDriveSettings))
+	mux.Handle("GET /user/{user}/confirm-scrub", loggedInHandler(server.userConfirmScrubHandler, CapDeleteUsers))
+	mux.Handle("GET /user/{user}/confirm-nuke", loggedInHandler(server.userConfirmNukeHandler, CapDeleteUsers))
 	// Forms
-	mux.Handle("POST /user/{user}/scrub", chainf(server.userDoScrubHandler, requiresAdmin...))
-	mux.Handle("POST /user/{user}/nuke", chainf(server.userDoNukeHandler, requiresAdmin...))
-	mux.Handle("POST /gdrive/invite/{email}", chainf(server.gdriveInviteUserHandler, requiresAdmin...))
-	mux.Handle("POST /invite", chainf(server.inviteHandler, requiresAdmin...))
-	mux.Handle("POST /invite/{email}", chainf(server.inviteHandler, requiresAdmin...))
-	mux.Handle("POST /invite/{id}/delete", chainf(server.inviteDeleteHandler, requiresAdmin...))
+	mux.Handle("POST /user/{user}/scrub", loggedInHandler(server.userDoScrubHandler, CapDeleteUsers))
+	mux.Handle("POST /user/{user}/nuke", loggedInHandler(server.userDoNukeHandler, CapDeleteUsers))
+	mux.Handle("POST /gdrive/invite/{email}", loggedInHandler(server.gdriveInviteUserHandler, CapInviteToGDrive))
+	mux.Handle("POST /invite", loggedInHandler(server.inviteHandler, CapInviteToBino))
+	mux.Handle("POST /invite/{email}", loggedInHandler(server.inviteHandler, CapInviteToBino))
+	mux.Handle("POST /invite/{id}/delete", loggedInHandler(server.inviteDeleteHandler, CapInviteToBino))
 
 	//// FALLBACK
 	// Pages
@@ -229,7 +243,9 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 			WriteTimeout:      config.HTTP.WriteTimeoutSeconds * time.Second,
 			IdleTimeout:       config.HTTP.IdleTimeoutSeconds * time.Second,
 		}
-		srv.ListenAndServe()
+		if err := srv.ListenAndServe(); err != nil {
+			panic(err)
+		}
 	}()
 
 	return nil
@@ -259,6 +275,13 @@ func (server *Server) getFormValues(r *http.Request, fields ...string) (map[stri
 	return SliceToMapErr(fields, func(_ int, field string) (string, string, error) {
 		v, err := server.getFormValue(r, field)
 		return field, v, err
+	})
+}
+
+func (server *Server) getOptionalFormValues(r *http.Request, fields ...string) map[string]string {
+	return SliceToMap(fields, func(field string) (string, string) {
+		v, _ := server.getFormValue(r, field)
+		return field, v
 	})
 }
 

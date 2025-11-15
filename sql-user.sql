@@ -3,12 +3,14 @@ INSERT INTO appuser (
   display_name,
   google_sub,
   email, 
-  avatar_url
+  avatar_url,
+  access_level
 ) VALUES (
   $1,
   $2,
   $3,
-  $4
+  $4,
+  $5
 )
 RETURNING id
 ;

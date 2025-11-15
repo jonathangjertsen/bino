@@ -185,8 +185,14 @@ type Language struct {
 	UserHomes      string
 	UserIsHomeless string
 
-	SearchModeBasic    string
-	SearchModeAdvanced string
+	SearchModeBasic           string
+	SearchModeAdvanced        string
+	SearchFilterCreated       string
+	SearchFilterClear         string
+	SearchTimePreference      string
+	SearchTimePreferenceNone  string
+	SearchTimePreferenceNewer string
+	SearchTimePreferenceOlder string
 
 	NavbarCalendar  string
 	NavbarDashboard string
@@ -194,6 +200,12 @@ type Language struct {
 	Status    map[Status]string
 	Event     map[Event]string
 	MatchType map[MatchType]string
+
+	CapabilitiesExplanation       string
+	CapabilitiesYourAccessLevelIs string
+	Capabilities                  map[Capability]string
+	CapabilitiesLink              string
+	CapabilitiesHeader            string
 }
 
 func (l *Language) HomeUnavailableUntil(dv DateView) string {
@@ -286,7 +298,7 @@ var NO = &Language{
 		AccessLevelAdmin:       "Administrator",
 		AccessLevelCoordinator: "Koordinator",
 		AccessLevelRehabber:    "Rehabilitør",
-		AccessLevelNone:        "Ingen",
+		AccessLevelNone:        "Bruker",
 	},
 
 	AdminDefaultIncludeTag:      "Vis ved innsjekk",
@@ -446,8 +458,14 @@ var NO = &Language{
 	UserHomes:      "Tilkoblede rehabhjem",
 	UserIsHomeless: "Ingen tilkoblede rehabhjem",
 
-	SearchModeBasic:    "Raskt",
-	SearchModeAdvanced: "Grundig",
+	SearchModeBasic:           "Raskt",
+	SearchModeAdvanced:        "Avansert",
+	SearchFilterCreated:       "Dato",
+	SearchFilterClear:         "Fjern",
+	SearchTimePreference:      "Prioriter eldre/nyere resultater",
+	SearchTimePreferenceNone:  "Nei",
+	SearchTimePreferenceOlder: "Eldre",
+	SearchTimePreferenceNewer: "Nyere",
 
 	Status: map[Status]string{
 		StatusUnknown:                        "Ukjent",
@@ -482,6 +500,34 @@ var NO = &Language{
 	MatchType: map[MatchType]string{
 		MatchTypeJournal: "📝 Journal",
 		MatchTypePatient: "❤️‍🩹 Pasient",
+	},
+
+	CapabilitiesLink:              "Les om brukertilganger i Bino",
+	CapabilitiesHeader:            "Brukertilganger",
+	CapabilitiesYourAccessLevelIs: "Ditt tilgangsnivå er: ",
+	CapabilitiesExplanation:       "Her er det brukere med forskjellig tilgangsnivå kan gjøre: ",
+	Capabilities: map[Capability]string{
+		CapViewAllActivePatients: "Se alle pasienter som er i rehab",
+		CapViewAllFormerPatients: "Se alle pasienter som har vært i rehab",
+		CapViewAllHomes:          "Se alle rehabhjem",
+		CapViewAllUsers:          "Se alle brukere",
+		CapViewCalendar:          "Se kalenderen",
+		CapSearch:                "Søke i journaler",
+		CapSetOwnPreferences:     "Sette egne preferanser for språk o.l.",
+		CapCheckInPatient:        "Sjekke inn pasienter",
+		CapManageOwnPatients:     "Endre informasjon om egne pasienter",
+		CapManageAllPatients:     "Redigere alle pasienter",
+		CapManageOwnHomes:        "Endre informasjon om eget rehabhjem",
+		CapManageAllHomes:        "Endre informasjon om alle rehabhjem",
+		CapCreatePatientJournal:  "Opprette nye pasientjournaler i Google Drive",
+		CapManageSpecies:         "Endre listen over arter",
+		CapManageTags:            "Endre listen over tagger",
+		CapManageUsers:           "Endre informasjon om andre brukere",
+		CapDeleteUsers:           "Slette brukere",
+		CapViewAdminTools:        "Se liste over adminverktøy",
+		CapViewGDriveSettings:    "Se Google Drive-innstillinger",
+		CapInviteToGDrive:        "Invitere brukere til Google Drive-mappen fra Bino",
+		CapInviteToBino:          "Invitere nye brukere til Bino",
 	},
 }
 
@@ -527,7 +573,7 @@ var EN = &Language{
 		AccessLevelAdmin:       "Administrator",
 		AccessLevelCoordinator: "Coordinator",
 		AccessLevelRehabber:    "Rehabilitator",
-		AccessLevelNone:        "None",
+		AccessLevelNone:        "User",
 	},
 
 	AdminDefaultIncludeTag:      "Show at check-in",
@@ -686,8 +732,14 @@ var EN = &Language{
 	UserHomes:      "Associated rehab homes",
 	UserIsHomeless: "No associated rehab homes",
 
-	SearchModeBasic:    "Fast",
-	SearchModeAdvanced: "Thorough",
+	SearchModeBasic:           "Fast",
+	SearchModeAdvanced:        "Thorough",
+	SearchFilterCreated:       "Date",
+	SearchFilterClear:         "Clear",
+	SearchTimePreference:      "Prefer older/newer results",
+	SearchTimePreferenceNone:  "None",
+	SearchTimePreferenceOlder: "Older",
+	SearchTimePreferenceNewer: "Newer",
 
 	Status: map[Status]string{
 		StatusUnknown:                        "Unknown",
@@ -722,6 +774,34 @@ var EN = &Language{
 	MatchType: map[MatchType]string{
 		MatchTypeJournal: "📝 Journal",
 		MatchTypePatient: "❤️‍🩹 Patient",
+	},
+
+	CapabilitiesHeader:            "Access levels and capabilities",
+	CapabilitiesLink:              "Read about access levels in Bino",
+	CapabilitiesYourAccessLevelIs: "Your access level is: ",
+	CapabilitiesExplanation:       "Here is the list of actions users with different levels can perform: ",
+	Capabilities: map[Capability]string{
+		CapViewAllActivePatients: "View all patients currently in rehab",
+		CapViewAllFormerPatients: "View all patients who have been in rehab",
+		CapViewAllHomes:          "View all rehab homes",
+		CapViewAllUsers:          "View all users",
+		CapViewCalendar:          "View the calendar",
+		CapSearch:                "Search in journals",
+		CapSetOwnPreferences:     "Set own preferences for language etc.",
+		CapCheckInPatient:        "Check in patients",
+		CapManageOwnPatients:     "Edit information about own patients",
+		CapManageAllPatients:     "Edit all patients",
+		CapManageOwnHomes:        "Edit information about own rehab home",
+		CapManageAllHomes:        "Edit information about all rehab homes",
+		CapCreatePatientJournal:  "Create new patient journals in Google Drive",
+		CapManageSpecies:         "Edit the list of species",
+		CapManageTags:            "Edit the list of tags",
+		CapManageUsers:           "Edit information about other users",
+		CapDeleteUsers:           "Delete users",
+		CapViewAdminTools:        "View list of admin tools",
+		CapViewGDriveSettings:    "View Google Drive settings",
+		CapInviteToGDrive:        "Invite users to the Google Drive folder from Bino",
+		CapInviteToBino:          "Invite new users to Bino",
 	},
 }
 

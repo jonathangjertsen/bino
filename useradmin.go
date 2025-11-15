@@ -27,9 +27,17 @@ func (server *Server) userAdminHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	UserAdmin(data, SliceToSlice(users, func(in GetAppusersRow) UserView {
+	homes, err := server.Queries.GetHomes(ctx)
+	if err != nil {
+		server.renderError(w, r, data, err)
+		return
+	}
+
+	UserAdmin(data, SliceToSlice(homes, func(in Home) HomeView {
+		return in.ToHomeView()
+	}), SliceToSlice(users, func(in GetAppusersRow) UserView {
 		return in.ToUserView()
-	}), SliceToSlice(invitations, func(in Invitation) InvitationView {
+	}), SliceToSlice(invitations, func(in GetInvitationsRow) InvitationView {
 		return in.ToInvitationView()
 	})).Render(ctx, w)
 }

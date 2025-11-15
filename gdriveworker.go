@@ -3,15 +3,11 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/api/drive/v3"
 )
 
@@ -87,6 +83,7 @@ type ListFilesParams struct {
 }
 
 type ListFilesResult struct {
+	Folder        GDriveItem
 	Files         []GDriveItem
 	NextPageToken string
 }
@@ -219,7 +216,7 @@ func NewGDriveWorker(ctx context.Context, cfg GDriveConfig, g *GDrive, c *Cache)
 		c.Delete("gdrive-config-info")
 		_ = w.GetGDriveConfigInfo()
 
-		w.poller(ctx)
+		w.searchIndexWorker(ctx)
 	}()
 
 	// Workers
@@ -228,160 +225,6 @@ func NewGDriveWorker(ctx context.Context, cfg GDriveConfig, g *GDrive, c *Cache)
 	}
 
 	return w
-}
-
-func (w *GDriveWorker) poller(ctx context.Context) {
-	for {
-		if err := w.pollOnce(ctx); err != nil {
-			log.Printf("ERROR: %v", err)
-		}
-		time.Sleep(time.Minute * 10)
-	}
-}
-
-func (w *GDriveWorker) pollOnce(ctx context.Context) error {
-	w.handleFiles(ctx, w.cfg.JournalFolder)
-	for _, folder := range w.cfg.ExtraJournalFolders {
-		w.handleFiles(ctx, folder)
-	}
-	return nil
-}
-
-func (w *GDriveWorker) handleFiles(ctx context.Context, folderID string) error {
-	folderItem, err := w.GetFile(folderID)
-	if err != nil {
-		return err
-	}
-	res, err := w.ListFiles(ListFilesParams{
-		Parent: folderID,
-	})
-	if err != nil {
-		return err
-	}
-	pageIdx := 0
-	fmt.Printf("nextPageToken=%s\n", res.NextPageToken)
-	for res.NextPageToken != "" {
-		if page, err := w.ListFiles(ListFilesParams{
-			Parent:    folderID,
-			PageToken: res.NextPageToken,
-		}); err == nil {
-			res.Files = append(res.Files, page.Files...)
-			res.NextPageToken = page.NextPageToken
-		} else {
-			log.Printf("getting page %d: %s", pageIdx, err.Error())
-			break
-		}
-	}
-
-	log.Printf("START: converting %d files for %s", len(res.Files), folderItem.Name)
-	defer log.Printf("DONE: converting files for %s", folderItem.Name)
-	for _, file := range res.Files {
-		ids, err := w.g.Queries.GetPatientsByJournalURL(ctx, file.ID)
-		if err != nil {
-			log.Printf("Querying patients: %s", err)
-			continue
-		}
-		var namespace = "journal"
-		url := file.DocumentURL()
-		journalInfo := SearchJournalInfo{
-			FolderURL:   folderItem.FolderURL(),
-			FolderName:  folderItem.Name,
-			CreatedTime: file.CreatedTime.Unix(),
-		}
-		var extraData any
-		extraData = journalInfo
-		if len(ids) == 1 {
-			namespace = "patient"
-			url = PatientURL(ids[0])
-			extraData = SearchPatientInfo{
-				JournalInfo: journalInfo,
-				JournalURL:  file.DocumentURL(),
-			}
-		}
-		extraDataStr, err := json.Marshal(extraData)
-		if err != nil {
-			extraDataStr = []byte("")
-		}
-		extraDataField := pgtype.Text{String: string(extraDataStr), Valid: err == nil}
-		associatedURLField := pgtype.Text{String: url, Valid: true}
-
-		// TODO get info like whether it's skipped
-		updatedField, err := w.g.Queries.GetSearchUpdatedTime(ctx, GetSearchUpdatedTimeParams{
-			Namespace:     namespace,
-			AssociatedUrl: associatedURLField,
-		})
-		if err != nil {
-			if !errors.Is(err, pgx.ErrNoRows) {
-				log.Printf("Getting update time for %s: %v", file.Name, err)
-			}
-			updatedField = pgtype.Timestamptz{}
-		}
-
-		journalLogInfo := fmt.Sprintf("Journal '%s' (id=%s, url=%s)", file.Name, file.ID, url)
-
-		if updatedField.Valid {
-			if file.Trashed {
-				log.Printf("%s: Trashed, deleting from search", journalLogInfo)
-				if err := w.g.Queries.DeleteSearchEntry(ctx, DeleteSearchEntryParams{
-					Namespace:     namespace,
-					AssociatedUrl: pgtype.Text{String: url, Valid: true},
-				}); err != nil {
-					log.Printf("%s: Failed to delete search entry: %v", journalLogInfo, err)
-				}
-				continue
-			} else {
-				if file.ModifiedTime.After(updatedField.Time) {
-					log.Printf("%s: Out of date\n", journalLogInfo)
-				} else {
-					if extraDataField.Valid {
-						tag, err := w.g.Queries.UpdateExtraData(ctx, UpdateExtraDataParams{
-							ExtraData:     extraDataField,
-							Namespace:     namespace,
-							AssociatedUrl: pgtype.Text{String: url, Valid: true},
-						})
-						if err != nil {
-							log.Printf("%s: Updating extra data: %v", journalLogInfo, err.Error())
-						} else if tag.RowsAffected() > 0 {
-							log.Printf("%s: Updated extra data: '%s'", journalLogInfo, extraDataStr)
-						}
-					}
-					// log.Printf("%s: Up to date, skipping\n", journalLogInfo)
-					continue
-				}
-			}
-		} else {
-			if file.Trashed {
-				log.Printf("%s: Trashed, skipping", journalLogInfo)
-				continue
-			}
-			log.Printf("%s: No search entry found (file modified=%s)\n", journalLogInfo, file.ModifiedTime)
-		}
-
-		log.Printf("Reading %s", journalLogInfo)
-		journal, err := w.g.ReadDocument(file.ID)
-		if err != nil {
-			log.Printf("Reading %s: %s", journalLogInfo, err.Error())
-			continue
-		}
-		if file.CreatedTime.IsZero() {
-			file.CreatedTime = file.ModifiedTime
-		}
-
-		if err := w.g.Queries.UpsertSearchEntry(ctx, UpsertSearchEntryParams{
-			Namespace:     namespace,
-			AssociatedUrl: associatedURLField,
-			Updated:       pgtype.Timestamptz{Time: file.ModifiedTime, Valid: !file.ModifiedTime.IsZero()},
-			Created:       pgtype.Timestamptz{Time: file.CreatedTime, Valid: true},
-			Header:        pgtype.Text{String: file.Name, Valid: true},
-			Body:          pgtype.Text{String: journal.Content, Valid: true},
-			Lang:          "norwegian",
-			ExtraData:     extraDataField,
-		}); err != nil {
-			log.Printf("Inserting search entry for %s: %s", journalLogInfo, err.Error())
-			continue
-		}
-	}
-	return nil
 }
 
 type GDriveConfigInfo struct {
@@ -531,6 +374,11 @@ func (w *GDriveWorker) handleRequestListFiles(req GDriveTaskRequest) GDriveTaskR
 		return w.errorResponse(req, err)
 	}
 
+	folderItem, err := w.g.GetFile(params.Parent)
+	if err != nil {
+		return w.errorResponse(req, err)
+	}
+
 	call := w.g.Drive.Files.List()
 
 	if w.g.DriveBase != "" {
@@ -571,6 +419,7 @@ func (w *GDriveWorker) handleRequestListFiles(req GDriveTaskRequest) GDriveTaskR
 	return GDriveTaskResponse{
 		Type: GDriveTaskRequestIDListFiles,
 		Payload: ListFilesResult{
+			Folder: folderItem,
 			Files: SliceToSlice(fileList.Files, func(in *drive.File) GDriveItem {
 				return GDriveItemFromFile(in, nil)
 			}),

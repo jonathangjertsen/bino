@@ -55,7 +55,7 @@ func (server *Server) getHomeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	preferredSpecies, otherSpecies, err := server.getSpeciesForUser(ctx)
+	preferredSpecies, otherSpecies, err := server.getSpeciesForUser(ctx, homeData.ID)
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return

@@ -12204,10 +12204,9 @@ legend {
 
 mark.hl {
   background: linear-gradient(148deg, #fff59d 0%, #fce168 100%);
-  padding: 0 2px;
+  padding: 0;
   border-radius: 3px;
-  border: 1px solid black;
-  font-weight: 500;
+  border: 1px solid rgb(126.75, 127.125, 141.875);
   box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
 }
 
@@ -12228,19 +12227,14 @@ mark.hl {
 .matches .fragment {
   position: relative;
 }
-.matches .fragment::after {
-  content: "—";
-  display: block;
-  text-align: center;
-  color: black;
-}
-.matches .fragment:last-of-type::after {
-  content: none;
-}
 .matches .fragment pre {
   margin: 0.25rem 0;
   white-space: pre-wrap;
   font-family: inherit;
+}
+
+.search-advanced-options[data-show=false] {
+  display: none;
 }
 
 .search-header {

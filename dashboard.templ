@@ -99,12 +99,12 @@ templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
                     <option value="" disabled selected>{data.User.Language.DashboardSelectSpecies}</option>
                     <optgroup label={data.User.Language.HomePreferredSpecies}>
                         for _, sp := range dashboardData.PreferredHomeView.PreferredSpecies {
-                            <option value={sp.ID}>{sp.Name}</option>
+                            <option value={sp.ID} selected?={sp.ID == dashboardData.DefaultSelectedSpecies}>{sp.Name}</option>
                         }
                     </optgroup>
                     <optgroup label={data.User.Language.DashboardNonPreferredSpecies}>
                         for _, sp := range dashboardData.NonPreferredSpecies {
-                            <option value={sp.ID}>{sp.Name}</option>
+                            <option value={sp.ID} selected?={sp.ID == dashboardData.DefaultSelectedSpecies}>{sp.Name}</option>
                         }
                     </optgroup>
                 </select>
