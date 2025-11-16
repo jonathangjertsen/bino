@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: bino
+      POSTGRES_PASSWORD: ${BINO_DB_PASSWORD}
+      POSTGRES_DB: bino
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  bino:
+    build: .
+    depends_on:
+      - db
+    environment:
+      BINO_DB_PASSWORD: ${BINO_DB_PASSWORD}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config.json:/app/config.json
+      - ./secret:/app/secret
+
+volumes:
+  pgdata:

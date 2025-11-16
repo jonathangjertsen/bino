@@ -1,4 +1,6 @@
 node_modules
+bino
 backend
 config.json
 cache.db
+.env
