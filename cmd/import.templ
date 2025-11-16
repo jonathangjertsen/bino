@@ -1,0 +1,58 @@
+package main
+
+templ ImportPage(data *CommonData, req ImportRequest) {
+    @Layout(data) {
+        <h1>{data.User.Language.ImportHeader}</h1>
+        <div class="card p-2">
+            <p>This tool allows you to add many patients in one go.</p>
+            <p>Each line in the textarea should have the following format: <code>Name Species Home JournalURL</code></p>
+            <p>You can omit the last parts (Home and URL). If there is no JournalURL, I will create a journal for that one. If there is also no Home, I will assume you want to add them to your own rehab home.</p>
+            <p>This textarea is auto-saved, so you can leave and continue your work at any time.</p>
+            <form action="/import" method="POST" autocomplete="off">
+                <div class="form-group">
+                <textarea
+                    name="txt"
+                    class="form-control"
+                    rows="10"
+                    hx-get="/import/validation"
+                    hx-trigger="input changed delay:100ms"
+                    hx-target="#import-validation"
+                    hx-swap="outerHTML"
+                    hx-on:htmx:afterOnLoad="document.querySelector('.b-create-patient').disabled = !this.closest('form').querySelector('.import-ok')"
+                >
+                {req.Txt}
+                </textarea>
+                </div>
+                <p>
+                    @ImportValidation(data, req)
+                </p>
+            </form>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js" integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz" crossorigin="anonymous"></script>
+    }
+}
+
+templ ImportValidation(data *CommonData, req ImportRequest) {
+    if req.OK {
+        <div id="import-validation">
+            <p>Validation result: <span class="import-ok">OK</span></p>
+            <ul>
+                for _, line := range req.Notes {
+                    <li>{line}</li>
+                }
+            </ul>
+            <div class="form-group">
+                <button type="submit" class="b-create-patient btn btn-primary">{data.User.Language.ImportPatients}</button>
+            </div>
+        </div>
+    } else {
+        <div id="import-validation" class="import-err">
+            <p>Validation result: <span class="import-error">ERROR</span></p>
+            <ul>
+                for _, line := range req.Notes {
+                    <li>{line}</li>
+                }
+            </ul>
+        </div>
+    }
+}

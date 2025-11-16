@@ -6,7 +6,7 @@ templ AdminRootPage(data *CommonData) {
         <div class="card b-card">
             if data.User.AccessLevel >= AccessLevelCoordinator {
                 <li class="card mb-1 p-1"><a href="/species">{data.User.Language.AdminManageSpecies}</a></li>
-                <li class="card mb-1 p-1"><a href="/tag">{data.User.Language.AdminManageTags}</a></li>
+                <li class="card mb-1 p-1"><a href="/import">{data.User.Language.ImportHeader}</a></li>
             }
             if data.User.AccessLevel >= AccessLevelAdmin {
                 <li class="card mb-1 p-1"><a href="/homes">{data.User.Language.AdminManageHomes}</a></li>

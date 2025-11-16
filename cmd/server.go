@@ -173,6 +173,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, gdri
 	mux.Handle("GET /user/{user}", loggedInHandler(server.getUserHandler, CapViewAllHomes))
 	mux.Handle("GET /former-patients", loggedInHandler(server.formerPatientsHandler, CapViewAllFormerPatients))
 	mux.Handle("GET /calendar", loggedInHandler(server.calendarHandler, CapViewCalendar))
+	mux.Handle("GET /import", loggedInHandler(server.getImportHandler, CapUseImportTool))
 	mux.Handle("GET /search", loggedInHandler(server.searchHandler, CapSearch))
 	mux.Handle("GET /search/live", loggedInHandler(server.searchLiveHandler, CapSearch))
 	// Forms
@@ -190,21 +191,19 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, gdri
 	mux.Handle("POST /home/{home}/species/add", loggedInHandler(server.addPreferredSpeciesHandler, CapManageOwnHomes))
 	mux.Handle("POST /home/{home}/species/delete/{species}", loggedInHandler(server.deletePreferredSpeciesHandler, CapManageOwnHomes))
 	mux.Handle("POST /home/{home}/species/reorder", loggedInHandler(server.reorderSpeciesHandler, CapManageOwnHomes))
-
 	mux.Handle("POST /period/{period}/delete", loggedInHandler(server.deleteHomeUnavailableHandler, CapManageOwnHomes))
+	mux.Handle("POST /import", loggedInHandler(server.postImportHandler, CapUseImportTool))
 	// Ajax
 	mux.Handle("POST /language", loggedInHandler(server.postLanguageHandler, CapSetOwnPreferences))
-	mux.Handle("DELETE /patient/{patient}/tag/{tag}", loggedInHandler(server.deletePatientTagHandler, CapManageOwnPatients))
-	mux.Handle("POST /patient/{patient}/tag/{tag}", loggedInHandler(server.createPatientTagHandler, CapManageOwnPatients))
 	mux.Handle("POST /ajaxreorder", loggedInHandler(server.ajaxReorderHandler, CapManageOwnPatients))
 	mux.Handle("POST /ajaxtransfer", loggedInHandler(server.ajaxTransferHandler, CapManageOwnPatients))
 	mux.Handle("GET /calendar/away", loggedInHandler(server.ajaxCalendarAwayHandler, CapViewCalendar))
 	mux.Handle("GET /calendar/patientevents", loggedInHandler(server.ajaxCalendarPatientEventsHandler, CapViewCalendar))
+	mux.Handle("GET /import/validation", loggedInHandler(server.ajaxImportValidateHandler, CapViewCalendar))
 
 	//// CONTENT MANAGEMENT
 	// Pages
 	mux.Handle("GET /species", loggedInHandler(server.getSpeciesHandler, CapManageSpecies))
-	mux.Handle("GET /tag", loggedInHandler(server.getTagHandler, CapManageTags))
 	mux.Handle("GET /admin", loggedInHandler(server.adminRootHandler, CapViewAdminTools))
 	mux.Handle("GET /homes", loggedInHandler(server.getHomesHandler, CapManageAllHomes))
 	mux.Handle("GET /users", loggedInHandler(server.userAdminHandler, CapManageUsers))
@@ -214,8 +213,6 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, gdri
 	// Ajax
 	mux.Handle("POST /species", loggedInHandler(server.postSpeciesHandler, CapManageSpecies))
 	mux.Handle("PUT /species", loggedInHandler(server.putSpeciesHandler, CapManageSpecies))
-	mux.Handle("POST /tag", loggedInHandler(server.postTagHandler, CapManageTags))
-	mux.Handle("PUT /tag", loggedInHandler(server.putTagHandler, CapManageTags))
 
 	//// ADMIN
 	// Pages

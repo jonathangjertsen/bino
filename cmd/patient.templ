@@ -43,9 +43,6 @@ templ PatientPage(ctx context.Context, data *CommonData, view PatientPageView, s
                         @DashboardMove(data, view.Homes, view.Home, view.Patient)
                         @PatientCheckout(data, view.Patient)
                     }
-
-                    // This must be the last one.
-                    @DashboardTagRows(data, view.Tags, view.Patient)
                 </tbody>
             </table>
 

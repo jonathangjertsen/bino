@@ -42,6 +42,36 @@ func (q *Queries) AddPatientEvent(ctx context.Context, arg AddPatientEventParams
 	return id, err
 }
 
+const addPatientRegisteredEvents = `-- name: AddPatientRegisteredEvents :exec
+INSERT INTO patient_event (patient_id, home_id, event_id, associated_id, note, appuser_id, time)
+VALUES (
+  UNNEST($1::int[]),
+  UNNEST($2::int[]),
+  $3,
+  NULL,
+  'Batch imported',
+  $4,
+  NOW()
+)
+`
+
+type AddPatientRegisteredEventsParams struct {
+	PatientID []int32
+	HomeID    []int32
+	EventID   int32
+	AppuserID int32
+}
+
+func (q *Queries) AddPatientRegisteredEvents(ctx context.Context, arg AddPatientRegisteredEventsParams) error {
+	_, err := q.db.Exec(ctx, addPatientRegisteredEvents,
+		arg.PatientID,
+		arg.HomeID,
+		arg.EventID,
+		arg.AppuserID,
+	)
+	return err
+}
+
 const deleteEventsCreatedByUser = `-- name: DeleteEventsCreatedByUser :exec
 DELETE
 FROM patient_event

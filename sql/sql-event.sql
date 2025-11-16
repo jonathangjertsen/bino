@@ -4,6 +4,18 @@ VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id
 ;
 
+-- name: AddPatientRegisteredEvents :exec
+INSERT INTO patient_event (patient_id, home_id, event_id, associated_id, note, appuser_id, time)
+VALUES (
+  UNNEST(@patient_id::int[]),
+  UNNEST(@home_id::int[]),
+  @event_id,
+  NULL,
+  'Batch imported',
+  @appuser_id,
+  NOW()
+);
+
 -- name: GetEventsForPatient :many
 SELECT
     pe.*,

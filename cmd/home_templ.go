@@ -888,7 +888,7 @@ func PreferredSpecies(data *CommonData, dashboardData *DashboardData, view *Home
 				fmt.Sprintf("/home/%d/species/delete/%d", view.Home.ID, species.ID),
 				"⛔",
 				"POST",
-				"btn-warn",
+				"btn-outline-danger",
 			).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

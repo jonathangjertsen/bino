@@ -47,21 +47,6 @@ func (server *Server) getPatientHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	availableTags, err := server.Queries.GetTagsWithLanguageCheckin(ctx, commonData.Lang32())
-	if err != nil {
-		server.renderError(w, r, commonData, err)
-		return
-	}
-
-	patientTags, err := server.Queries.GetTagsForPatient(ctx, GetTagsForPatientParams{
-		PatientID:  patientData.ID,
-		LanguageID: commonData.Lang32(),
-	})
-	if err != nil {
-		server.renderError(w, r, commonData, err)
-		return
-	}
-
 	eventData, err := server.Queries.GetEventsForPatient(ctx, patientData.ID)
 	if err != nil {
 		server.renderError(w, r, commonData, err)
@@ -97,19 +82,11 @@ func (server *Server) getPatientHandler(w http.ResponseWriter, r *http.Request) 
 			Name:       patientData.Name,
 			Species:    patientData.SpeciesName,
 			JournalURL: patientData.JournalUrl.String,
-			Tags: SliceToSlice(patientTags, func(in GetTagsForPatientRow) TagView {
-				return TagView{
-					ID:        in.TagID,
-					Name:      in.Name,
-					PatientID: patientData.ID,
-				}
-			}),
 		},
 		Home: home,
 		Homes: SliceToSlice(homes, func(home Home) HomeView {
 			return HomeView{Home: home}
 		}),
-		Tags:   availableTags,
 		Events: events,
 	}, server).Render(ctx, w)
 }
@@ -160,13 +137,13 @@ func (server *Server) createJournalHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := server.Queries.SetPatientJournal(ctx, SetPatientJournalParams{
+	if tag, err := server.Queries.SetPatientJournal(ctx, SetPatientJournalParams{
 		ID: patient,
 		JournalUrl: pgtype.Text{
 			String: item.DocumentURL(),
 			Valid:  true,
 		},
-	}); err != nil {
+	}); err != nil || tag.RowsAffected() == 0 {
 		commonData.Error(commonData.User.Language.TODO("failed to set in DB"), err)
 		server.redirectToReferer(w, r)
 		return
@@ -215,13 +192,13 @@ func (server *Server) attachJournalHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := server.Queries.SetPatientJournal(ctx, SetPatientJournalParams{
+	if tag, err := server.Queries.SetPatientJournal(ctx, SetPatientJournalParams{
 		ID: patient,
 		JournalUrl: pgtype.Text{
 			String: baseURL,
 			Valid:  true,
 		},
-	}); err != nil {
+	}); err != nil || tag.RowsAffected() == 0 {
 		commonData.Error(commonData.User.Language.TODO("failed to set in DB"), err)
 		server.redirectToReferer(w, r)
 		return

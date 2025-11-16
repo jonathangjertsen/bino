@@ -38,17 +38,6 @@ func (server *Server) getHomeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	patientTags, err := server.Queries.GetTagsForCurrentPatientsForHome(ctx, GetTagsForCurrentPatientsForHomeParams{
-		CurrHomeID: pgtype.Int4{Int32: id, Valid: true},
-		LanguageID: commonData.Lang32(),
-	})
-
-	availableTags, err := server.Queries.GetTagsWithLanguageCheckin(ctx, commonData.Lang32())
-	if err != nil {
-		server.renderError(w, r, commonData, err)
-		return
-	}
-
 	homes, err := server.Queries.GetHomes(ctx)
 	if err != nil {
 		server.renderError(w, r, commonData, err)
@@ -69,7 +58,6 @@ func (server *Server) getHomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	HomePage(ctx, commonData, &DashboardData{
 		NonPreferredSpecies: otherSpecies,
-		Tags:                availableTags,
 		Homes: SliceToSlice(homes, func(h Home) HomeView {
 			return h.ToHomeView()
 		}),
@@ -84,11 +72,6 @@ func (server *Server) getHomeHandler(w http.ResponseWriter, r *http.Request) {
 				Status:  p.Status,
 				Name:    p.Name,
 				Species: p.SpeciesName,
-				Tags: SliceToSlice(FilterSlice(patientTags, func(t GetTagsForCurrentPatientsForHomeRow) bool {
-					return t.PatientID == p.ID
-				}), func(t GetTagsForCurrentPatientsForHomeRow) TagView {
-					return t.ToTagView()
-				}),
 			}
 		}),
 		PreferredSpecies: preferredSpecies,

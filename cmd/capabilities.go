@@ -18,13 +18,13 @@ import "slices"
 // ManageAllHomes,
 // CreatePatientJournal,
 // ManageSpecies,
-// ManageTags,
 // ManageUsers,
 // DeleteUsers,
 // ViewAdminTools,
 // ViewGDriveSettings,
 // InviteToGDrive,
 // InviteToBino,
+// UseImportTool,
 // )
 type Capability int32
 
@@ -42,12 +42,12 @@ var RequiredAccessLevel = map[Capability]AccessLevel{
 	CapManageOwnHomes:       AccessLevelRehabber,
 	CapCreatePatientJournal: AccessLevelRehabber,
 	CapViewGDriveSettings:   AccessLevelRehabber,
+	CapManageAllPatients:    AccessLevelRehabber,
 
-	CapViewAdminTools:    AccessLevelCoordinator,
-	CapManageAllPatients: AccessLevelCoordinator,
-	CapManageAllHomes:    AccessLevelCoordinator,
-	CapManageSpecies:     AccessLevelCoordinator,
-	CapManageTags:        AccessLevelCoordinator,
+	CapViewAdminTools: AccessLevelCoordinator,
+	CapManageAllHomes: AccessLevelCoordinator,
+	CapManageSpecies:  AccessLevelCoordinator,
+	CapUseImportTool:  AccessLevelCoordinator,
 
 	CapManageUsers:    AccessLevelAdmin,
 	CapDeleteUsers:    AccessLevelAdmin,

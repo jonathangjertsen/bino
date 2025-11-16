@@ -11972,7 +11972,6 @@ h1, h2, h3, h4, h5, h6 {
 }
 .dashboard-form {
   border: 1px solid rgb(126.75, 127.125, 141.875);
-  flex: 1;
   align-self: flex-start;
   margin-top: 0 !important;
   margin-left: 0 !important;

@@ -13,12 +13,7 @@ type DashboardData struct {
 	PreferredHomeView      HomeView
 	DefaultSelectedSpecies int32
 	NonPreferredSpecies    []SpeciesView
-	Tags                   []GetTagsWithLanguageCheckinRow
 	Homes                  []HomeView
-}
-
-func (r GetTagsWithLanguageCheckinRow) HTMLID() string {
-	return fmt.Sprintf("patient-label-%d", r.TagID)
 }
 
 func (server *Server) getSpeciesForUser(ctx context.Context, user int32) ([]SpeciesView, []SpeciesView, error) {
@@ -59,12 +54,6 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tags, err := server.Queries.GetTagsWithLanguageCheckin(ctx, commonData.Lang32())
-	if err != nil {
-		server.renderError(w, r, commonData, err)
-		return
-	}
-
 	users, err := server.Queries.GetAppusers(ctx) // TODO(perf) use a more specific query
 	if err != nil {
 		server.renderError(w, r, commonData, err)
@@ -78,12 +67,6 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	patients, err := server.Queries.GetActivePatients(ctx, commonData.Lang32())
-	if err != nil {
-		server.renderError(w, r, commonData, err)
-		return
-	}
-
-	patientTags, err := server.Queries.GetTagsForActivePatients(ctx, commonData.Lang32())
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return
@@ -107,11 +90,6 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 					Name:       p.Name,
 					Status:     p.Status,
 					JournalURL: p.JournalUrl.String,
-					Tags: SliceToSlice(FilterSlice(patientTags, func(t GetTagsForActivePatientsRow) bool {
-						return t.PatientID == p.ID
-					}), func(t GetTagsForActivePatientsRow) TagView {
-						return t.ToTagView()
-					}),
 				}
 			}),
 			Users: SliceToSlice(FilterSlice(users, func(u GetAppusersRow) bool {
@@ -144,7 +122,6 @@ func (server *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	_ = DashboardPage(commonData, &DashboardData{
 		NonPreferredSpecies:    otherSpecies,
 		DefaultSelectedSpecies: defaultSpecies,
-		Tags:                   tags,
 		PreferredHomeView:      preferredHomeView,
 		Homes:                  homeViews,
 	}).Render(r.Context(), w)
@@ -164,13 +141,12 @@ func (server *Server) postCheckinHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	fields, err := server.getFormIDs(r, "home", "species")
-	if err != nil {
-		server.renderError(w, r, commonData, err)
-		return
+	var createJournal bool
+	if _, err := server.getFormValue(r, "create-journal"); err == nil {
+		createJournal = true
 	}
 
-	tags, err := IDSlice(r.Form["tag"])
+	fields, err := server.getFormIDs(r, "home", "species")
 	if err != nil {
 		server.renderError(w, r, commonData, err)
 		return
@@ -185,8 +161,10 @@ func (server *Server) postCheckinHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	var patientID int32
 	if err := server.Transaction(ctx, func(ctx context.Context, q *Queries) error {
-		patientID, err := q.AddPatient(ctx, AddPatientParams{
+		var err error
+		patientID, err = q.AddPatient(ctx, AddPatientParams{
 			SpeciesID:  fields["species"],
 			CurrHomeID: pgtype.Int4{Int32: fields["home"], Valid: true},
 			Name:       name,
@@ -194,15 +172,6 @@ func (server *Server) postCheckinHandler(w http.ResponseWriter, r *http.Request)
 		})
 		if err != nil {
 			return err
-		}
-
-		if len(tags) > 0 {
-			if err := q.AddPatientTags(ctx, AddPatientTagsParams{
-				PatientID: patientID,
-				Tags:      tags,
-			}); err != nil {
-				return fmt.Errorf("creating tags: %w", err)
-			}
 		}
 
 		if _, err := q.AddPatientEvent(ctx, AddPatientEventParams{
@@ -215,7 +184,13 @@ func (server *Server) postCheckinHandler(w http.ResponseWriter, r *http.Request)
 		}); err != nil {
 			return fmt.Errorf("registering patient: %w", err)
 		}
+		return nil
+	}); err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
 
+	if createJournal {
 		if item, err := server.GDriveWorker.CreateJournal(GDriveTemplateVars{
 			Time:    time.Now(),
 			Name:    name,
@@ -224,126 +199,16 @@ func (server *Server) postCheckinHandler(w http.ResponseWriter, r *http.Request)
 		}); err != nil {
 			commonData.Warning(commonData.User.Language.GDriveCreateJournalFailed, err)
 		} else {
-			q.SetPatientJournal(ctx, SetPatientJournalParams{
+			if tag, err := server.Queries.SetPatientJournal(ctx, SetPatientJournalParams{
 				ID:         patientID,
 				JournalUrl: pgtype.Text{String: item.DocumentURL(), Valid: true},
-			})
+			}); err != nil || tag.RowsAffected() == 0 {
+				commonData.Warning(commonData.User.Language.GDriveCreateJournalFailed, err)
+			}
 		}
-
-		return nil
-	}); err != nil {
-		server.renderError(w, r, commonData, err)
-		return
 	}
 
 	server.redirectToReferer(w, r)
-}
-
-func (server *Server) deletePatientTagHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	commonData := MustLoadCommonData(ctx)
-
-	fields, err := server.getPathIDs(r, "patient", "tag")
-	if err != nil {
-		ajaxError(w, r, err, http.StatusInternalServerError)
-		return
-	}
-
-	patient, tag := fields["patient"], fields["tag"]
-
-	patientData, err := server.Queries.GetPatient(ctx, patient)
-	if err != nil {
-		ajaxError(w, r, err, http.StatusInternalServerError)
-		return
-	}
-
-	if err := server.Transaction(ctx, func(ctx context.Context, q *Queries) error {
-		if err := q.DeletePatientTag(ctx, DeletePatientTagParams{
-			PatientID: patient,
-			TagID:     tag,
-		}); err != nil {
-			return err
-		}
-
-		if _, err := q.AddPatientEvent(ctx, AddPatientEventParams{
-			PatientID:    patient,
-			HomeID:       patientData.CurrHomeID.Int32,
-			EventID:      int32(EventTagRemoved),
-			AssociatedID: pgtype.Int4{Int32: tag, Valid: true},
-			Note:         "",
-			AppuserID:    commonData.User.AppuserID,
-			Time:         pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		}); err != nil {
-			return err
-		}
-
-		return nil
-	}); err != nil {
-		ajaxError(w, r, err, http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-}
-
-func (server *Server) createPatientTagHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	commonData := MustLoadCommonData(ctx)
-
-	fields, err := server.getPathIDs(r, "patient", "tag")
-	if err != nil {
-		ajaxError(w, r, err, http.StatusInternalServerError)
-		return
-	}
-
-	patient, tag := fields["patient"], fields["tag"]
-
-	patientData, err := server.Queries.GetPatient(ctx, patient)
-	if err != nil {
-		ajaxError(w, r, err, http.StatusInternalServerError)
-		return
-	}
-
-	if err := server.Transaction(ctx, func(ctx context.Context, q *Queries) error {
-		if err := q.AddPatientTags(ctx, AddPatientTagsParams{
-			PatientID: patient,
-			Tags:      []int32{tag},
-		}); err != nil {
-			return err
-		}
-
-		if _, err := q.AddPatientEvent(ctx, AddPatientEventParams{
-			PatientID:    patient,
-			HomeID:       patientData.CurrHomeID.Int32,
-			EventID:      int32(EventTagAdded),
-			AssociatedID: pgtype.Int4{Int32: tag, Valid: true},
-			Note:         "",
-			AppuserID:    commonData.User.AppuserID,
-			Time:         pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		}); err != nil {
-			return err
-		}
-
-		return nil
-	}); err != nil {
-		ajaxError(w, r, err, http.StatusInternalServerError)
-		return
-	}
-
-	tagName, err := server.Queries.GetTagName(ctx, GetTagNameParams{
-		LanguageID: commonData.Lang32(),
-		TagID:      tag,
-	})
-	if err != nil {
-		ajaxError(w, r, err, http.StatusInternalServerError)
-		return
-	}
-
-	DashboardTag(commonData, TagView{
-		ID:        tag,
-		PatientID: patient,
-		Name:      tagName,
-	}).Render(ctx, w)
 }
 
 func (server *Server) movePatientHandler(w http.ResponseWriter, r *http.Request) {

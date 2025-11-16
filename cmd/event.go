@@ -13,8 +13,6 @@ import "net/http"
 //	TransferredOutsideOrganization = 6,
 //	Died                           = 7,
 //	Euthanized                     = 8,
-//	TagAdded                       = 9,  // Associated ID is tag ID
-//	TagRemoved                     = 10, // Associated ID is tag ID
 //	StatusChanged                  = 11, // Associated ID is status
 //	Deleted                        = 12,
 //	NameChanged                    = 13,

@@ -89,12 +89,6 @@ type PatientEvent struct {
 	AppuserID    int32
 }
 
-// Each row represents a tag on a patient
-type PatientTag struct {
-	PatientID int32
-	TagID     int32
-}
-
 type Search struct {
 	Ns            string
 	Updated       pgtype.Timestamptz
@@ -128,20 +122,5 @@ type SpeciesLanguage struct {
 	SpeciesID  int32
 	LanguageID int32
 	// The name of the species in the given language
-	Name string
-}
-
-// Each row represents a possible tag for a patient
-type Tag struct {
-	ID int32
-	// Whether to show this tag by default when creating a patient
-	DefaultShow bool
-}
-
-// Internationalization for tag
-type TagLanguage struct {
-	TagID      int32
-	LanguageID int32
-	// The name of the tag in the given language
 	Name string
 }

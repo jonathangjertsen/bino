@@ -148,6 +148,37 @@ func (q *Queries) GetHome(ctx context.Context, id int32) (Home, error) {
 	return i, err
 }
 
+const getHomeByName = `-- name: GetHomeByName :many
+SELECT id, name, capacity, note
+FROM home
+WHERE name = $1
+`
+
+func (q *Queries) GetHomeByName(ctx context.Context, name string) ([]Home, error) {
+	rows, err := q.db.Query(ctx, getHomeByName, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Home
+	for rows.Next() {
+		var i Home
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Capacity,
+			&i.Note,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getHomeUnavailablePeriods = `-- name: GetHomeUnavailablePeriods :many
 SELECT id, home_id, from_date, to_date, note
 FROM home_unavailable

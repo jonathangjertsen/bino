@@ -65,6 +65,32 @@ func (q *Queries) GetSpecies(ctx context.Context) ([]Species, error) {
 	return items, nil
 }
 
+const getSpeciesByName = `-- name: GetSpeciesByName :many
+SELECT species_id
+FROM species_language
+WHERE name = $1
+`
+
+func (q *Queries) GetSpeciesByName(ctx context.Context, name string) ([]int32, error) {
+	rows, err := q.db.Query(ctx, getSpeciesByName, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int32
+	for rows.Next() {
+		var species_id int32
+		if err := rows.Scan(&species_id); err != nil {
+			return nil, err
+		}
+		items = append(items, species_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getSpeciesLanguage = `-- name: GetSpeciesLanguage :many
 SELECT species_id, language_id, name FROM species_language
 ORDER BY (species_id, language_id)

@@ -28,7 +28,6 @@ type Language struct {
 	AccessLevel  string
 	AccessLevels map[AccessLevel]string
 
-	AdminDefaultIncludeTag      string
 	AdminDisplayName            string
 	AdminEmailAddress           string
 	AdminInviteToBino           string
@@ -37,7 +36,6 @@ type Language struct {
 	AdminManageHomes            string
 	AdminManageSpecies          string
 	AdminManageStatuses         string
-	AdminManageTags             string
 	AdminManageInvites          string
 	AdminManageUsers            string
 	AdminScrubUserData          string
@@ -76,11 +74,9 @@ type Language struct {
 	DashboardSearchShowUnavailable string
 	DashboardSelectHome            string
 	DashboardSelectCheckout        string
-	DashboardSelectTag             string
 	DashboardSelectSpecies         string
 	DashboardNonPreferredSpecies   string
 	DashboardOtherHome             string
-	DashboardTagsShowAll           string
 
 	ErrorPageHead         string
 	ErrorPageInstructions string
@@ -140,7 +136,6 @@ type Language struct {
 	GenericNotFound string
 	GenericSpecies  string
 	GenericStatus   string
-	GenericTags     string
 	GenericUpdate   string
 	GenericFailed   string
 	GenericSuccess  string
@@ -168,6 +163,9 @@ type Language struct {
 	HomeUnavailableIndefinitely    string
 	HomeUnavailableFromInstruction string
 	HomeUnavailableToInstruction   string
+
+	ImportHeader   string
+	ImportPatients string
 
 	LanguageUpdateFailed string
 
@@ -301,7 +299,6 @@ var NO = &Language{
 		AccessLevelNone:        "Bruker",
 	},
 
-	AdminDefaultIncludeTag:      "Vis ved innsjekk",
 	AdminDisplayName:            "Navn",
 	AdminEmailAddress:           "Epostaddresse",
 	AdminInviteToBino:           "Inviter til Bino",
@@ -310,7 +307,6 @@ var NO = &Language{
 	AdminManageHomes:            "Konfigurer rehabhjem",
 	AdminManageSpecies:          "Konfigurer arter",
 	AdminManageStatuses:         "Konfigurer statuser",
-	AdminManageTags:             "Konfigurer tagger",
 	AdminManageInvites:          "Administrer invitasjoner",
 	AdminManageUsers:            "Administrer brukere",
 	AdminScrubUserData:          "Slett brukerdata",
@@ -349,11 +345,9 @@ var NO = &Language{
 	DashboardSearchShowUnavailable: "Vis utilgjengelige rehabhjem",
 	DashboardSelectHome:            "Velg rehabhjem",
 	DashboardSelectCheckout:        "Velg status",
-	DashboardSelectTag:             "Velg tagg",
 	DashboardSelectSpecies:         "Velg art",
 	DashboardNonPreferredSpecies:   "Andre arter",
 	DashboardOtherHome:             "Andre rehabhjem",
-	DashboardTagsShowAll:           "Vis alle",
 
 	ErrorPageHead:         "Feilmelding",
 	ErrorPageInstructions: "Det skjedde noe feil under lasting av siden. Feilen har blitt logget og vil bli undersøkt. Send melding til administrator for hjelp. Den tekniske feilmeldingen følger under.",
@@ -411,7 +405,6 @@ var NO = &Language{
 	GenericNotFound: "Ikke funnet",
 	GenericSpecies:  "Art",
 	GenericStatus:   "Status",
-	GenericTags:     "Tagger",
 	GenericUpdate:   "Oppdater",
 	GenericFailed:   "Noe gikk galt. Kontakt administrator.",
 	GenericSuccess:  "Handlingen ble utført.",
@@ -438,6 +431,9 @@ var NO = &Language{
 	HomeUnavailableIndefinitely:    "Utilgjengelig på ubestemt tid.",
 	HomeUnavailableFromInstruction: "Datoen du blir utilgjengelig.",
 	HomeUnavailableToInstruction:   "Siste dato du er utilgjengelig.",
+
+	ImportHeader:   "Importverktøy",
+	ImportPatients: "Importer pasienter",
 
 	LanguageUpdateFailed: "Kunne ikke oppdatere språk",
 
@@ -487,8 +483,6 @@ var NO = &Language{
 		EventTransferredOutsideOrganization: "Overført til annen organisasjon",
 		EventDied:                           "Døde",
 		EventEuthanized:                     "Avlivet",
-		EventTagAdded:                       "La til tagg",
-		EventTagRemoved:                     "Fjernet tagg",
 		EventStatusChanged:                  "Endret status",
 		EventDeleted:                        "Slettet",
 		EventNameChanged:                    "Endret navn",
@@ -521,7 +515,6 @@ var NO = &Language{
 		CapManageAllHomes:        "Endre informasjon om alle rehabhjem",
 		CapCreatePatientJournal:  "Opprette nye pasientjournaler i Google Drive",
 		CapManageSpecies:         "Endre listen over arter",
-		CapManageTags:            "Endre listen over tagger",
 		CapManageUsers:           "Endre informasjon om andre brukere",
 		CapDeleteUsers:           "Slette brukere",
 		CapViewAdminTools:        "Se liste over adminverktøy",
@@ -576,7 +569,6 @@ var EN = &Language{
 		AccessLevelNone:        "User",
 	},
 
-	AdminDefaultIncludeTag:      "Show at check-in",
 	AdminDisplayName:            "Name",
 	AdminEmailAddress:           "Email address",
 	AdminInviteToBino:           "Invite to Bino",
@@ -585,7 +577,6 @@ var EN = &Language{
 	AdminManageHomes:            "Manage rehab homes",
 	AdminManageSpecies:          "Manage species",
 	AdminManageStatuses:         "Manage statuses",
-	AdminManageTags:             "Manage tags",
 	AdminManageInvites:          "Invitations",
 	AdminManageUsers:            "Manage users",
 	AdminScrubUserData:          "Delete user data",
@@ -624,11 +615,9 @@ var EN = &Language{
 	DashboardSearchShowUnavailable: "Show unavailable homes",
 	DashboardSelectHome:            "Select home",
 	DashboardSelectCheckout:        "Select status",
-	DashboardSelectTag:             "Select tag",
 	DashboardSelectSpecies:         "Select species",
 	DashboardNonPreferredSpecies:   "Other species",
 	DashboardOtherHome:             "Other homes",
-	DashboardTagsShowAll:           "Show all",
 
 	ErrorPageHead:         "Error",
 	ErrorPageInstructions: "An error occurred while loading the page. The error has been logged and will be investigated. Send a message to the site admin for help. The technical error message is as follows.",
@@ -688,7 +677,6 @@ var EN = &Language{
 	GenericNotFound: "Not found",
 	GenericSpecies:  "Species",
 	GenericStatus:   "Status",
-	GenericTags:     "Tags",
 	GenericUpdate:   "Update",
 	GenericFailed:   "Something went wrong. Contact the site administrator.",
 	GenericSuccess:  "Success.",
@@ -715,6 +703,9 @@ var EN = &Language{
 	HomeUnavailableIndefinitely:    "Unavailable until further notice.",
 	HomeUnavailableFromInstruction: "The date when you become unavailable.",
 	HomeUnavailableToInstruction:   "The last date when you are unavailable.",
+
+	ImportHeader:   "Importer",
+	ImportPatients: "Importe patients",
 
 	LanguageUpdateFailed: "Failed to update language",
 
@@ -761,8 +752,6 @@ var EN = &Language{
 		EventTransferredOutsideOrganization: "Transferred outside of organisation",
 		EventDied:                           "Died",
 		EventEuthanized:                     "Euthanized",
-		EventTagAdded:                       "Tag added",
-		EventTagRemoved:                     "Tag removed",
 		EventStatusChanged:                  "Status changed",
 		EventDeleted:                        "Deleted",
 		EventNameChanged:                    "Name changed",
@@ -795,7 +784,6 @@ var EN = &Language{
 		CapManageAllHomes:        "Edit information about all rehab homes",
 		CapCreatePatientJournal:  "Create new patient journals in Google Drive",
 		CapManageSpecies:         "Edit the list of species",
-		CapManageTags:            "Edit the list of tags",
 		CapManageUsers:           "Edit information about other users",
 		CapDeleteUsers:           "Delete users",
 		CapViewAdminTools:        "View list of admin tools",
@@ -820,20 +808,6 @@ func (l *Language) FormatEvent(ctx context.Context, e int32, assocID pgtype.Int4
 	event := Event(e)
 
 	switch event {
-	case EventTagAdded:
-		if tagName, err := server.Queries.GetTagName(ctx, GetTagNameParams{
-			LanguageID: int32(l.ID),
-			TagID:      assocID.Int32,
-		}); err == nil {
-			return l.formatTagAdded(tagName)
-		}
-	case EventTagRemoved:
-		if tagName, err := server.Queries.GetTagName(ctx, GetTagNameParams{
-			LanguageID: int32(l.ID),
-			TagID:      assocID.Int32,
-		}); err == nil {
-			return l.formatTagRemoved(tagName)
-		}
 	case EventStatusChanged:
 		return l.formatStatusChanged(Status(assocID.Int32))
 	default:

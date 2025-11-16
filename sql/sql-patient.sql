@@ -47,6 +47,17 @@ VALUES ($1, $2, $3, $4, NOW())
 RETURNING id
 ;
 
+-- name: AddPatients :many
+INSERT INTO patient (species_id, name, curr_home_id, status, journal_url, time_checkin)
+SELECT UNNEST(@species::int[]),
+       UNNEST(@name::text[]),
+       UNNEST(@curr_home_id::int[]),
+       UNNEST(@status::int[]),
+       UNNEST(@journal_url::text[]),
+       NOW()
+RETURNING id
+;
+
 -- name: MovePatient :exec
 UPDATE patient
 SET curr_home_id = $2
@@ -87,7 +98,7 @@ SET name = $2
 WHERE id = $1
 ;
 
--- name: SetPatientJournal :exec
+-- name: SetPatientJournal :execresult
 UPDATE patient
 SET journal_url = $2
 WHERE id = $1

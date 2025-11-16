@@ -1,7 +1,6 @@
 package main
 
 import (
-    "slices"
     "strings"
 )
 
@@ -39,40 +38,45 @@ templ DashboardSearch(data *CommonData) {
             </form-group>
         </fieldset>
     }
-    @Card("dashboard-filter", "shadow-sm") {
-        <fieldset>
-            <legend>{data.User.Language.DashboardSearchFilter}</legend>
-            @DashboardSearchCheckbox(
-                "ds-show-me",
-                data.User.Language.DashboardSearchShowMine,
-                true,
-            )
-            @DashboardSearchCheckbox(
-                "ds-show-full",
-                data.User.Language.DashboardSearchShowFull,
-                true,
-            )
-            @DashboardSearchCheckbox(
-                "ds-show-unavailable",
-                data.User.Language.DashboardSearchShowUnavailable,
-                true,
-            )
-        </fieldset>
 
-        <fieldset>
-            <legend>{data.User.Language.HomeAvailability}</legend>
-            <div>
-                <label for="ds-availability-from">
-                    {data.User.Language.GenericFrom}
-                </label>
-                <input class="form-control" autocomplete="off" type="date" name="ds-availability-from" id="ds-availability-from">
-                <label for="ds-availability-to">
-                    {data.User.Language.GenericTo}
-                </label>
-                <input class="form-control" autocomplete="off" type="date" name="ds-availability-to" id="ds-availability-to">
-            </div>
-        </fieldset>
+    // not ready
+    if false {
+        @Card("dashboard-filter", "shadow-sm") {
+            <fieldset>
+                <legend>{data.User.Language.DashboardSearchFilter}</legend>
+                @DashboardSearchCheckbox(
+                    "ds-show-me",
+                    data.User.Language.DashboardSearchShowMine,
+                    true,
+                )
+                @DashboardSearchCheckbox(
+                    "ds-show-full",
+                    data.User.Language.DashboardSearchShowFull,
+                    true,
+                )
+                @DashboardSearchCheckbox(
+                    "ds-show-unavailable",
+                    data.User.Language.DashboardSearchShowUnavailable,
+                    true,
+                )
+            </fieldset>
+
+            <fieldset>
+                <legend>{data.User.Language.HomeAvailability}</legend>
+                <div>
+                    <label for="ds-availability-from">
+                        {data.User.Language.GenericFrom}
+                    </label>
+                    <input class="form-control" autocomplete="off" type="date" name="ds-availability-from" id="ds-availability-from">
+                    <label for="ds-availability-to">
+                        {data.User.Language.GenericTo}
+                    </label>
+                    <input class="form-control" autocomplete="off" type="date" name="ds-availability-to" id="ds-availability-to">
+                </div>
+            </fieldset>
+        }
     }
+  
 }
 
 templ DashboardSearchCheckbox(id, text string, checked bool) {
@@ -93,53 +97,39 @@ templ DashboardForm(data *CommonData, dashboardData *DashboardData) {
                 <label>{data.User.Language.CheckinPatientName}</label>
                 <input class="form-control" name="name">
             </div>
-            <div class="form-group">
-                <label>{data.User.Language.GenericSpecies}</label>
-                <select autocomplete="off" class="form-control form-select" name="species">
-                    <option value="" disabled selected>{data.User.Language.DashboardSelectSpecies}</option>
-                    <optgroup label={data.User.Language.HomePreferredSpecies}>
-                        for _, sp := range dashboardData.PreferredHomeView.PreferredSpecies {
-                            <option value={sp.ID} selected?={sp.ID == dashboardData.DefaultSelectedSpecies}>{sp.Name}</option>
+            <div class="form-row d-flex justify-content-between gap-2 mb-2">
+                <div class="form-group">
+                    <label>{data.User.Language.GenericSpecies}</label>
+                    <select autocomplete="off" class="form-control form-select" name="species">
+                        <option value="" disabled selected>{data.User.Language.DashboardSelectSpecies}</option>
+                        <optgroup label={data.User.Language.HomePreferredSpecies}>
+                            for _, sp := range dashboardData.PreferredHomeView.PreferredSpecies {
+                                <option value={sp.ID} selected?={sp.ID == dashboardData.DefaultSelectedSpecies}>{sp.Name}</option>
+                            }
+                        </optgroup>
+                        <optgroup label={data.User.Language.DashboardNonPreferredSpecies}>
+                            for _, sp := range dashboardData.NonPreferredSpecies {
+                                <option value={sp.ID} selected?={sp.ID == dashboardData.DefaultSelectedSpecies}>{sp.Name}</option>
+                            }
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="patient-home">{data.User.Language.HomesHomeName}</label>
+                    <select autocomplete="off" class="form-control form-select" name="home">
+                        <option value="" disabled selected>{data.User.Language.DashboardSelectHome}</option>
+                        if data.User.PreferredHome.ID != 0 {
+                            <option value={data.User.PreferredHome.ID} selected>{data.User.PreferredHome.Name}</option>
                         }
-                    </optgroup>
-                    <optgroup label={data.User.Language.DashboardNonPreferredSpecies}>
-                        for _, sp := range dashboardData.NonPreferredSpecies {
-                            <option value={sp.ID} selected?={sp.ID == dashboardData.DefaultSelectedSpecies}>{sp.Name}</option>
-                        }
-                    </optgroup>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>{data.User.Language.GenericTags}</label>
-                <br/>
-                for _, tag := range dashboardData.Tags {
-                    <div class="form-check-inline checkbox dashboard-tag" data-hidden={!tag.DefaultShow}>
-                        <input autocomplete="off" type="checkbox" name="tag" id={tag.HTMLID()} value={tag.TagID}>
-                        <label for={tag.HTMLID()}>
-                            {tag.Name}
-                        </label>
-                    </div>
-                }
-                <div class="form-check-inline" id="dashboard-tags-show-all">
-                    <label>{data.User.Language.DashboardTagsShowAll}</label>
+                        <optgroup label={data.User.Language.DashboardOtherHome}>
+                            for _, home := range dashboardData.Homes {
+                                <option value={home.Home.ID}>{home.Home.Name}</option>
+                            }
+                        </optgroup>
+                    </select>
                 </div>
             </div>
-
-            <div class="form-group">
-                <label for="patient-home">{data.User.Language.HomesHomeName}</label>
-                <select autocomplete="off" class="form-control form-select" name="home">
-                    <option value="" disabled selected>{data.User.Language.DashboardSelectHome}</option>
-                    if data.User.PreferredHome.ID != 0 {
-                        <option value={data.User.PreferredHome.ID} selected>{data.User.PreferredHome.Name}</option>
-                    }
-                    <optgroup label={data.User.Language.DashboardOtherHome}>
-                        for _, home := range dashboardData.Homes {
-                            <option value={home.Home.ID}>{home.Home.Name}</option>
-                        }
-                    </optgroup>
-                </select>
-            </div>
-
+           
             <div class="form-group">
                 <div class="form-check-inline">
                     <input autocomplete="off" type="checkbox" name="create-journal" id="create-journal" checked>
@@ -240,7 +230,7 @@ templ DashboardPatientCard(data *CommonData, dashboardData *DashboardData, home 
             </div>
         </div>
         <div class="card-content collapse" id={patient.CollapseID("")}>
-            @DashboardPatientTable(data, dashboardData.Homes, dashboardData.Tags, home, patient)
+            @DashboardPatientTable(data, dashboardData.Homes, home, patient)
         </div>
     </div>
 }
@@ -248,7 +238,6 @@ templ DashboardPatientCard(data *CommonData, dashboardData *DashboardData, home 
 templ DashboardPatientTable(
     data *CommonData,
     homes []HomeView,
-    tags []GetTagsWithLanguageCheckinRow,
     home *HomeView,
     patient PatientView,
 ) {
@@ -260,9 +249,6 @@ templ DashboardPatientTable(
             }
             @DashboardMove(data, homes, home, patient)
             @DashboardCheckout(data, patient)
-
-            // This must be the last one.
-            @DashboardTagRows(data, tags, patient)
         </tbody>
     </table>
 }
@@ -361,50 +347,4 @@ templ DashboardJournalUpdate(data *CommonData, patient PatientView, unconditiona
             }
         </td>
     </tr>
-}
-
-templ DashboardTagRows(data *CommonData, tags []GetTagsWithLanguageCheckinRow, patient PatientView) {
-    <tr>
-        @DashboardTagLabel(data)
-        <td class="d-none"></td>
-    </tr>
-    for _, tag := range patient.Tags {
-        <tr>
-            @DashboardTag(data, tag)
-        </tr>
-    }
-    <tr>
-        @DashboardAddTag(data, tags, patient)
-    </tr>
-}
-
-templ DashboardTagLabel(data *CommonData) {
-    <th rowspan="1000">
-        {data.User.Language.GenericTags}
-    </th>
-}
-
-templ DashboardTag(data *CommonData, tag TagView) {
-    <td class="d-flex justify-content-between border-0">
-        <span class="d-flex filter-content">{tag.Name}</span>
-        @SingleButtonForm(tag.URL(), data.User.Language.GenericDelete, "DELETE", "btn-warning", "tag-delete")
-    </td>
-}
-
-templ DashboardAddTag(data *CommonData, tags []GetTagsWithLanguageCheckinRow, patient PatientView) {
-    <td>
-        <form class="form-control-sm form-control-plaintext d-flex justify-content-between tag-create">
-            <select autocomplete="off" class="form-control form-select form-select-sm">
-                <option value="" disabled selected>{data.User.Language.DashboardSelectTag}</option>
-                for _, tag := range tags {
-                    if !slices.ContainsFunc(patient.Tags, func(existingTag TagView) bool {
-                        return existingTag.ID == tag.TagID
-                    }) {
-                        <option value={tag.TagID}>{tag.Name}</option>
-                    }
-                }
-            </select>
-            <button type="submit" class="btn btn-primary btn-sm w-25" data-patient-id={patient.ID}>+</button>
-        </form>
-    </td>
 }

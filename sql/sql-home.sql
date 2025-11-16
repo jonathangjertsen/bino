@@ -143,3 +143,9 @@ INNER JOIN home AS h
 WHERE from_date <= @range_end
   AND to_date >= @range_begin
 ;
+
+-- name: GetHomeByName :many
+SELECT *
+FROM home
+WHERE name = $1
+;

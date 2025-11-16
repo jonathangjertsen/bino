@@ -32,5 +32,5 @@ psql:
 session_key:
 	openssl rand -base64 32 > secret/session_key
 
-docker: gen
+docker: build
 	docker compose up --build

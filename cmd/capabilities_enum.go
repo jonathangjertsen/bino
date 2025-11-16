@@ -39,25 +39,25 @@ const (
 	CapCreatePatientJournal Capability = 12
 	// CapManageSpecies is a Capability of type ManageSpecies.
 	CapManageSpecies Capability = 13
-	// CapManageTags is a Capability of type ManageTags.
-	CapManageTags Capability = 14
 	// CapManageUsers is a Capability of type ManageUsers.
-	CapManageUsers Capability = 15
+	CapManageUsers Capability = 14
 	// CapDeleteUsers is a Capability of type DeleteUsers.
-	CapDeleteUsers Capability = 16
+	CapDeleteUsers Capability = 15
 	// CapViewAdminTools is a Capability of type ViewAdminTools.
-	CapViewAdminTools Capability = 17
+	CapViewAdminTools Capability = 16
 	// CapViewGDriveSettings is a Capability of type ViewGDriveSettings.
-	CapViewGDriveSettings Capability = 18
+	CapViewGDriveSettings Capability = 17
 	// CapInviteToGDrive is a Capability of type InviteToGDrive.
-	CapInviteToGDrive Capability = 19
+	CapInviteToGDrive Capability = 18
 	// CapInviteToBino is a Capability of type InviteToBino.
-	CapInviteToBino Capability = 20
+	CapInviteToBino Capability = 19
+	// CapUseImportTool is a Capability of type UseImportTool.
+	CapUseImportTool Capability = 20
 )
 
 var ErrInvalidCapability = errors.New("not a valid Capability")
 
-const _CapabilityName = "ViewAllActivePatientsViewAllFormerPatientsViewAllHomesViewAllUsersViewCalendarSearchSetOwnPreferencesCheckInPatientManageOwnPatientsManageAllPatientsManageOwnHomesManageAllHomesCreatePatientJournalManageSpeciesManageTagsManageUsersDeleteUsersViewAdminToolsViewGDriveSettingsInviteToGDriveInviteToBino"
+const _CapabilityName = "ViewAllActivePatientsViewAllFormerPatientsViewAllHomesViewAllUsersViewCalendarSearchSetOwnPreferencesCheckInPatientManageOwnPatientsManageAllPatientsManageOwnHomesManageAllHomesCreatePatientJournalManageSpeciesManageUsersDeleteUsersViewAdminToolsViewGDriveSettingsInviteToGDriveInviteToBinoUseImportTool"
 
 var _CapabilityMap = map[Capability]string{
 	CapViewAllActivePatients: _CapabilityName[0:21],
@@ -74,13 +74,13 @@ var _CapabilityMap = map[Capability]string{
 	CapManageAllHomes:        _CapabilityName[163:177],
 	CapCreatePatientJournal:  _CapabilityName[177:197],
 	CapManageSpecies:         _CapabilityName[197:210],
-	CapManageTags:            _CapabilityName[210:220],
-	CapManageUsers:           _CapabilityName[220:231],
-	CapDeleteUsers:           _CapabilityName[231:242],
-	CapViewAdminTools:        _CapabilityName[242:256],
-	CapViewGDriveSettings:    _CapabilityName[256:274],
-	CapInviteToGDrive:        _CapabilityName[274:288],
-	CapInviteToBino:          _CapabilityName[288:300],
+	CapManageUsers:           _CapabilityName[210:221],
+	CapDeleteUsers:           _CapabilityName[221:232],
+	CapViewAdminTools:        _CapabilityName[232:246],
+	CapViewGDriveSettings:    _CapabilityName[246:264],
+	CapInviteToGDrive:        _CapabilityName[264:278],
+	CapInviteToBino:          _CapabilityName[278:290],
+	CapUseImportTool:         _CapabilityName[290:303],
 }
 
 // String implements the Stringer interface.
@@ -113,13 +113,13 @@ var _CapabilityValue = map[string]Capability{
 	_CapabilityName[163:177]: CapManageAllHomes,
 	_CapabilityName[177:197]: CapCreatePatientJournal,
 	_CapabilityName[197:210]: CapManageSpecies,
-	_CapabilityName[210:220]: CapManageTags,
-	_CapabilityName[220:231]: CapManageUsers,
-	_CapabilityName[231:242]: CapDeleteUsers,
-	_CapabilityName[242:256]: CapViewAdminTools,
-	_CapabilityName[256:274]: CapViewGDriveSettings,
-	_CapabilityName[274:288]: CapInviteToGDrive,
-	_CapabilityName[288:300]: CapInviteToBino,
+	_CapabilityName[210:221]: CapManageUsers,
+	_CapabilityName[221:232]: CapDeleteUsers,
+	_CapabilityName[232:246]: CapViewAdminTools,
+	_CapabilityName[246:264]: CapViewGDriveSettings,
+	_CapabilityName[264:278]: CapInviteToGDrive,
+	_CapabilityName[278:290]: CapInviteToBino,
+	_CapabilityName[290:303]: CapUseImportTool,
 }
 
 // ParseCapability attempts to convert a string to a Capability.

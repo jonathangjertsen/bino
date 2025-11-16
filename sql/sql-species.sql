@@ -30,3 +30,9 @@ SELECT species_id, name FROM species_language
 WHERE language_id = $1
 ORDER BY (species_id)
 ;
+
+-- name: GetSpeciesByName :many
+SELECT species_id
+FROM species_language
+WHERE name = $1
+;

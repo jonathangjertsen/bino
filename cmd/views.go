@@ -95,7 +95,6 @@ type PatientView struct {
 	Status       int32
 	Name         string
 	Species      string
-	Tags         []TagView
 	JournalURL   string
 	TimeCheckin  time.Time
 	TimeCheckout time.Time
@@ -141,34 +140,6 @@ func (in GetFormerPatientsRow) ToPatientView() PatientView {
 		Species:      in.Species,
 		TimeCheckin:  in.TimeCheckin.Time,
 		TimeCheckout: in.TimeCheckout.Time,
-	}
-}
-
-// ---- Tag
-
-type TagView struct {
-	ID        int32
-	PatientID int32
-	Name      string
-}
-
-func (tv TagView) URL() string {
-	return fmt.Sprintf("/patient/%d/tag/%d", tv.PatientID, tv.ID)
-}
-
-func (in GetTagsForCurrentPatientsForHomeRow) ToTagView() TagView {
-	return TagView{
-		ID:        in.TagID,
-		PatientID: in.PatientID,
-		Name:      in.Name,
-	}
-}
-
-func (in GetTagsForActivePatientsRow) ToTagView() TagView {
-	return TagView{
-		ID:        in.TagID,
-		PatientID: in.PatientID,
-		Name:      in.Name,
 	}
 }
 
@@ -384,7 +355,6 @@ func (dv DateView) Before(other DateView) bool {
 type PatientPageView struct {
 	Patient PatientView
 	Home    *HomeView
-	Tags    []GetTagsWithLanguageCheckinRow
 	Events  []EventView
 	Homes   []HomeView
 }

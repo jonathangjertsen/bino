@@ -8,6 +8,7 @@ package main
 import (
 	"context"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -34,6 +35,51 @@ func (q *Queries) AddPatient(ctx context.Context, arg AddPatientParams) (int32, 
 	var id int32
 	err := row.Scan(&id)
 	return id, err
+}
+
+const addPatients = `-- name: AddPatients :many
+INSERT INTO patient (species_id, name, curr_home_id, status, journal_url, time_checkin)
+SELECT UNNEST($1::int[]),
+       UNNEST($2::text[]),
+       UNNEST($3::int[]),
+       UNNEST($4::int[]),
+       UNNEST($5::text[]),
+       NOW()
+RETURNING id
+`
+
+type AddPatientsParams struct {
+	Species    []int32
+	Name       []string
+	CurrHomeID []int32
+	Status     []int32
+	JournalUrl []string
+}
+
+func (q *Queries) AddPatients(ctx context.Context, arg AddPatientsParams) ([]int32, error) {
+	rows, err := q.db.Query(ctx, addPatients,
+		arg.Species,
+		arg.Name,
+		arg.CurrHomeID,
+		arg.Status,
+		arg.JournalUrl,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int32
+	for rows.Next() {
+		var id int32
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const checkoutPatient = `-- name: CheckoutPatient :exec
@@ -335,7 +381,7 @@ func (q *Queries) MovePatient(ctx context.Context, arg MovePatientParams) error 
 	return err
 }
 
-const setPatientJournal = `-- name: SetPatientJournal :exec
+const setPatientJournal = `-- name: SetPatientJournal :execresult
 UPDATE patient
 SET journal_url = $2
 WHERE id = $1
@@ -346,9 +392,8 @@ type SetPatientJournalParams struct {
 	JournalUrl pgtype.Text
 }
 
-func (q *Queries) SetPatientJournal(ctx context.Context, arg SetPatientJournalParams) error {
-	_, err := q.db.Exec(ctx, setPatientJournal, arg.ID, arg.JournalUrl)
-	return err
+func (q *Queries) SetPatientJournal(ctx context.Context, arg SetPatientJournalParams) (pgconn.CommandTag, error) {
+	return q.db.Exec(ctx, setPatientJournal, arg.ID, arg.JournalUrl)
 }
 
 const setPatientName = `-- name: SetPatientName :exec
