@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "bino": {
+      "Name": "bino",
+      "Group": "Servers",
+      "Host": "db",
+      "Port": 5432,
+      "Username": "bino",
+      "SSLMode": "disable",
+      "MaintenanceDB": "postgres"
+    }
+  }
+}

@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -14,19 +15,14 @@ func main() {
 	ctx := context.Background()
 	fmt.Println("Starting...")
 
+	godotenv.Load(".env")
+
 	config, err := loadConfig("config.json")
 	if err != nil {
 		panic(err)
 	}
 
-	cache, err := NewCache(config.DB.CacheFile, func(action, key string, err error) {
-		fmt.Fprintf(os.Stderr, "Cache%s(%s): %v\n", action, key, err)
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	conn, err := dbSetup(ctx, config.DB)
+	conn, err := dbSetup(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -38,11 +34,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	worker := NewGDriveWorker(ctx, config.GoogleDrive, gdriveSA, cache)
+	worker := NewGDriveWorker(ctx, config.GoogleDrive, gdriveSA)
 
 	go backgroundDeleteExpiredItems(ctx, queries)
 
-	err = startServer(ctx, conn, queries, cache, worker, config, BuildKey)
+	err = startServer(ctx, conn, queries, worker, config, BuildKey)
 	if err != nil {
 		panic(err)
 	}

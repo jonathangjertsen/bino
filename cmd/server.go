@@ -32,7 +32,6 @@ type Server struct {
 	Cookies       *sessions.CookieStore
 	OAuthConfig   *oauth2.Config
 	TokenVerifier *oidc.IDTokenVerifier
-	Cache         *Cache
 	GDriveWorker  *GDriveWorker
 	BuildKey      string
 	Config        Config
@@ -84,7 +83,7 @@ func getStatusCode(err error) int {
 	return http.StatusInternalServerError
 }
 
-func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cache *Cache, gdriveWorker *GDriveWorker, config Config, buildKey string) error {
+func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, gdriveWorker *GDriveWorker, config Config, buildKey string) error {
 	sessionKey, err := os.ReadFile(config.Auth.SessionKeyLocation)
 	if err != nil {
 		return err
@@ -115,7 +114,6 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 		Conn:         conn,
 		Queries:      queries,
 		Cookies:      cookies,
-		Cache:        cache,
 		GDriveWorker: gdriveWorker,
 		OAuthConfig: &oauth2.Config{
 			ClientID:     c.Web.ClientID,

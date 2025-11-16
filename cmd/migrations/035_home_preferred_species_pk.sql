@@ -1,6 +1,4 @@
 -- +migrate Up
-ALTER TABLE home_preferred_species
-    ADD PRIMARY KEY (home_id, species_id)
-;
+-- removed; sqlc didn't understand this migration
 
 -- +migrate Down

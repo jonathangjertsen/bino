@@ -13,7 +13,6 @@ type Config struct {
 	Auth           AuthConfig
 	HTTP           HTTPConfig
 	GoogleDrive    GDriveConfig
-	DB             DBConfig
 	SystemLanguage LanguageID
 	SystemBaseURL  string
 }

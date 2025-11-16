@@ -1,6 +1,6 @@
 FROM golang:trixie AS build
 
-WORKDIR /app
+WORKDIR /
 
 # Download go dependencies
 COPY go.mod go.sum ./
@@ -13,8 +13,12 @@ RUN apt-get update && apt-get install -y curl postgresql \
   && ln -s /opt/dart-sass/sass /usr/local/bin/sass \
   && rm -rf /var/lib/apt/lists/*
 
-# Copy all files
-# TODO: there is no caching after this point, it would be good to run sqlc before this since it's so slow the first time
+# Copy the stuff needed for SQLC to run with caching
+COPY sqlc.yaml ./
+COPY cmd ./cmd
+RUN go tool sqlc generate
+
+# Copy remaining files
 COPY . .
 
 RUN ./scripts/init_db.sh
@@ -23,17 +27,17 @@ RUN ./scripts/init_db.sh
 RUN sass styles.scss static/gen.css -q
 RUN go tool templ generate
 RUN go generate ./...
-RUN go tool sqlc generate
 
 # Build application
-RUN go build -ldflags="-X 'main.BuildKey=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 8)'" -o bino github.com/jonathangjertsen/bino
+RUN go build -ldflags="-X 'main.BuildKey=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 8)'" -o bino github.com/jonathangjertsen/bino/cmd
 
 FROM gcr.io/distroless/base-debian12
 
-WORKDIR /app
+WORKDIR /
 
-COPY --from=build /app/bino .
-COPY static ./static
+COPY --from=build /bino .
+COPY cmd/static ./cmd/static
+COPY config.json ./config.json
 
 EXPOSE 8080
 ENTRYPOINT ["./bino"]

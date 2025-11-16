@@ -25,11 +25,6 @@
         "ExtraJournalFolders": [
         ]
     },
-    "DB": {
-        "URL": "localhost",
-        "Port": "5432",
-        "CacheFile": "cache.db"
-    },
     "SystemLanguage": 1,
     "SystemBaseURL": "bino.<your-domain>"
 }

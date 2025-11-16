@@ -37,6 +37,6 @@ dbuild:
 
 drun: dbuild
 	docker run --rm -p 8080:8080 \
-		-v $(pwd)/config.json:/app/config.json \
-		-v $(pwd)/secret:/app/secret \
+		-v $(pwd)/config.json:/main/config.json \
+		-v $(pwd)/secret:/main/secret \
 		bino

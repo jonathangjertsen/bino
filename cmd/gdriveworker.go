@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	"google.golang.org/api/drive/v3"
@@ -30,9 +31,11 @@ type GDriveTaskRequestID int
 type GDriveWorker struct {
 	cfg GDriveConfig
 	g   *GDrive
-	c   *Cache
 
 	in chan GDriveTaskRequest
+
+	cachedInfo   *GDriveConfigInfo
+	cachedInfoMu *sync.Mutex
 }
 
 type GDriveTaskRequest struct {
@@ -203,17 +206,16 @@ func (gdtr GDriveTaskResponse) String() string {
 	return fmt.Sprintf("<GDriveTaskResponse of type %s>", gdtr.Type)
 }
 
-func NewGDriveWorker(ctx context.Context, cfg GDriveConfig, g *GDrive, c *Cache) *GDriveWorker {
+func NewGDriveWorker(ctx context.Context, cfg GDriveConfig, g *GDrive) *GDriveWorker {
 	w := &GDriveWorker{
-		cfg: cfg,
-		g:   g,
-		c:   c,
-		in:  make(chan GDriveTaskRequest, maxNConcurrentGDriveTaskRequests),
+		cfg:          cfg,
+		g:            g,
+		in:           make(chan GDriveTaskRequest, maxNConcurrentGDriveTaskRequests),
+		cachedInfoMu: &sync.Mutex{},
 	}
 
 	// Warm the cache on gdrive info, then start pollin
 	go func() {
-		c.Delete("gdrive-config-info")
 		_ = w.GetGDriveConfigInfo()
 
 		w.searchIndexWorker(ctx)
@@ -234,22 +236,24 @@ type GDriveConfigInfo struct {
 }
 
 func (w *GDriveWorker) GetGDriveConfigInfo() GDriveConfigInfo {
-	var configInfo GDriveConfigInfo
-	w.c.Cached("gdrive-config-info", &configInfo, func() error {
+	w.cachedInfoMu.Lock()
+	defer w.cachedInfoMu.Unlock()
+	if w.cachedInfo == nil {
+		w.cachedInfo = new(GDriveConfigInfo)
 		item, err := w.g.GetFile(w.cfg.JournalFolder)
 		if err != nil {
-			return err
+			panic(err)
 		}
-		configInfo.JournalFolder = item
+		w.cachedInfo.JournalFolder = item
 
 		doc, err := w.g.ReadDocument(w.cfg.TemplateFile)
 		if err != nil {
-			return err
+			panic(err)
 		}
-		configInfo.TemplateDoc = doc
+		w.cachedInfo.TemplateDoc = doc
 
 		if err := doc.Validate(); err != nil {
-			return err
+			panic(err)
 		}
 
 		for _, id := range w.cfg.ExtraJournalFolders {
@@ -258,17 +262,15 @@ func (w *GDriveWorker) GetGDriveConfigInfo() GDriveConfigInfo {
 				log.Printf("error getting extra folder %s: %v", id, err)
 				continue
 			}
-			configInfo.ExtraFolders = append(
-				configInfo.ExtraFolders,
+			w.cachedInfo.ExtraFolders = append(
+				w.cachedInfo.ExtraFolders,
 				folder,
 			)
 		}
 
 		log.Printf("Fetched GDrive Config info")
-
-		return nil
-	})
-	return configInfo
+	}
+	return *w.cachedInfo
 }
 
 func (w *GDriveWorker) Exec(req GDriveTaskRequest) GDriveTaskResponse {
