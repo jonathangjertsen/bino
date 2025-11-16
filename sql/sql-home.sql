@@ -60,6 +60,7 @@ SELECT hps.species_id, sl.name FROM home_preferred_species AS hps
 JOIN species_language AS sl USING(species_id)
 WHERE hps.home_id = $1
   AND sl.language_id = $2
+ORDER BY hps.sort_order ASC, hps.species_id ASC
 ;
 
 -- name: AddPreferredSpecies :exec

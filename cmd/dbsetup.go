@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
@@ -27,7 +29,6 @@ func dbSetup(ctx context.Context) (*pgxpool.Pool, error) {
 	}
 
 	connStr := fmt.Sprintf("postgres://bino:%s@%s:%s/bino?sslmode=disable", pass, host, port)
-	fmt.Printf("conn=" + connStr + "\n")
 
 	conn, err := pgxpool.New(ctx, connStr)
 	if err != nil {
@@ -42,9 +43,20 @@ func dbSetup(ctx context.Context) (*pgxpool.Pool, error) {
 	sqlDB := stdlib.OpenDBFromPool(conn)
 	defer sqlDB.Close()
 
-	n, err := migrate.ExecContext(ctx, sqlDB, "postgres", migrations, migrate.Up)
-	if err != nil {
-		return nil, fmt.Errorf("migrating: %w", err)
+	var n int
+	for {
+		var err error
+		n, err = migrate.ExecContext(ctx, sqlDB, "postgres", migrations, migrate.Up)
+		if err != nil {
+			if strings.Contains(err.Error(), "SQLSTATE 57P03") {
+				fmt.Printf("db is starting up...\n")
+				time.Sleep(time.Second)
+			} else {
+				return nil, fmt.Errorf("migrating: %w", err)
+			}
+		} else {
+			break
+		}
 	}
 	fmt.Printf("Did %d migrations\n", n)
 

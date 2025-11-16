@@ -185,9 +185,12 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, gdri
 	mux.Handle("POST /patient/{patient}/attach-journal", loggedInHandler(server.attachJournalHandler, CapManageOwnPatients))
 	mux.Handle("POST /event/{event}/set-note", loggedInHandler(server.postEventSetNoteHandler, CapManageOwnPatients))
 	mux.Handle("POST /home/{home}/set-capacity", loggedInHandler(server.setCapacityHandler, CapManageOwnHomes))
-	mux.Handle("POST /home/{home}/add-preferred-species", loggedInHandler(server.addPreferredSpeciesHandler, CapManageOwnHomes))
 	mux.Handle("POST /home/{home}/add-unavailable", loggedInHandler(server.addHomeUnavailablePeriodHandler, CapManageOwnHomes))
 	mux.Handle("POST /home/{home}/set-note", loggedInHandler(server.homeSetNoteHandler, CapManageOwnHomes))
+	mux.Handle("POST /home/{home}/species/add", loggedInHandler(server.addPreferredSpeciesHandler, CapManageOwnHomes))
+	mux.Handle("POST /home/{home}/species/delete/{species}", loggedInHandler(server.deletePreferredSpeciesHandler, CapManageOwnHomes))
+	mux.Handle("POST /home/{home}/species/reorder", loggedInHandler(server.reorderSpeciesHandler, CapManageOwnHomes))
+
 	mux.Handle("POST /period/{period}/delete", loggedInHandler(server.deleteHomeUnavailableHandler, CapManageOwnHomes))
 	// Ajax
 	mux.Handle("POST /language", loggedInHandler(server.postLanguageHandler, CapSetOwnPreferences))

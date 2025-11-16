@@ -151,6 +151,60 @@ func (server *Server) addPreferredSpeciesHandler(w http.ResponseWriter, r *http.
 	server.redirectToReferer(w, r)
 }
 
+func (server *Server) deletePreferredSpeciesHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
+
+	id, err := server.getPathID(r, "home")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	species, err := server.getPathID(r, "species")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	if err := server.Queries.DeletePreferredSpecies(ctx, DeletePreferredSpeciesParams{
+		HomeID:    id,
+		SpeciesID: species,
+	}); err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+
+	server.redirectToReferer(w, r)
+}
+
+func (server *Server) reorderSpeciesHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	commonData := MustLoadCommonData(ctx)
+
+	id, err := server.getPathID(r, "home")
+	if err != nil {
+		server.renderError(w, r, commonData, err)
+		return
+	}
+	jsonHandler(server, w, r, func(q *Queries, req AJAXReorderRequest) error {
+		if req.ID != id {
+			return fmt.Errorf("mismatched ID between request data and URL (URL=%d, req=%d)", id, req.ID)
+		}
+		ids := []int32{}
+		orders := []int32{}
+		for idx, id := range req.Order {
+			ids = append(ids, id)
+			orders = append(orders, int32(idx))
+		}
+		return q.UpdatePreferredSpeciesSortOrder(ctx, UpdatePreferredSpeciesSortOrderParams{
+			HomeID:    id,
+			SpeciesID: ids,
+			Orders:    orders,
+		})
+	})
+}
+
 func (server *Server) addHomeUnavailablePeriodHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	commonData := MustLoadCommonData(ctx)

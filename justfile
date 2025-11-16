@@ -32,11 +32,5 @@ psql:
 session_key:
 	openssl rand -base64 32 > secret/session_key
 
-dbuild:
-	docker build -t bino .
-
-drun: dbuild
-	docker run --rm -p 8080:8080 \
-		-v $(pwd)/config.json:/main/config.json \
-		-v $(pwd)/secret:/main/secret \
-		bino
+docker: gen
+	docker compose up --build

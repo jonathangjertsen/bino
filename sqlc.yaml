@@ -1,16 +1,7 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    queries:
-    - "cmd/sql-event.sql"
-    - "cmd/sql-home.sql"
-    - "cmd/sql-invitation.sql"
-    - "cmd/sql-patient.sql"
-    - "cmd/sql-session.sql"
-    - "cmd/sql-species.sql"
-    - "cmd/sql-tag.sql"
-    - "cmd/sql-user.sql"
-    - "cmd/sql-search.sql"
+    queries: "sql"
     schema: "cmd/migrations"
     gen:
       go:
