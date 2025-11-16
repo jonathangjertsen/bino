@@ -10,12 +10,12 @@ enum:
 	go generate ./...
 
 sass:
-	sass styles.scss static/gen.css -q
+	sass styles.scss cmd/static/gen.css -q
 
 gen: sqlc templ enum sass
 
 build: gen
-	go build -ldflags="-X 'main.BuildKey=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 8)'" -o backend github.com/jonathangjertsen/bino
+	go build -ldflags="-X 'main.BuildKey=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 8)'" -o backend github.com/jonathangjertsen/bino/cmd
 
 run: build
 	./backend

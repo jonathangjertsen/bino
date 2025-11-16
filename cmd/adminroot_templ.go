@@ -48,7 +48,7 @@ func AdminRootPage(data *CommonData) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(data.User.Language.AdminRoot)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `adminroot.templ`, Line: 5, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `cmd/adminroot.templ`, Line: 5, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -66,7 +66,7 @@ func AdminRootPage(data *CommonData) templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(data.User.Language.AdminManageSpecies)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `adminroot.templ`, Line: 8, Col: 99}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `cmd/adminroot.templ`, Line: 8, Col: 99}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -79,7 +79,7 @@ func AdminRootPage(data *CommonData) templ.Component {
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(data.User.Language.AdminManageTags)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `adminroot.templ`, Line: 9, Col: 92}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `cmd/adminroot.templ`, Line: 9, Col: 92}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -98,7 +98,7 @@ func AdminRootPage(data *CommonData) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(data.User.Language.AdminManageHomes)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `adminroot.templ`, Line: 12, Col: 95}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `cmd/adminroot.templ`, Line: 12, Col: 95}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -111,7 +111,7 @@ func AdminRootPage(data *CommonData) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(data.User.Language.AdminManageUsers)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `adminroot.templ`, Line: 13, Col: 95}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `cmd/adminroot.templ`, Line: 13, Col: 95}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -124,7 +124,7 @@ func AdminRootPage(data *CommonData) templ.Component {
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(data.User.Language.AdminManageGoogleDrive)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `adminroot.templ`, Line: 14, Col: 102}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `cmd/adminroot.templ`, Line: 14, Col: 102}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {

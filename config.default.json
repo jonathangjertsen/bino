@@ -4,7 +4,8 @@
         "ReadTimeoutSeconds": 10,
         "ReadHeaderTimeoutSeconds": 10,
         "WriteTimeoutSeconds": 15,
-        "IdleTimeoutSeconds": 60
+        "IdleTimeoutSeconds": 60,
+        "StaticDir": "cmd/static"
     },
     "Auth": {
         "SessionKeyLocation": "secret/session_key",

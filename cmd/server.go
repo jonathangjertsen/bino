@@ -51,6 +51,7 @@ type HTTPConfig struct {
 	ReadHeaderTimeoutSeconds time.Duration
 	WriteTimeoutSeconds      time.Duration
 	IdleTimeoutSeconds       time.Duration
+	StaticDir                string
 }
 
 type Middleware = func(http.Handler) http.Handler
@@ -157,7 +158,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, cach
 	mux.Handle("GET /access", chainf(server.accessHandler, requiresLogin...))
 	// Static content
 	staticDir := fmt.Sprintf("/static/%s/", buildKey)
-	mux.Handle("GET "+staticDir, http.StripPrefix(staticDir, http.FileServer(http.Dir("static"))))
+	mux.Handle("GET "+staticDir, http.StripPrefix(staticDir, http.FileServer(http.Dir(config.HTTP.StaticDir))))
 
 	//// LOGIN
 	mux.Handle("GET /login", chainf(server.loginHandler))

@@ -2,20 +2,20 @@ version: "2"
 sql:
   - engine: "postgresql"
     queries:
-    - "sql-event.sql"
-    - "sql-home.sql"
-    - "sql-invitation.sql"
-    - "sql-patient.sql"
-    - "sql-session.sql"
-    - "sql-species.sql"
-    - "sql-tag.sql"
-    - "sql-user.sql"
-    - "sql-search.sql"
-    schema: "migrations"
+    - "cmd/sql-event.sql"
+    - "cmd/sql-home.sql"
+    - "cmd/sql-invitation.sql"
+    - "cmd/sql-patient.sql"
+    - "cmd/sql-session.sql"
+    - "cmd/sql-species.sql"
+    - "cmd/sql-tag.sql"
+    - "cmd/sql-user.sql"
+    - "cmd/sql-search.sql"
+    schema: "cmd/migrations"
     gen:
       go:
         package: "main"
-        out: "."
+        out: "cmd"
         sql_package: "pgx/v5"
         overrides:
           - db_type: regconfig
