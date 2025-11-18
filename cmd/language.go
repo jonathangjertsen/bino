@@ -53,6 +53,7 @@ type Language struct {
 	AdminInvitationOKNoEmail    string
 	AdminInviteCode             string
 	AdminRoot                   string
+	AdminDebug                  string
 
 	AuthLogOut string
 
@@ -324,6 +325,7 @@ var NO = &Language{
 	AdminInvitationOKNoEmail:    "Eposten ble lagt til i listen, men det er ikke sendt ut en epost. Send personen en lenke til forsiden og be dem om å opprette en bruker.",
 	AdminInviteCode:             "Kode",
 	AdminRoot:                   "Admin",
+	AdminDebug:                  "Debug",
 
 	AuthLogOut: "Logg ut",
 
@@ -594,6 +596,7 @@ var EN = &Language{
 	AdminInvitationOKNoEmail:    "The user was added to the list of invited user. No email was sent; send them a link to the main page and ask them to log in.",
 	AdminInviteCode:             "Code",
 	AdminRoot:                   "Admin",
+	AdminDebug:                  "Debug",
 
 	AuthLogOut: "Log out",
 
