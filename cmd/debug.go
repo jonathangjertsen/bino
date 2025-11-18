@@ -39,7 +39,7 @@ func (server *Server) debugHandler(w http.ResponseWriter, r *http.Request) {
 				{Name: "Goroutines", Value: runtime.NumGoroutine()},
 				{Name: "NumCPU", Value: runtime.NumCPU()},
 				{Name: "Started", Value: data.User.Language.FormatTimeAbsWithRelParen(server.Runtime.TimeStarted)},
-				{Name: "Load avg (up to 100% * n cores)", Value: avg.Load1 * 100},
+				{Name: "System total load avg (up to 100% * n cores)", Value: fmt.Sprintf("%.1f", avg.Load1*100)},
 			},
 		},
 		{
