@@ -219,6 +219,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, gdri
 	mux.Handle("GET /gdrive", loggedInHandler(server.getGDriveHandler, CapViewGDriveSettings))
 	mux.Handle("GET /user/{user}/confirm-scrub", loggedInHandler(server.userConfirmScrubHandler, CapDeleteUsers))
 	mux.Handle("GET /user/{user}/confirm-nuke", loggedInHandler(server.userConfirmNukeHandler, CapDeleteUsers))
+	mux.Handle("GET /debug", loggedInHandler(server.debugHandler, CapDebug))
 	// Forms
 	mux.Handle("POST /user/{user}/scrub", loggedInHandler(server.userDoScrubHandler, CapDeleteUsers))
 	mux.Handle("POST /user/{user}/nuke", loggedInHandler(server.userDoNukeHandler, CapDeleteUsers))

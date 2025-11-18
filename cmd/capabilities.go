@@ -25,6 +25,7 @@ import "slices"
 // InviteToGDrive,
 // InviteToBino,
 // UseImportTool,
+// Debug,
 // )
 type Capability int32
 
@@ -53,6 +54,7 @@ var RequiredAccessLevel = map[Capability]AccessLevel{
 	CapDeleteUsers:    AccessLevelAdmin,
 	CapInviteToGDrive: AccessLevelAdmin,
 	CapInviteToBino:   AccessLevelAdmin,
+	CapDebug:          AccessLevelAdmin,
 }
 
 var AccessLevelToCapabilities = func() (out struct {

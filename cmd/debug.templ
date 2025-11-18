@@ -1,0 +1,26 @@
+package main
+
+import (
+    "fmt"
+)
+
+templ DebugPage(data *CommonData, info []DebugInfo) {
+	@Layout(data) {
+        <div class="card p-2">
+            <ul class="debug-top">
+                @DebugItems(data, info)
+            </ul>
+        </div>
+    }
+}
+
+templ DebugItems(data *CommonData, info []DebugInfo) {
+    for _, child := range info {
+        <li class="debug-item">
+        <span class="debug-name">{child.Name}</span>: {fmt.Sprintf("%v", child.Value)}
+        <ul class="debug-list">
+            @DebugItems(data, child.Children)
+        </ul>
+        </li>
+    }
+}
