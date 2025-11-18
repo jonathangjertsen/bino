@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"runtime"
 )
@@ -10,6 +11,16 @@ type DebugInfo struct {
 	Name     string
 	Value    any
 	Children []DebugInfo
+}
+
+func fetchPublicIP() string {
+	resp, err := http.Get("https://api.ipify.org")
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+	b, _ := io.ReadAll(resp.Body)
+	return string(b)
 }
 
 func (server *Server) debugHandler(w http.ResponseWriter, r *http.Request) {
@@ -21,21 +32,24 @@ func (server *Server) debugHandler(w http.ResponseWriter, r *http.Request) {
 
 	info := []DebugInfo{
 		{
-			Name:  "Runtime",
-			Value: "",
+			Name: "Runtime",
 			Children: []DebugInfo{
 				{Name: "Goroutines", Value: runtime.NumGoroutine()},
 				{Name: "NumCPU", Value: runtime.NumCPU()},
-				{Name: "NumCgoCall", Value: runtime.NumCgoCall()},
+				{Name: "Started", Value: data.User.Language.FormatTimeAbsWithRelParen(server.Runtime.TimeStarted)},
 			},
 		},
 		{
-			Name:  "Memory",
-			Value: "",
+			Name: "Memory",
 			Children: []DebugInfo{
 				{Name: "Alloc MB", Value: toMB(m.Alloc)},
-				{Name: "TotalAlloc MB", Value: toMB(m.TotalAlloc)},
 				{Name: "Sys MB", Value: toMB(m.Sys)},
+			},
+		},
+		{
+			Name: "Network",
+			Children: []DebugInfo{
+				{Name: "Public IP", Value: server.Runtime.PublicIP},
 			},
 		},
 	}

@@ -33,6 +33,7 @@ type Server struct {
 	OAuthConfig   *oauth2.Config
 	TokenVerifier *oidc.IDTokenVerifier
 	GDriveWorker  *GDriveWorker
+	Runtime       RuntimeInfo
 	BuildKey      string
 	Config        Config
 }
@@ -51,6 +52,11 @@ type HTTPConfig struct {
 	WriteTimeoutSeconds      time.Duration
 	IdleTimeoutSeconds       time.Duration
 	StaticDir                string
+}
+
+type RuntimeInfo struct {
+	PublicIP    string
+	TimeStarted time.Time
 }
 
 type Middleware = func(http.Handler) http.Handler
@@ -125,6 +131,10 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, gdri
 		TokenVerifier: provider.Verifier(&oidc.Config{
 			ClientID: c.Web.ClientID,
 		}),
+		Runtime: RuntimeInfo{
+			PublicIP:    fetchPublicIP(),
+			TimeStarted: time.Now(),
+		},
 		BuildKey: buildKey,
 		Config:   config,
 	}
