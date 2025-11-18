@@ -22,7 +22,7 @@ This is only tested on Linux. Other Unixes and WSL should work too.
 After you have installed all the prerequisites, clone the repository:
 
 ```sh
-git clone git@github.com:jonathangjertsen/bino.git
+git clone git@github.com:fugleadvokatene/bino.git
 ```
 
 ### Config

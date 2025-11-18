@@ -12,7 +12,7 @@ COPY . .
 #RUN ./scripts/init_db.sh
 
 # Build application
-RUN go build -ldflags="-X 'main.BuildKey=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 8)'" -o bino github.com/jonathangjertsen/bino/cmd
+RUN go build -ldflags="-X 'main.BuildKey=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 8)'" -o bino github.com/fugleadvokatene/bino/cmd
 
 FROM gcr.io/distroless/base-debian12
 
