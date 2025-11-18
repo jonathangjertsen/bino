@@ -10,8 +10,9 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      # NOTE: if these are changed run `docker rm bino-pgadmin-1` to refresh
+      PGADMIN_DEFAULT_EMAIL: name@example.com
+      PGADMIN_DEFAULT_PASSWORD: ${BINO_DB_PASSWORD}
       PGADMIN_SERVER_JSON_FILE: /pgadmin/servers.json
     ports:
       - "5050:80"
