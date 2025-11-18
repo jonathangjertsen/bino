@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/http"
 	"runtime"
+
+	"github.com/shirou/gopsutil/v3/load"
 )
 
 type DebugInfo struct {
@@ -29,7 +31,7 @@ func (server *Server) debugHandler(w http.ResponseWriter, r *http.Request) {
 
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-
+	avg, _ := load.Avg()
 	info := []DebugInfo{
 		{
 			Name: "Runtime",
@@ -37,6 +39,7 @@ func (server *Server) debugHandler(w http.ResponseWriter, r *http.Request) {
 				{Name: "Goroutines", Value: runtime.NumGoroutine()},
 				{Name: "NumCPU", Value: runtime.NumCPU()},
 				{Name: "Started", Value: data.User.Language.FormatTimeAbsWithRelParen(server.Runtime.TimeStarted)},
+				{Name: "Load avg (up to 100% * n cores)", Value: avg.Load1 * 100},
 			},
 		},
 		{
