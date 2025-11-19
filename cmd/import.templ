@@ -5,7 +5,7 @@ templ ImportPage(data *CommonData, req ImportRequest) {
         <h1>{data.User.Language.ImportHeader}</h1>
         <div class="card p-2">
             <p>This tool allows you to add many patients in one go.</p>
-            <p>Each line in the textarea should have the following format: <code>Name Species Home JournalURL</code></p>
+            <p>Each line in the textarea should have the following format: <code>Name, Species, Home, JournalURL</code></p>
             <p>You can omit the last parts (Home and URL). If there is no JournalURL, I will create a journal for that one. If there is also no Home, I will assume you want to add them to your own rehab home.</p>
             <p>This textarea is auto-saved, so you can leave and continue your work at any time.</p>
             <form action="/import" method="POST" autocomplete="off">

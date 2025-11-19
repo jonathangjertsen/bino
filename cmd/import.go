@@ -121,7 +121,7 @@ func (server *Server) parseImportForm(r *http.Request) ImportRequest {
 
 	lines := SliceToSlice(strings.Split(strings.TrimSpace(txt), "\n"), strings.TrimSpace)
 	for i, line := range lines {
-		fields := strings.Fields(line)
+		fields := SliceToSlice(strings.Split(line, ","), strings.TrimSpace)
 		if n := len(fields); n < 2 || n > 4 {
 			out.Notes = append(out.Notes, fmt.Sprintf("line %d: expect 2-4 fields, have %d", i, n))
 			return out
