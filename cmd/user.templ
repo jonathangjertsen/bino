@@ -21,5 +21,4 @@ templ UserPage(ctx context.Context, data *CommonData, user UserView) {
             <p>{data.User.Language.AccessLevels[user.AccessLevel]}</p>
         }
     }
-    <script src={data.StaticFile("patienttags.js")}></script>
 }
