@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"runtime"
+	"runtime/debug"
 
 	"github.com/shirou/gopsutil/v3/load"
 )
@@ -31,7 +32,18 @@ func (server *Server) debugHandler(w http.ResponseWriter, r *http.Request) {
 
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
+
 	avg, _ := load.Avg()
+
+	buildInfo := []DebugInfo{
+		{Name: "Build key", Value: data.BuildKey},
+	}
+	if info, ok := debug.ReadBuildInfo(); ok {
+		for _, setting := range info.Settings {
+			buildInfo = append(buildInfo, DebugInfo{Name: setting.Key, Value: setting.Value})
+		}
+	}
+
 	info := []DebugInfo{
 		{
 			Name: "Runtime",
@@ -46,7 +58,7 @@ func (server *Server) debugHandler(w http.ResponseWriter, r *http.Request) {
 			Name: "Memory",
 			Children: []DebugInfo{
 				{Name: "Alloc MB", Value: toMB(m.Alloc)},
-				{Name: "Sys MB", Value: toMB(m.Sys)},
+				{Name: "Total MB", Value: toMB(m.Sys)},
 			},
 		},
 		{
@@ -54,6 +66,10 @@ func (server *Server) debugHandler(w http.ResponseWriter, r *http.Request) {
 			Children: []DebugInfo{
 				{Name: "Public IP", Value: server.Runtime.PublicIP},
 			},
+		},
+		{
+			Name:     "Build",
+			Children: buildInfo,
 		},
 	}
 

@@ -15,7 +15,7 @@ sass:
 gen: sqlc templ enum sass
 
 build: gen
-	go build -ldflags="-X 'main.BuildKey=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 8)'" -o backend github.com/fugleadvokatene/bino/cmd
+	go build -buildvcs -ldflags="-X 'main.BuildKey=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 8)'" -o backend github.com/fugleadvokatene/bino/cmd
 
 run: build
 	./backend
@@ -32,7 +32,10 @@ session_key:
 docker: build
 	docker compose up --build
 
+push-release: build
+	git push origin master
+
 pull-release:
 	git pull origin master
-	go build -ldflags="-X 'main.BuildKey=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 8)'" -o backend github.com/fugleadvokatene/bino/cmd
+	go build -buildvcs -ldflags="-X 'main.BuildKey=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 8)'" -o backend github.com/fugleadvokatene/bino/cmd
 	sudo systemctl restart bino-backend
