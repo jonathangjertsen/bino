@@ -33,6 +33,7 @@ docker: build
 	docker compose up --build
 
 push-release: build
+	git commit -a
 	git push origin master
 
 pull-release:

@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"runtime"
 	"runtime/debug"
 
+	"github.com/shirou/gopsutil/v3/disk"
+	"github.com/shirou/gopsutil/v3/host"
 	"github.com/shirou/gopsutil/v3/load"
 )
 
@@ -34,10 +37,11 @@ func (server *Server) debugHandler(w http.ResponseWriter, r *http.Request) {
 	runtime.ReadMemStats(&m)
 
 	avg, _ := load.Avg()
+	u, _ := disk.Usage("/")
+	h, _ := host.Info()
+	cwd, _ := os.Getwd()
 
-	buildInfo := []DebugInfo{
-		{Name: "Build key", Value: data.BuildKey},
-	}
+	buildInfo := []DebugInfo{}
 	if info, ok := debug.ReadBuildInfo(); ok {
 		for _, setting := range info.Settings {
 			buildInfo = append(buildInfo, DebugInfo{Name: setting.Key, Value: setting.Value})
@@ -46,19 +50,25 @@ func (server *Server) debugHandler(w http.ResponseWriter, r *http.Request) {
 
 	info := []DebugInfo{
 		{
-			Name: "Runtime",
+			Name: "Process",
 			Children: []DebugInfo{
 				{Name: "Goroutines", Value: runtime.NumGoroutine()},
 				{Name: "NumCPU", Value: runtime.NumCPU()},
 				{Name: "Started", Value: data.User.Language.FormatTimeAbsWithRelParen(server.Runtime.TimeStarted)},
-				{Name: "System total load avg (up to 100% * n cores)", Value: fmt.Sprintf("%.1f", avg.Load1*100)},
+				{Name: "Alloc MB", Value: toMB(m.Alloc)},
+				{Name: "Total MB", Value: toMB(m.Sys)},
+				{Name: "Working directory", Value: cwd},
 			},
 		},
 		{
-			Name: "Memory",
+			Name: "Machine",
 			Children: []DebugInfo{
-				{Name: "Alloc MB", Value: toMB(m.Alloc)},
-				{Name: "Total MB", Value: toMB(m.Sys)},
+				{Name: "System total load avg (up to 100% * n cores)", Value: fmt.Sprintf("%.1f", avg.Load1*100)},
+				{Name: "Disk total GB", Value: toGB(u.Total)},
+				{Name: "Disk free GB", Value: toGB(u.Free)},
+				{Name: "Disk used GB", Value: toGB(u.Used)},
+				{Name: "Hostname", Value: h.Hostname},
+				{Name: "Uptime", Value: h.Uptime},
 			},
 		},
 		{
@@ -78,4 +88,8 @@ func (server *Server) debugHandler(w http.ResponseWriter, r *http.Request) {
 
 func toMB(v uint64) string {
 	return fmt.Sprintf("%.0f", float64(v)/1024/1024)
+}
+
+func toGB(v uint64) string {
+	return fmt.Sprintf("%.0f", float64(v)/1024/1024/1024)
 }
