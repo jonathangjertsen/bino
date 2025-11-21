@@ -88,7 +88,7 @@ $(function() {
     zIndex: 9999,
     appendTo: document.body,
     update: function(e, ui) {
-      reordered(sender);
+      reordered(parseInt(e.target.dataset["home"]));
     },
     over: function(e, ui) {
       e.target.classList.add("drop-target");
