@@ -77,46 +77,55 @@ const setupBoard = (elem) => {
   }, true);
 };
 
-$(function() {
+document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".dashboard").forEach(setupBoard);
 
-  $(".dashboard-patient-list").sortable({
-    cancel: "a,button",
-    handle: ".card-header-patient",
-    forcePlaceholderSize: true,
-    forceHelperSize: true,
-    zIndex: 9999,
-    appendTo: document.body,
-    update: function(e, ui) {
-      reordered(parseInt(e.target.dataset["home"]));
-    },
-    over: function(e, ui) {
-      e.target.classList.add("drop-target");
-    },
-    out: function(e, ui) {
-      e.target.classList.remove("drop-target");
-    }
-  }).disableSelection();
+  document.querySelectorAll(".dashboard-patient-list").forEach(list => {
+    let dragged;
+
+    list.querySelectorAll(".card-header-patient").forEach(handle => {
+      handle.addEventListener("pointerdown", e => {
+        dragged = handle.closest(".card");
+        dragged.setPointerCapture(e.pointerId);
+        dragged.classList.add("dragging");
+      });
+    });
+
+    document.addEventListener("pointermove", e => {
+      if (!dragged) return;
+      const lists = [...document.querySelectorAll(".dashboard-patient-list")];
+      const target = lists.find(l => {
+        const r = l.getBoundingClientRect();
+        return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+      });
+      if (target) {
+        target.classList.add("drop-target");
+        const items = [...target.children];
+        const before = items.find(i => e.clientY < i.getBoundingClientRect().top + i.offsetHeight / 2);
+        target.classList.remove("drop-target");
+        target.insertBefore(dragged, before || null);
+      }
+    });
+
+    document.addEventListener("pointerup", e => {
+      if (!dragged) return;
+      const home = parseInt(dragged.closest(".dashboard-patient-list").dataset.home);
+      reordered(home);
+      dragged.classList.remove("dragging");
+      dragged.releasePointerCapture(e.pointerId);
+      dragged = null;
+    });
+  });
 });
 
 function reordered(home) {
-  var req = {
-    Id: home,
-    Order: [],
-  }
-
-  $(".dashboard-patient-list").each(function(){
-    const id = $(this).data("home");
-    if (id == home) {
-      req.Order = $(this).children().map(function(){ return $(this).data("patient-id"); }).get();
-    }
-  });
+  const list = document.querySelector(`.dashboard-patient-list[data-home='${home}']`);
+  const order = [...list.children].map(c => c.dataset.patientId);
+  const req = { Id: home, Order: order };
 
   fetch("/ajaxreorder", {
     method: "POST",
-    headers: {
-        "Content-Type": "application/json"
-    },
-      body: JSON.stringify(req),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req)
   });
 }
