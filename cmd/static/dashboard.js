@@ -78,45 +78,64 @@ const setupBoard = (elem) => {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".dashboard").forEach(setupBoard);
+  document.querySelectorAll(".dashboard-patient-list").forEach(initList);
+});
 
-  document.querySelectorAll(".dashboard-patient-list").forEach(list => {
-    let dragged;
+function initList(list) {
+  let handle, original, ghost, offsetX, offsetY;
 
-    list.querySelectorAll(".card-header-patient").forEach(handle => {
-      handle.addEventListener("pointerdown", e => {
-        dragged = handle.closest(".card");
-        dragged.setPointerCapture(e.pointerId);
-        dragged.classList.add("dragging");
-      });
-    });
+  list.querySelectorAll(".card-header-patient").forEach(h => {
+    h.addEventListener("pointerdown", e => {
+      original = h.closest(".card");
+      const r = original.getBoundingClientRect();
+      offsetX = e.clientX - r.left;
+      offsetY = e.clientY - r.top;
 
-    document.addEventListener("pointermove", e => {
-      if (!dragged) return;
-      const lists = [...document.querySelectorAll(".dashboard-patient-list")];
-      const target = lists.find(l => {
-        const r = l.getBoundingClientRect();
-        return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
-      });
-      if (target) {
-        target.classList.add("drop-target");
-        const items = [...target.children];
-        const before = items.find(i => e.clientY < i.getBoundingClientRect().top + i.offsetHeight / 2);
-        target.classList.remove("drop-target");
-        target.insertBefore(dragged, before || null);
-      }
-    });
+      ghost = original.cloneNode(true);
+      ghost.style.position = "fixed";
+      ghost.style.left = r.left + "px";
+      ghost.style.top = r.top + "px";
+      ghost.style.width = r.width + "px";
+      ghost.style.pointerEvents = "none";
+      ghost.style.opacity = "0.9";
+      ghost.classList.add("drag-ghost");
+      document.body.appendChild(ghost);
 
-    document.addEventListener("pointerup", e => {
-      if (!dragged) return;
-      const home = parseInt(dragged.closest(".dashboard-patient-list").dataset.home);
-      reordered(home);
-      dragged.classList.remove("dragging");
-      dragged.releasePointerCapture(e.pointerId);
-      dragged = null;
+      original.classList.add("drag-origin");
+
+      original.setPointerCapture(e.pointerId);
     });
   });
-});
+
+  document.addEventListener("pointermove", e => {
+    if (!ghost) return;
+
+    ghost.style.left = e.clientX - offsetX + "px";
+    ghost.style.top = e.clientY - offsetY + "px";
+
+    const lists = [...document.querySelectorAll(".dashboard-patient-list")];
+    const overList = lists.find(l => {
+      const r = l.getBoundingClientRect();
+      return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+    });
+    if (!overList) return;
+
+    const items = [...overList.children].filter(i => i !== original);
+    const before = items.find(i => e.clientY < i.getBoundingClientRect().top + i.offsetHeight / 2);
+    overList.insertBefore(original, before || null);
+  });
+
+  document.addEventListener("pointerup", e => {
+    if (!ghost || !original) return;
+
+    const home = parseInt(original.closest(".dashboard-patient-list").dataset.home);
+    ghost.remove();
+    original.classList.remove("drag-origin");
+    ghost = null;
+    reordered(home);
+    original = null;
+  });
+}
 
 function reordered(home) {
   const list = document.querySelector(`.dashboard-patient-list[data-home='${home}']`);
@@ -129,3 +148,4 @@ function reordered(home) {
     body: JSON.stringify(req)
   });
 }
+
