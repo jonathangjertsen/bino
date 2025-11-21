@@ -77,75 +77,45 @@ const setupBoard = (elem) => {
   }, true);
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".dashboard-patient-list").forEach(initList);
+document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll(".dashboard").forEach(setupBoard);
+
+  document.querySelectorAll(".dashboard-patient-list").forEach(function(list) {
+    new Sortable(list, {
+      handle: ".card-header-patient",
+      animation: 150,
+      onUpdate: function(evt) {
+        reordered(parseInt(evt.to.dataset.home));
+      },
+      onChoose: function(evt) {
+        evt.from.classList.add("drop-target");
+      },
+      onUnchoose: function(evt) {
+        evt.from.classList.remove("drop-target");
+      }
+    });
+  });
 });
 
-function initList(list) {
-  let handle, original, ghost, offsetX, offsetY;
-
-  list.querySelectorAll(".card-header-patient").forEach(h => {
-    h.addEventListener("pointerdown", e => {
-      original = h.closest(".card");
-      const r = original.getBoundingClientRect();
-      offsetX = e.clientX - r.left;
-      offsetY = e.clientY - r.top;
-
-      ghost = original.cloneNode(true);
-      ghost.style.position = "fixed";
-      ghost.style.left = r.left + "px";
-      ghost.style.top = r.top + "px";
-      ghost.style.width = r.width + "px";
-      ghost.style.pointerEvents = "none";
-      ghost.style.opacity = "0.9";
-      ghost.classList.add("drag-ghost");
-      document.body.appendChild(ghost);
-
-      original.classList.add("drag-origin");
-
-      original.setPointerCapture(e.pointerId);
-    });
-  });
-
-  document.addEventListener("pointermove", e => {
-    if (!ghost) return;
-
-    ghost.style.left = e.clientX - offsetX + "px";
-    ghost.style.top = e.clientY - offsetY + "px";
-
-    const lists = [...document.querySelectorAll(".dashboard-patient-list")];
-    const overList = lists.find(l => {
-      const r = l.getBoundingClientRect();
-      return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
-    });
-    if (!overList) return;
-
-    const items = [...overList.children].filter(i => i !== original);
-    const before = items.find(i => e.clientY < i.getBoundingClientRect().top + i.offsetHeight / 2);
-    overList.insertBefore(original, before || null);
-  });
-
-  document.addEventListener("pointerup", e => {
-    if (!ghost || !original) return;
-
-    const home = parseInt(original.closest(".dashboard-patient-list").dataset.home);
-    ghost.remove();
-    original.classList.remove("drag-origin");
-    ghost = null;
-    reordered(home);
-    original = null;
-  });
-}
-
 function reordered(home) {
-  const list = document.querySelector(`.dashboard-patient-list[data-home='${home}']`);
-  const order = [...list.children].map(c => c.dataset.patientId);
-  const req = { Id: home, Order: order };
+  var req = {
+    Id: home,
+    Order: []
+  };
+
+  document.querySelectorAll(".dashboard-patient-list").forEach(function(list) {
+    if (parseInt(list.dataset.home) === home) {
+      req.Order = Array.from(list.children).map(function(item) {
+        return item.dataset.patientId;
+      });
+    }
+  });
 
   fetch("/ajaxreorder", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify(req)
   });
 }
-
