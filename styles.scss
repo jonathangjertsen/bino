@@ -659,3 +659,14 @@ mark.hl {
     padding-left: 12px;
 }
 
+.sortable-fallback {
+  opacity: 0;
+}
+
+.drop-target {
+  outline: 2px dashed #ccc;
+}
+
+.chosen, .dragging {
+  opacity: 0.6;
+}

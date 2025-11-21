@@ -83,15 +83,14 @@ document.addEventListener("DOMContentLoaded", function() {
   document.querySelectorAll(".dashboard-patient-list").forEach(function(list) {
     new Sortable(list, {
       handle: ".card-header-patient",
-      animation: 150,
+      animation: 0,
+      forceFallback: true,
+      fallbackClass: "sortable-fallback",
+      ghostClass: "drop-target",
+      chosenClass: "chosen",
+      dragClass: "dragging",
       onUpdate: function(evt) {
         reordered(parseInt(evt.to.dataset.home));
-      },
-      onChoose: function(evt) {
-        evt.from.classList.add("drop-target");
-      },
-      onUnchoose: function(evt) {
-        evt.from.classList.remove("drop-target");
       }
     });
   });
