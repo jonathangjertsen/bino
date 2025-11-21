@@ -106,7 +106,7 @@ function reordered(home) {
   document.querySelectorAll(".dashboard-patient-list").forEach(function(list) {
     if (parseInt(list.dataset.home) === home) {
       req.Order = Array.from(list.children).map(function(item) {
-        return item.dataset.patientId;
+        return parseInt(item.dataset.patientId);
       });
     }
   });
