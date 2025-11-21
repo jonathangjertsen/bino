@@ -89,6 +89,7 @@ document.addEventListener("DOMContentLoaded", function() {
       ghostClass: "drop-target",
       chosenClass: "chosen",
       dragClass: "dragging",
+      filter: "a,button",
       onUpdate: function(evt) {
         reordered(parseInt(evt.to.dataset.home));
       }
