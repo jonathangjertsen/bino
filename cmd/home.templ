@@ -9,6 +9,13 @@ templ HomePage(ctx context.Context, data *CommonData, dashboardData *DashboardDa
     @Layout(data, "home-page") {
         <h1>{view.Home.Name}</h1>
         @Card() {
+            <h2>{data.User.Language.HomesPatients} ({len(view.Patients)})</h2>
+            <div class="dashboard-patient-list" data-home={view.Home.ID}>
+                for _, patient := range view.Patients {
+                    @DashboardPatientCard(data, dashboardData, view, patient)
+                }
+            </div>
+
             <h2>{data.User.Language.GenericUpdate}</h2>
             <h3>{data.User.Language.HomeCapacity}</h3>
             @CapacityForm(data, view)
@@ -18,13 +25,6 @@ templ HomePage(ctx context.Context, data *CommonData, dashboardData *DashboardDa
 
             <h3>{data.User.Language.HomePreferredSpecies}</h3>
             @PreferredSpecies(data, dashboardData, view)
-
-            <h2>{data.User.Language.HomesPatients} ({len(view.Patients)})</h2>
-            <div class="dashboard-patient-list" data-home={view.Home.ID}>
-                for _, patient := range view.Patients {
-                    @DashboardPatientCard(data, dashboardData, view, patient)
-                }
-            </div>
 
             <h2>{data.User.Language.HomesUsers}</h2>
             for _, user := range view.Users {
