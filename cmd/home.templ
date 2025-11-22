@@ -20,9 +20,12 @@ templ HomePage(ctx context.Context, data *CommonData, dashboardData *DashboardDa
             @PreferredSpecies(data, dashboardData, view)
 
             <h2>{data.User.Language.HomesPatients} ({len(view.Patients)})</h2>
-            for _, patient := range view.Patients {
-                @DashboardPatientCard(data, dashboardData, view, patient)
-            }
+            <div class="dashboard-patient-list" data-home={view.Home.ID}>
+                for _, patient := range view.Patients {
+                    @DashboardPatientCard(data, dashboardData, view, patient)
+                }
+            </div>
+
             <h2>{data.User.Language.HomesUsers}</h2>
             for _, user := range view.Users {
                 @user.Component(data) {}
@@ -38,7 +41,9 @@ templ HomePage(ctx context.Context, data *CommonData, dashboardData *DashboardDa
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
     <script src="https://kit.fontawesome.com/9e1149297d.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <script src={data.StaticFile("home.js")}></script>
+    <script src={data.StaticFile("reorder-patients.js")}></script>
 }
 
 templ (dv DateView) View(data *CommonData) {
