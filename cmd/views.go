@@ -581,17 +581,29 @@ type FileView struct {
 	Created          time.Time
 	OriginalFileName string
 	MIMEType         string
+	Size             int64
 }
 
-func (in *File) ToFileView(fileInfo FileInfo) FileView {
+func (in *File) ToFileView() FileView {
 	return FileView{
 		ID:               in.ID,
 		Creator:          in.Creator,
 		Accessibility:    FileAccessibility(in.Accessibility),
 		Created:          in.Created.Time,
 		UUID:             in.Uuid,
-		OriginalFileName: fileInfo.FileName,
-		MIMEType:         fileInfo.MIMEContentType(),
+		OriginalFileName: in.Filename,
+		MIMEType:         in.Mimetype,
+		Size:             in.Size,
+	}
+}
+
+func (in *FileView) FileInfo() FileInfo {
+	return FileInfo{
+		FileName: in.OriginalFileName,
+		MIMEType: in.MIMEType,
+		Size:     in.Size,
+		Created:  in.Created,
+		Creator:  in.Creator,
 	}
 }
 

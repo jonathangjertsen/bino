@@ -49,13 +49,7 @@ func (server *Server) fileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileInfo, err := server.FileBackend.ReadInfo(ctx, file.Uuid)
-	if err != nil {
-		ajaxError(w, r, err, http.StatusInternalServerError)
-		return
-	}
-
-	fileView := file.ToFileView(fileInfo)
+	fileView := file.ToFileView()
 
 	switch fileView.Accessibility {
 	case FileAccessibilityPublic:
@@ -73,14 +67,14 @@ func (server *Server) fileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	rc, err := server.FileBackend.Open(ctx, fileView.UUID, fileInfo)
+	rc, err := server.FileBackend.Open(ctx, fileView.UUID, fileView.FileInfo())
 	if err != nil {
 		ajaxError(w, r, err, http.StatusInternalServerError)
 		return
 	}
 	defer rc.Close()
-	w.Header().Set("Content-Type", fileInfo.MIMEContentType())
-	w.Header().Set("Content-Length", strconv.Itoa(int(fileInfo.Size)))
+	w.Header().Set("Content-Type", fileView.MIMEType)
+	w.Header().Set("Content-Length", strconv.Itoa(int(fileView.Size)))
 	if _, err := io.Copy(w, rc); err != nil {
 		LogCtx(ctx, "failed to write out file: %w", err)
 	}
@@ -99,15 +93,7 @@ func (server *Server) filePage(w http.ResponseWriter, r *http.Request) {
 		files = nil
 	}
 
-	fileViews := []FileView{}
-	for _, file := range files {
-		if fileInfo, err := server.FileBackend.ReadInfo(ctx, file.Uuid); err != nil {
-			data.Error(data.User.Language.TODO("Loading file"), err)
-		} else {
-			fileViews = append(fileViews, file.ToFileView(fileInfo))
-		}
-	}
-	_ = FileUploadPage(data, fileViews).Render(ctx, w)
+	_ = FileUploadPage(data, SliceToSlice(files, func(in File) FileView { return in.ToFileView() })).Render(ctx, w)
 }
 
 func (server *Server) filepondSubmit(w http.ResponseWriter, r *http.Request) {
@@ -165,7 +151,7 @@ func (server *Server) filepondProcess(w http.ResponseWriter, r *http.Request) {
 
 	result := server.FileBackend.Upload(ctx, file, FileInfo{
 		FileName: header.Filename,
-		MIMEInfo: header.Header,
+		MIMEType: header.Header.Get("Content-Type"),
 		Size:     header.Size,
 		Creator:  data.User.AppuserID,
 		Created:  time.Now(),
@@ -216,7 +202,7 @@ func (server *Server) imageFilepondRestore(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	w.Header().Set("Content-Type", res.FileInfo.MIMEContentType())
+	w.Header().Set("Content-Type", res.FileInfo.MIMEType)
 	w.Header().Set("Content-Length", strconv.Itoa(len(res.Data)))
 	w.Write(res.Data)
 }

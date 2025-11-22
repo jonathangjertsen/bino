@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/textproto"
 	"os"
 	"time"
 
@@ -42,14 +41,10 @@ type CommitResult struct {
 
 type FileInfo struct {
 	FileName string
-	MIMEInfo map[string][]string
+	MIMEType string
 	Size     int64
 	Created  time.Time
 	Creator  int32
-}
-
-func (fi FileInfo) MIMEContentType() string {
-	return textproto.MIMEHeader(fi.MIMEInfo).Get("Content-Type")
 }
 
 type FileBackend interface {
@@ -61,8 +56,6 @@ type FileBackend interface {
 	ReadTemp(ctx context.Context, ID string) ReadResult
 	// Commit files from temporary storage to real storage
 	Commit(ctx context.Context, IDs []string) CommitResult
-	// Read info
-	ReadInfo(ctx context.Context, ID string) (FileInfo, error)
 	// Open file
 	Open(ctx context.Context, ID string, fileInfo FileInfo) (io.ReadCloser, error)
 	// Delete file
@@ -294,27 +287,6 @@ func (lfs *LocalFileStorage) Commit(ctx context.Context, ids []string) CommitRes
 		}
 	}
 	return out
-}
-
-func (lfs *LocalFileStorage) ReadInfo(ctx context.Context, id string) (FileInfo, error) {
-	dir, err := os.OpenRoot(lfs.MainDirectory)
-	if err != nil {
-		return FileInfo{}, err
-	}
-	defer dir.Close()
-
-	metaFile, err := dir.Open(id + "/metadata.json")
-	if err != nil {
-		return FileInfo{}, err
-	}
-	var info FileInfo
-	if err := json.NewDecoder(metaFile).Decode(&info); err != nil {
-		metaFile.Close()
-		return FileInfo{}, err
-	}
-	metaFile.Close()
-
-	return info, nil
 }
 
 func (lfs *LocalFileStorage) Open(ctx context.Context, id string, info FileInfo) (io.ReadCloser, error) {

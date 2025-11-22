@@ -1,0 +1,4 @@
+-- +migrate Up
+ALTER TABLE file ADD COLUMN filename TEXT   NOT NULL;
+ALTER TABLE file ADD COLUMN mimetype TEXT   NOT NULL;
+ALTER TABLE file ADD COLUMN size     BIGINT NOT NULL;

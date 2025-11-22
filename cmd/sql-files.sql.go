@@ -23,7 +23,7 @@ func (q *Queries) DeregisterFile(ctx context.Context, id int32) error {
 }
 
 const getFileByID = `-- name: GetFileByID :one
-SELECT id, uuid, creator, created, accessibility
+SELECT id, uuid, creator, created, accessibility, filename, mimetype, size
 FROM file
 WHERE id = $1
 `
@@ -37,12 +37,15 @@ func (q *Queries) GetFileByID(ctx context.Context, id int32) (File, error) {
 		&i.Creator,
 		&i.Created,
 		&i.Accessibility,
+		&i.Filename,
+		&i.Mimetype,
+		&i.Size,
 	)
 	return i, err
 }
 
 const getFilesForUser = `-- name: GetFilesForUser :many
-SELECT id, uuid, creator, created, accessibility
+SELECT id, uuid, creator, created, accessibility, filename, mimetype, size
 FROM file
 WHERE
       creator = $1
@@ -70,6 +73,9 @@ func (q *Queries) GetFilesForUser(ctx context.Context, arg GetFilesForUserParams
 			&i.Creator,
 			&i.Created,
 			&i.Accessibility,
+			&i.Filename,
+			&i.Mimetype,
+			&i.Size,
 		); err != nil {
 			return nil, err
 		}
