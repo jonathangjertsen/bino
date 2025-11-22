@@ -37,6 +37,7 @@ templ HomePage(ctx context.Context, data *CommonData, dashboardData *DashboardDa
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
+    <script src="https://kit.fontawesome.com/9e1149297d.js" crossorigin="anonymous"></script>
     <script src={data.StaticFile("home.js")}></script>
 }
 
@@ -133,7 +134,9 @@ templ PreferredSpecies(data *CommonData, dashboardData *DashboardData, view *Hom
     <tbody id="species-list" data-home={view.Home.ID}> 
         for _, species := range view.PreferredSpecies {
             <tr data-id={species.ID} class=".species-list-row">
-                <td class="icon-col">☰</td>
+                <td class="icon-col">
+                    <i class="fa-solid fa-grip-vertical card-gripper"></i>
+                </td>
                 <td>{species.Name}</td>
                 <td class="icon-col">
                     @SingleButtonForm(

@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   document.querySelectorAll(".dashboard-patient-list").forEach(function(list) {
     new Sortable(list, {
-      handle: ".card-header-patient",
+      handle: ".card-gripper",
       animation: 0,
       forceFallback: true,
       fallbackClass: "sortable-fallback",

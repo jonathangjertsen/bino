@@ -24,6 +24,7 @@ templ DashboardPage(data *CommonData, dashboardData *DashboardData) {
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <script src="https://kit.fontawesome.com/9e1149297d.js" crossorigin="anonymous"></script>
 
     <script src={data.StaticFile("dashboard.js")}></script>
     <script src={data.StaticFile("dashboard-search.js")}></script>
@@ -170,7 +171,7 @@ templ DashboardHomes(data *CommonData, dashboardData *DashboardData) {
 }
 
 templ Avatar(u UserView) {
-    <a href={u.URL()}>
+    <a href={templ.URL(u.URL())}>
         if u.HasAvatarURL {
             <img src={u.AvatarURL} class="dashboard-head-profile" data-toggle="tooltip" data-placement="top" title={u.Name}>
         } else {
@@ -185,7 +186,7 @@ templ Avatar(u UserView) {
 
 templ DashboardHomeCard(data *CommonData, dashboardData *DashboardData, home *HomeView) {
     <div class="card-header d-flex justify-content-between">
-        <a href={home.URL()} class="filter-content">{home.Home.Name} — <span class={"occupancy", home.OccupancyClass()}>{len(home.Patients)} / {home.Home.Capacity}</span></a>
+        <a href={templ.URL(home.URL())} class="filter-content">{home.Home.Name} — <span class={"occupancy", home.OccupancyClass()}>{len(home.Patients)} / {home.Home.Capacity}</span></a>
         <div>
             for _, u := range home.Users {
                 @Avatar(u)
@@ -223,7 +224,12 @@ templ DashboardHomeCard(data *CommonData, dashboardData *DashboardData, home *Ho
 templ DashboardPatientCard(data *CommonData, dashboardData *DashboardData, home *HomeView, patient PatientView) {
     <div class="card b-card dashboard-patient-card m-2 filter-box shadow-sm" id={patient.CardID("#")} data-patient-id={patient.ID}>
         <div class="card-header card-header-patient d-flex justify-content-between">
-            <a href={patient.URL()} class="filter-content">{patient.Name}</a>
+            <div>
+                if data.User.HasHomeOrAccess(home.Home.ID, AccessLevelCoordinator) {
+                    <i class="fa-solid fa-grip-vertical card-gripper"></i>
+                }
+                <a href={templ.URL(patient.URL())} class="filter-content">{patient.Name}</a>
+            </div>
             <div>
                 <span class="patient-species-header filter-content">{patient.Species}</span>    
                 <button class="expander btn btn-sm btn-outline-success" data-bs-toggle="collapse" data-bs-target={patient.CollapseID("#")}>{data.User.Language.GenericDetails}</button>

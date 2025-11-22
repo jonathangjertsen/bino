@@ -12321,4 +12321,9 @@ mark.hl {
   font-weight: normal;
 }
 
+.card-gripper {
+  align-self: center;
+  color: rgb(126.75, 127.125, 141.875);
+}
+
 /*# sourceMappingURL=gen.css.map */
