@@ -120,36 +120,37 @@ type Language struct {
 	GDriveTemplateFile                     string
 	GDriveExtraDirs                        string
 
-	GenericAdd      string
-	GenericAge      string
-	GenericAvatar   string
-	GenericCancel   string
-	GenericConfirm  string
-	GenericDelete   string
-	GenericDetails  string
-	GenericEmail    string
-	GenericFrom     string
-	GenericTo       string
-	GenericGoBack   string
-	GenericHome     string
-	GenericJournal  string
-	GenericLatin    string
-	GenericMove     string
-	GenericMoveTo   string
-	GenericName     string
-	GenericNone     string
-	GenericNever    string
-	GenericNote     string
-	GenericNotFound string
-	GenericSpecies  string
-	GenericStatus   string
-	GenericUpdate   string
-	GenericFailed   string
-	GenericSuccess  string
-	GenericMessage  string
-	GenericURL      string
-	GenericSearch   string
-	GenericSave     string
+	GenericAdd          string
+	GenericAge          string
+	GenericAvatar       string
+	GenericCancel       string
+	GenericConfirm      string
+	GenericDelete       string
+	GenericDetails      string
+	GenericEmail        string
+	GenericFrom         string
+	GenericTo           string
+	GenericGoBack       string
+	GenericHome         string
+	GenericJournal      string
+	GenericLatin        string
+	GenericMove         string
+	GenericMoveTo       string
+	GenericName         string
+	GenericNone         string
+	GenericNever        string
+	GenericNote         string
+	GenericNotFound     string
+	GenericSpecies      string
+	GenericStatus       string
+	GenericUpdate       string
+	GenericFailed       string
+	GenericSuccess      string
+	GenericMessage      string
+	GenericURL          string
+	GenericSearch       string
+	GenericSave         string
+	GenericUnauthorized string
 
 	HomesArchiveHome               string
 	HomesAddToHome                 string
@@ -400,36 +401,37 @@ var NO = &Language{
 	GDriveBaseDir:                          "Nye journaler vil bli opprettet i denne mappen:",
 	GDriveExtraDirs:                        "I tillegg er journaler i disse mappene inkludert i søk:",
 
-	GenericAdd:      "Legg til",
-	GenericAge:      "Alder",
-	GenericAvatar:   "Profilbilde",
-	GenericCancel:   "Avbryt",
-	GenericConfirm:  "Bekreft",
-	GenericDelete:   "Slett",
-	GenericDetails:  "Detaljer",
-	GenericEmail:    "Email",
-	GenericFrom:     "Fra",
-	GenericTo:       "Til",
-	GenericGoBack:   "Tilbake",
-	GenericHome:     "Rehabhjem",
-	GenericJournal:  "Journal",
-	GenericLatin:    "Latin",
-	GenericMove:     "Flytt",
-	GenericMoveTo:   "Flytt til",
-	GenericName:     "Navn",
-	GenericNone:     "Ingen",
-	GenericNever:    "Aldri",
-	GenericNote:     "Notis",
-	GenericNotFound: "Ikke funnet",
-	GenericSpecies:  "Art",
-	GenericStatus:   "Status",
-	GenericUpdate:   "Oppdater",
-	GenericFailed:   "Noe gikk galt. Kontakt administrator.",
-	GenericSuccess:  "Handlingen ble utført.",
-	GenericMessage:  "Melding",
-	GenericURL:      "URL",
-	GenericSearch:   "Søk",
-	GenericSave:     "Lagre",
+	GenericAdd:          "Legg til",
+	GenericAge:          "Alder",
+	GenericAvatar:       "Profilbilde",
+	GenericCancel:       "Avbryt",
+	GenericConfirm:      "Bekreft",
+	GenericDelete:       "Slett",
+	GenericDetails:      "Detaljer",
+	GenericEmail:        "Email",
+	GenericFrom:         "Fra",
+	GenericTo:           "Til",
+	GenericGoBack:       "Tilbake",
+	GenericHome:         "Rehabhjem",
+	GenericJournal:      "Journal",
+	GenericLatin:        "Latin",
+	GenericMove:         "Flytt",
+	GenericMoveTo:       "Flytt til",
+	GenericName:         "Navn",
+	GenericNone:         "Ingen",
+	GenericNever:        "Aldri",
+	GenericNote:         "Notis",
+	GenericNotFound:     "Ikke funnet",
+	GenericSpecies:      "Art",
+	GenericStatus:       "Status",
+	GenericUpdate:       "Oppdater",
+	GenericFailed:       "Noe gikk galt. Kontakt administrator.",
+	GenericSuccess:      "Handlingen ble utført.",
+	GenericMessage:      "Melding",
+	GenericURL:          "URL",
+	GenericSearch:       "Søk",
+	GenericSave:         "Lagre",
+	GenericUnauthorized: "Du har ikke lov til å gjøre dette",
 
 	HomesAddToHome:                 "Legg til",
 	HomesArchiveHome:               "Arkiver rehabhjem",
@@ -683,36 +685,37 @@ var EN = &Language{
 	GDriveBaseDir:                          "New files will be created in this folder:",
 	GDriveExtraDirs:                        "In addition, these folders are included in the document search:",
 
-	GenericAdd:      "Add",
-	GenericAge:      "Age",
-	GenericAvatar:   "Avatar",
-	GenericCancel:   "Cancel",
-	GenericConfirm:  "Confirm",
-	GenericDelete:   "Delete",
-	GenericDetails:  "Details",
-	GenericEmail:    "Email",
-	GenericFrom:     "From",
-	GenericTo:       "To",
-	GenericGoBack:   "Go back",
-	GenericHome:     "Home",
-	GenericJournal:  "Journal",
-	GenericLatin:    "Latin",
-	GenericMove:     "Move",
-	GenericMoveTo:   "Move to",
-	GenericName:     "Name",
-	GenericNone:     "None",
-	GenericNever:    "Never",
-	GenericNote:     "Note",
-	GenericNotFound: "Not found",
-	GenericSpecies:  "Species",
-	GenericStatus:   "Status",
-	GenericUpdate:   "Update",
-	GenericFailed:   "Something went wrong. Contact the site administrator.",
-	GenericSuccess:  "Success.",
-	GenericMessage:  "Message",
-	GenericURL:      "URL",
-	GenericSearch:   "Search",
-	GenericSave:     "Lagre",
+	GenericAdd:          "Add",
+	GenericAge:          "Age",
+	GenericAvatar:       "Avatar",
+	GenericCancel:       "Cancel",
+	GenericConfirm:      "Confirm",
+	GenericDelete:       "Delete",
+	GenericDetails:      "Details",
+	GenericEmail:        "Email",
+	GenericFrom:         "From",
+	GenericTo:           "To",
+	GenericGoBack:       "Go back",
+	GenericHome:         "Home",
+	GenericJournal:      "Journal",
+	GenericLatin:        "Latin",
+	GenericMove:         "Move",
+	GenericMoveTo:       "Move to",
+	GenericName:         "Name",
+	GenericNone:         "None",
+	GenericNever:        "Never",
+	GenericNote:         "Note",
+	GenericNotFound:     "Not found",
+	GenericSpecies:      "Species",
+	GenericStatus:       "Status",
+	GenericUpdate:       "Update",
+	GenericFailed:       "Something went wrong. Contact the site administrator.",
+	GenericSuccess:      "Success.",
+	GenericMessage:      "Message",
+	GenericURL:          "URL",
+	GenericSearch:       "Search",
+	GenericSave:         "Lagre",
+	GenericUnauthorized: "Unauthorized.",
 
 	HomesAddToHome:                 "Add",
 	HomesArchiveHome:               "Archive rehab home",

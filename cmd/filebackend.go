@@ -65,6 +65,8 @@ type FileBackend interface {
 	ReadInfo(ctx context.Context, ID string) (FileInfo, error)
 	// Open file
 	Open(ctx context.Context, ID string, fileInfo FileInfo) (io.ReadCloser, error)
+	// Delete file
+	Delete(ctx context.Context, ID string) DeleteResult
 }
 
 // LOCAL FILE API
@@ -167,7 +169,7 @@ func (lfs *LocalFileStorage) Upload(ctx context.Context, data io.Reader, fileInf
 	}
 }
 
-func (lfs *LocalFileStorage) DeleteTemp(ctx context.Context, id string) (out DeleteResult) {
+func (lfs *LocalFileStorage) delete(ctx context.Context, dirname string, id string) (out DeleteResult) {
 	if err := uuid.Validate(id); err != nil {
 		return DeleteResult{
 			Error:          fmt.Errorf("'%s' is not a valid UUID: %w", id, err),
@@ -176,7 +178,7 @@ func (lfs *LocalFileStorage) DeleteTemp(ctx context.Context, id string) (out Del
 	}
 
 	// Open the file base directory
-	dir, err := os.OpenRoot(lfs.TmpDirectory)
+	dir, err := os.OpenRoot(dirname)
 	if err != nil {
 		return DeleteResult{
 			Error:          err,
@@ -196,6 +198,10 @@ func (lfs *LocalFileStorage) DeleteTemp(ctx context.Context, id string) (out Del
 	return DeleteResult{
 		HTTPStatusCode: http.StatusOK,
 	}
+}
+
+func (lfs *LocalFileStorage) DeleteTemp(ctx context.Context, id string) (out DeleteResult) {
+	return lfs.delete(ctx, lfs.TmpDirectory, id)
 }
 
 func (lfs *LocalFileStorage) ReadTemp(ctx context.Context, id string) (out ReadResult) {
@@ -323,4 +329,8 @@ func (lfs *LocalFileStorage) Open(ctx context.Context, id string, info FileInfo)
 		return nil, err
 	}
 	return file, nil
+}
+
+func (lfs *LocalFileStorage) Delete(ctx context.Context, id string) (out DeleteResult) {
+	return lfs.delete(ctx, lfs.MainDirectory, id)
 }

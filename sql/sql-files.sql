@@ -9,6 +9,12 @@ SELECT array_agg(id)::int[] AS ids
 FROM ins
 ;
 
+-- name: DeregisterFile :exec
+DELETE
+FROM file
+WHERE id = @id
+;
+
 -- name: GetFilesForUser :many
 SELECT *
 FROM file

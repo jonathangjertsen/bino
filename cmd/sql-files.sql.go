@@ -11,6 +11,17 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const deregisterFile = `-- name: DeregisterFile :exec
+DELETE
+FROM file
+WHERE id = $1
+`
+
+func (q *Queries) DeregisterFile(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deregisterFile, id)
+	return err
+}
+
 const getFileByID = `-- name: GetFileByID :one
 SELECT id, uuid, creator, created, accessibility
 FROM file

@@ -220,3 +220,42 @@ func (server *Server) imageFilepondRestore(w http.ResponseWriter, r *http.Reques
 	w.Header().Set("Content-Length", strconv.Itoa(len(res.Data)))
 	w.Write(res.Data)
 }
+
+func (server *Server) fileDelete(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	data := MustLoadCommonData(ctx)
+
+	id, err := server.getPathID(r, "id")
+	if err != nil {
+		data.Error(data.User.Language.GenericFailed, err)
+		server.redirectToReferer(w, r)
+		return
+	}
+
+	file, err := server.Queries.GetFileByID(ctx, id)
+	if err != nil {
+		data.Error(data.User.Language.GenericNotFound, err)
+		server.redirectToReferer(w, r)
+		return
+	}
+
+	if file.Creator != data.User.AppuserID {
+		data.Error(data.User.Language.GenericUnauthorized, err)
+		server.redirectToReferer(w, r)
+		return
+	}
+
+	if err := server.Queries.DeregisterFile(ctx, id); err != nil {
+		data.Error(data.User.Language.GenericFailed, err)
+		server.redirectToReferer(w, r)
+		return
+	}
+
+	if result := server.FileBackend.Delete(ctx, file.Uuid); result.Error != nil {
+		ajaxError(w, r, err, result.HTTPStatusCode)
+		return
+	}
+
+	data.Success(data.User.Language.GenericSuccess)
+	server.redirectToReferer(w, r)
+}

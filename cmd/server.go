@@ -220,6 +220,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, gdri
 	mux.Handle("DELETE /file/filepond", loggedInHandler(server.imageFilepondRevert, CapUploadFile))
 	mux.Handle("GET /file/filepond/{id}", loggedInHandler(server.imageFilepondRestore, CapUploadFile))
 	mux.Handle("POST /file/submit", loggedInHandler(server.filepondSubmit, CapUploadFile))
+	mux.Handle("POST /file/{id}/delete", loggedInHandler(server.fileDelete, CapUploadFile))
 
 	//// CONTENT MANAGEMENT
 	// Pages
