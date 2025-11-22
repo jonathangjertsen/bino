@@ -4,3 +4,5 @@ backend
 config.json
 cache.db
 .env
+tmp/
+file/

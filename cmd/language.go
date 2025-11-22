@@ -28,6 +28,8 @@ type Language struct {
 	AccessLevel  string
 	AccessLevels map[AccessLevel]string
 
+	FileAccessibility map[FileAccessibility]string
+
 	AdminDisplayName            string
 	AdminEmailAddress           string
 	AdminInviteToBino           string
@@ -82,6 +84,10 @@ type Language struct {
 	ErrorPageHead         string
 	ErrorPageInstructions string
 	ErrorSettingLanguage  string
+
+	FilesUploadHeader        string
+	FilesPleaseWait          string
+	FilesThatYouHaveUploaded string
 
 	FooterPrivacy    string
 	FooterSourceCode string
@@ -143,6 +149,7 @@ type Language struct {
 	GenericMessage  string
 	GenericURL      string
 	GenericSearch   string
+	GenericSave     string
 
 	HomesArchiveHome               string
 	HomesAddToHome                 string
@@ -299,6 +306,11 @@ var NO = &Language{
 		AccessLevelRehabber:    "Rehabilitør",
 		AccessLevelNone:        "Bruker",
 	},
+	FileAccessibility: map[FileAccessibility]string{
+		FileAccessibilityPersonal: "Synlig for bare deg",
+		FileAccessibilityInternal: "Synlig for innloggede",
+		FileAccessibilityPublic:   "Synlig for hele internett",
+	},
 
 	AdminDisplayName:            "Navn",
 	AdminEmailAddress:           "Epostaddresse",
@@ -354,6 +366,10 @@ var NO = &Language{
 	ErrorPageHead:         "Feilmelding",
 	ErrorPageInstructions: "Det skjedde noe feil under lasting av siden. Feilen har blitt logget og vil bli undersøkt. Send melding til administrator for hjelp. Den tekniske feilmeldingen følger under.",
 	ErrorSettingLanguage:  "Kunne ikke oppdatere språk",
+
+	FilesUploadHeader:        "Last opp filer",
+	FilesPleaseWait:          "Laster opp filer...",
+	FilesThatYouHaveUploaded: "Filer du har lastet opp",
 
 	FooterPrivacy:    "Personvern",
 	FooterSourceCode: "Kildekode",
@@ -413,6 +429,7 @@ var NO = &Language{
 	GenericMessage:  "Melding",
 	GenericURL:      "URL",
 	GenericSearch:   "Søk",
+	GenericSave:     "Lagre",
 
 	HomesAddToHome:                 "Legg til",
 	HomesArchiveHome:               "Arkiver rehabhjem",
@@ -570,6 +587,11 @@ var EN = &Language{
 		AccessLevelRehabber:    "Rehabilitator",
 		AccessLevelNone:        "User",
 	},
+	FileAccessibility: map[FileAccessibility]string{
+		FileAccessibilityPersonal: "Visible for you",
+		FileAccessibilityInternal: "Visible for logged-in users",
+		FileAccessibilityPublic:   "Visible for the entire internet",
+	},
 
 	AdminDisplayName:            "Name",
 	AdminEmailAddress:           "Email address",
@@ -625,6 +647,10 @@ var EN = &Language{
 	ErrorPageHead:         "Error",
 	ErrorPageInstructions: "An error occurred while loading the page. The error has been logged and will be investigated. Send a message to the site admin for help. The technical error message is as follows.",
 	ErrorSettingLanguage:  "Failed to update language",
+
+	FilesUploadHeader:        "Upload files",
+	FilesPleaseWait:          "Uploading...",
+	FilesThatYouHaveUploaded: "Files you have uploaded",
 
 	FooterPrivacy:    "Privacy",
 	FooterSourceCode: "Source code",
@@ -686,6 +712,7 @@ var EN = &Language{
 	GenericMessage:  "Message",
 	GenericURL:      "URL",
 	GenericSearch:   "Search",
+	GenericSave:     "Lagre",
 
 	HomesAddToHome:                 "Add",
 	HomesArchiveHome:               "Archive rehab home",

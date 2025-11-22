@@ -118,7 +118,7 @@ func CalendarPage(data *CommonData, initialTime, initialView string) templ.Compo
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = FullLayout(data, "calendar").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = FullLayout(data).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

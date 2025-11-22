@@ -4,6 +4,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -568,4 +569,44 @@ func HighlightFallback(text, query string) []HighlightRun {
 	}
 
 	return out
+}
+
+// ---- File
+
+type FileView struct {
+	ID               int32
+	UUID             string
+	Creator          int32
+	Accessibility    FileAccessibility
+	Created          time.Time
+	OriginalFileName string
+	MIMEType         string
+}
+
+func (in *File) ToFileView(fileInfo FileInfo) FileView {
+	return FileView{
+		ID:               in.ID,
+		Creator:          in.Creator,
+		Accessibility:    FileAccessibility(in.Accessibility),
+		Created:          in.Created.Time,
+		UUID:             in.Uuid,
+		OriginalFileName: fileInfo.FileName,
+		MIMEType:         fileInfo.MIMEContentType(),
+	}
+}
+
+func (in *FileView) IsImage() bool {
+	return strings.HasPrefix(in.MIMEType, "image/")
+}
+
+func (in *FileView) Extension() string {
+	return filepath.Ext(in.OriginalFileName)
+}
+
+func (in *FileView) Filename() string {
+	return fmt.Sprintf("%d%s", in.ID, in.Extension())
+}
+
+func (in *FileView) URL() string {
+	return "/file/" + in.Filename()
 }

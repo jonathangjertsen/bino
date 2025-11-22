@@ -26,6 +26,7 @@ import "slices"
 // InviteToBino,
 // UseImportTool,
 // Debug,
+// UploadFile,
 // )
 type Capability int32
 
@@ -44,6 +45,7 @@ var RequiredAccessLevel = map[Capability]AccessLevel{
 	CapCreatePatientJournal: AccessLevelRehabber,
 	CapViewGDriveSettings:   AccessLevelRehabber,
 	CapManageAllPatients:    AccessLevelRehabber,
+	CapUploadFile:           AccessLevelRehabber,
 
 	CapViewAdminTools: AccessLevelCoordinator,
 	CapManageAllHomes: AccessLevelCoordinator,

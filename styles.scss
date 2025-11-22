@@ -667,3 +667,29 @@ mark.hl {
   outline: 1px dashed black;
   opacity: 0.1;
 }
+
+.filepond--credits {
+    // I gave the FilePond developer 15 dollars so I would feel OK about this.
+    // buymeacoffee.com/rikschennink/c/16242415
+    display: none;
+}
+
+.file-container {
+    max-width: 800px;
+}
+
+.dark-on-hover:hover {
+  filter: brightness(0.8);
+}
+
+.user-image-link {
+    max-width: 100%;
+}
+
+.user-image {
+    max-width: 100%;
+}
+
+.user-file-accessibility {
+    font-weight: normal;
+}

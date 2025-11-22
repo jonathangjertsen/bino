@@ -171,20 +171,6 @@ func (server *Server) postHomeAddUser(w http.ResponseWriter, r *http.Request, co
 	server.redirectToReferer(w, r)
 }
 
-func (server *Server) getPathValue(r *http.Request, field string) (string, error) {
-	v := r.PathValue(field)
-	var err error
-	if v == "" {
-		err = fmt.Errorf("no such path value: '%s'", field)
-	}
-	return v, err
-}
-
-func (server *Server) getCheckboxValue(r *http.Request, field string) bool {
-	v, err := server.getFormValue(r, field)
-	return err == nil && v == "on"
-}
-
 func stringsToIDs(in map[string]string) (map[string]int32, error) {
 	return MapToMapErr(in, func(str string) (int32, error) {
 		v, err := strconv.ParseInt(str, 10, 32)

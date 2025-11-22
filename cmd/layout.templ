@@ -1,45 +1,51 @@
 package main
 
-templ FullLayout(data *CommonData, classes ...string) {
+templ FullLayout(data *CommonData) {
     <!doctype html>
     <html lang="en">
     <head>
         @Head(data)
     </head>
     <body data-lang={templ.JSONString(data.User.Language)}>
-        @Navbar(data)
-        if len(data.Feedback.Items) > 0 {
-            <div class="b-container">
-                @Card("feedback-container", data.Feedback.CSSClass()) {
-                    <ul class="feedback-list">
-                        for _, item := range data.Feedback.Items {
-                            <li class={"feedback-item", item.Type.CSSClass()}>{item.Message}</li>
-                        }
-                    </ul>
-                    <button class="btn btn-sm btn-success closer">OK</button>
-                }
-            </div>
+        @Body(data) {
+            { children... }
         }
-        { children... }
-        @Footer(&data.User)
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Hammersmith+One&family=Roboto:wght@100..900&display=swap" rel="stylesheet">
-        <script
-			  src="https://code.jquery.com/jquery-3.7.1.min.js"
-			  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
-			  crossorigin="anonymous"></script>
-		
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-        <script src={data.StaticFile("lang.js")}></script>
-        <script src={data.StaticFile("main.js")}></script>
-        <script src={data.StaticFile("editable.js")}></script>
     </body>
     </html>
 }
 
+templ Body(data *CommonData) {
+    @Navbar(data)
+    if len(data.Feedback.Items) > 0 {
+        <div class="b-container">
+            @Card("feedback-container", data.Feedback.CSSClass()) {
+                <ul class="feedback-list">
+                    for _, item := range data.Feedback.Items {
+                        <li class={"feedback-item", item.Type.CSSClass()}>{item.Message}</li>
+                    }
+                </ul>
+                <button class="btn btn-sm btn-success closer">OK</button>
+            }
+        </div>
+    }
+    { children... }
+    @Footer(&data.User)
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hammersmith+One&family=Roboto:wght@100..900&display=swap" rel="stylesheet">
+    <script
+            src="https://code.jquery.com/jquery-3.7.1.min.js"
+            integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+            crossorigin="anonymous"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src={data.StaticFile("lang.js")}></script>
+    <script src={data.StaticFile("main.js")}></script>
+    <script src={data.StaticFile("editable.js")}></script>
+}
+
 templ Layout(data *CommonData, classes ...string) {
-    @FullLayout(data, classes...) {
+    @FullLayout(data) {
         <div class={"main b-container", classes}>
             { children... }
         </div>

@@ -12297,4 +12297,28 @@ mark.hl {
   opacity: 0.1;
 }
 
+.filepond--credits {
+  display: none;
+}
+
+.file-container {
+  max-width: 800px;
+}
+
+.dark-on-hover:hover {
+  filter: brightness(0.8);
+}
+
+.user-image-link {
+  max-width: 100%;
+}
+
+.user-image {
+  max-width: 100%;
+}
+
+.user-file-accessibility {
+  font-weight: normal;
+}
+
 /*# sourceMappingURL=gen.css.map */

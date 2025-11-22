@@ -33,6 +33,7 @@ type Server struct {
 	OAuthConfig   *oauth2.Config
 	TokenVerifier *oidc.IDTokenVerifier
 	GDriveWorker  *GDriveWorker
+	FileBackend   FileBackend
 	Runtime       RuntimeInfo
 	BuildKey      string
 	Config        Config
@@ -135,8 +136,9 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, gdri
 			PublicIP:    fetchPublicIP(),
 			TimeStarted: time.Now(),
 		},
-		BuildKey: buildKey,
-		Config:   config,
+		FileBackend: NewLocalFileStorage(ctx, "file", "tmp"),
+		BuildKey:    buildKey,
+		Config:      config,
 	}
 
 	mux := http.NewServeMux()
@@ -167,6 +169,8 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, gdri
 	// Static content
 	staticDir := fmt.Sprintf("/static/%s/", buildKey)
 	mux.Handle("GET "+staticDir, http.StripPrefix(staticDir, http.FileServer(http.Dir(config.HTTP.StaticDir))))
+	// User content
+	mux.Handle("GET /file/{name}", chainf(server.fileHandler, requiresLogin...))
 
 	//// LOGIN
 	mux.Handle("GET /login", chainf(server.loginHandler))
@@ -186,6 +190,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, gdri
 	mux.Handle("GET /import", loggedInHandler(server.getImportHandler, CapUseImportTool))
 	mux.Handle("GET /search", loggedInHandler(server.searchHandler, CapSearch))
 	mux.Handle("GET /search/live", loggedInHandler(server.searchLiveHandler, CapSearch))
+	mux.Handle("GET /file", loggedInHandler(server.filePage, CapUploadFile))
 	// Forms
 	mux.Handle("POST /checkin", loggedInHandler(server.postCheckinHandler, CapCheckInPatient))
 	mux.Handle("POST /privacy", loggedInHandler(server.postPrivacyHandler, CapSetOwnPreferences))
@@ -210,6 +215,11 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, gdri
 	mux.Handle("GET /calendar/away", loggedInHandler(server.ajaxCalendarAwayHandler, CapViewCalendar))
 	mux.Handle("GET /calendar/patientevents", loggedInHandler(server.ajaxCalendarPatientEventsHandler, CapViewCalendar))
 	mux.Handle("GET /import/validation", loggedInHandler(server.ajaxImportValidateHandler, CapViewCalendar))
+	// Filepond
+	mux.Handle("POST /file/filepond", loggedInHandler(server.filepondProcess, CapUploadFile))
+	mux.Handle("DELETE /file/filepond", loggedInHandler(server.imageFilepondRevert, CapUploadFile))
+	mux.Handle("GET /file/filepond/{id}", loggedInHandler(server.imageFilepondRestore, CapUploadFile))
+	mux.Handle("POST /file/submit", loggedInHandler(server.filepondSubmit, CapUploadFile))
 
 	//// CONTENT MANAGEMENT
 	// Pages
@@ -307,13 +317,21 @@ func (server *Server) getFormID(r *http.Request, field string) (int32, error) {
 	return int32(v), nil
 }
 
-func (server *Server) getFormValue(r *http.Request, field string) (string, error) {
+func (server *Server) getFormMultiValue(r *http.Request, field string) ([]string, error) {
 	if err := r.ParseForm(); err != nil {
-		return "", fmt.Errorf("parsing form: %w", err)
+		return nil, fmt.Errorf("parsing form: %w", err)
 	}
 	values, ok := r.Form[field]
 	if !ok {
-		return "", fmt.Errorf("missing form value '%s'", field)
+		return nil, fmt.Errorf("missing form value '%s'", field)
+	}
+	return values, nil
+}
+
+func (server *Server) getFormValue(r *http.Request, field string) (string, error) {
+	values, err := server.getFormMultiValue(r, field)
+	if err != nil {
+		return "", err
 	}
 	if len(values) != 1 {
 		return "", fmt.Errorf("expect 1 form value for '%s', got %d", field, len(values))
@@ -343,4 +361,18 @@ func (server *Server) getPathID(r *http.Request, field string) (int32, error) {
 		return 0, err
 	}
 	return int32(v), nil
+}
+
+func (server *Server) getPathValue(r *http.Request, field string) (string, error) {
+	v := r.PathValue(field)
+	var err error
+	if v == "" {
+		err = fmt.Errorf("no such path value: '%s'", field)
+	}
+	return v, err
+}
+
+func (server *Server) getCheckboxValue(r *http.Request, field string) bool {
+	v, err := server.getFormValue(r, field)
+	return err == nil && v == "on"
 }

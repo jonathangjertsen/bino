@@ -55,11 +55,13 @@ const (
 	CapUseImportTool Capability = 20
 	// CapDebug is a Capability of type Debug.
 	CapDebug Capability = 21
+	// CapUploadFile is a Capability of type UploadFile.
+	CapUploadFile Capability = 22
 )
 
 var ErrInvalidCapability = errors.New("not a valid Capability")
 
-const _CapabilityName = "ViewAllActivePatientsViewAllFormerPatientsViewAllHomesViewAllUsersViewCalendarSearchSetOwnPreferencesCheckInPatientManageOwnPatientsManageAllPatientsManageOwnHomesManageAllHomesCreatePatientJournalManageSpeciesManageUsersDeleteUsersViewAdminToolsViewGDriveSettingsInviteToGDriveInviteToBinoUseImportToolDebug"
+const _CapabilityName = "ViewAllActivePatientsViewAllFormerPatientsViewAllHomesViewAllUsersViewCalendarSearchSetOwnPreferencesCheckInPatientManageOwnPatientsManageAllPatientsManageOwnHomesManageAllHomesCreatePatientJournalManageSpeciesManageUsersDeleteUsersViewAdminToolsViewGDriveSettingsInviteToGDriveInviteToBinoUseImportToolDebugUploadFile"
 
 var _CapabilityMap = map[Capability]string{
 	CapViewAllActivePatients: _CapabilityName[0:21],
@@ -84,6 +86,7 @@ var _CapabilityMap = map[Capability]string{
 	CapInviteToBino:          _CapabilityName[278:290],
 	CapUseImportTool:         _CapabilityName[290:303],
 	CapDebug:                 _CapabilityName[303:308],
+	CapUploadFile:            _CapabilityName[308:318],
 }
 
 // String implements the Stringer interface.
@@ -124,6 +127,7 @@ var _CapabilityValue = map[string]Capability{
 	_CapabilityName[278:290]: CapInviteToBino,
 	_CapabilityName[290:303]: CapUseImportTool,
 	_CapabilityName[303:308]: CapDebug,
+	_CapabilityName[308:318]: CapUploadFile,
 }
 
 // ParseCapability attempts to convert a string to a Capability.

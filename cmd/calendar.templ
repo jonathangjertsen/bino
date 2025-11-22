@@ -7,7 +7,7 @@ import (
 )
 
 templ CalendarPage(data *CommonData, initialTime, initialView string) {
-	@FullLayout(data, "calendar") {
+	@FullLayout(data) {
         <div class="h-100">
             <h1>{data.User.Language.Calendar}</h1>
             <div class="card p-2 w-100">

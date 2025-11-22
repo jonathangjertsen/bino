@@ -22,19 +22,19 @@ services:
       - db
     volumes:
        - pgadmin:/root/.pgadmin
-  bino:
-    build: .
-    depends_on:
-      - db
-    environment:
-      BINO_DB_PASSWORD: ${BINO_DB_PASSWORD}
-      BINO_DB_HOST: db
-      BINO_DB_PORT: 5432
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./config.json:/config.json
-      - ./secret:/secret
+#  bino:
+#    build: .
+#    depends_on:
+#      - db
+#    environment:
+#      BINO_DB_PASSWORD: ${BINO_DB_PASSWORD}
+#      BINO_DB_HOST: db
+#      BINO_DB_PORT: 5432
+#    ports:
+#      - "8080:8080"
+#    volumes:
+#      - ./config.json:/config.json
+#      - ./secret:/secret
 
 volumes:
   pgdata:

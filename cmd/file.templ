@@ -1,0 +1,101 @@
+package main
+
+import (
+    "fmt"
+)
+
+templ FileUploadPage(data *CommonData, files []FileView) {
+    <!doctype html>
+    <html lang="en">
+    <head>
+        @Head(data)
+        <link href="https://unpkg.com/filepond@^4/dist/filepond.css" rel="stylesheet" />
+        <link href="https://unpkg.com/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.css" rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.5/css/lightbox.min.css" />
+        <link
+    href="https://unpkg.com/filepond-plugin-image-edit/dist/filepond-plugin-image-edit.css"
+    rel="stylesheet"
+/>
+    </head>
+    <body data-lang={templ.JSONString(data.User.Language)}>
+        @Body(data) {
+            <div class={"main b-container"}>
+                <h1>{data.User.Language.FilesUploadHeader}</h1>
+                <div class="card p-2">
+                    @FileUploader(data, "/file/submit")
+                </div>
+                <h1>{data.User.Language.FilesThatYouHaveUploaded}</h1>
+                <div class="file-list">
+                    for _, file := range files {
+                        @file.Component(data)
+                    }
+                </div>
+            </div>
+        }
+
+    <script src="https://unpkg.com/filepond-plugin-image-edit/dist/filepond-plugin-image-edit.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-exif-orientation/dist/filepond-plugin-image-exif-orientation.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-validate-size/dist/filepond-plugin-image-validate-size.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-crop/dist/filepond-plugin-image-crop.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-transform/dist/filepond-plugin-image-transform.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.5/js/lightbox.min.js"></script>
+    <script src="https://unpkg.com/filepond@^4/dist/filepond.js"></script>
+    <script src={data.StaticFile("imageupload.js")}></script>
+    <script src={data.StaticFile("lightbox.js")}></script>
+    </body>
+    </html>
+}
+
+templ FileUploader(data *CommonData, url string) {
+    <form action={templ.URL(url)} method="POST">
+        <input type="file" 
+            class="filepond m-0"
+            name="filepond"
+            id="general-file-uploader"
+            multiple 
+            data-allow-reorder="true"
+            data-max-files="10"
+        >
+        <button
+            type="submit"
+            class="btn btn-success w-100"
+            id="general-file-submit"
+        >{data.User.Language.GenericSave}</button>
+    </form>
+}
+
+templ (file *FileView) Component(data *CommonData) {
+    <div class="card file-container mb-2">
+        <div class="card-header d-flex justify-content-between">
+            <div>
+                <div class="user-file-name">{file.OriginalFileName}</div>
+                <div class="user-file-accessibility small">{data.User.Language.FileAccessibility[file.Accessibility]}</div>
+            </div>
+            @SingleButtonForm(
+                fmt.Sprintf("/file/%d/delete", file.ID),
+                "⛔",
+                "POST",
+                "btn-outline-danger",
+            )
+        </div>
+        <div class="card-content d-flex justify-content-around">
+            if file.IsImage() {
+                <a
+                    href={templ.URL(file.URL())}
+                    data-lightbox="user-files"
+                    class="user-image-link"
+                >
+                    <img 
+                        class="user-image dark-on-hover"
+                        src={templ.URL(file.URL())}
+                        alt={file.OriginalFileName}
+                    />
+                </a>
+            } else {
+                <a href={templ.URL(file.URL())}>{file.OriginalFileName}</a>
+            }
+        </div>
+    </div>
+}

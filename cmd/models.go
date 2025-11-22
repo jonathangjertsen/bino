@@ -27,6 +27,14 @@ type AppuserLanguage struct {
 	LanguageID int32
 }
 
+type File struct {
+	ID            int32
+	Uuid          string
+	Creator       int32
+	Created       pgtype.Timestamptz
+	Accessibility int32
+}
+
 // Each row is a rehab home
 type Home struct {
 	ID       int32
