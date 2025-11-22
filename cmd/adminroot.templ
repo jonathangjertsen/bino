@@ -4,6 +4,8 @@ templ AdminRootPage(data *CommonData) {
 	@Layout(data) {
         <h1>{data.User.Language.AdminRoot}</h1>
         <div class="card b-card">
+            // TODO: make these check for capabilities instead
+            <li class="card mb-1 p-1"><a href="/file">{data.User.Language.FilesUploadHeader}</a></li>
             if data.User.AccessLevel >= AccessLevelCoordinator {
                 <li class="card mb-1 p-1"><a href="/species">{data.User.Language.AdminManageSpecies}</a></li>
                 <li class="card mb-1 p-1"><a href="/import">{data.User.Language.ImportHeader}</a></li>
