@@ -611,14 +611,37 @@ func (in *FileView) IsImage() bool {
 	return strings.HasPrefix(in.MIMEType, "image/")
 }
 
+func (in *FileView) IsVideo() bool {
+	return strings.HasPrefix(in.MIMEType, "video/")
+}
+
+func (in *FileView) IsAudio() bool {
+	return strings.HasPrefix(in.MIMEType, "audio/")
+}
+
+func (in *FileView) IsPDF() bool {
+	return in.MIMEType == "application/pdf"
+}
+
 func (in *FileView) Extension() string {
 	return filepath.Ext(in.OriginalFileName)
 }
 
-func (in *FileView) Filename() string {
-	return fmt.Sprintf("%d%s", in.ID, in.Extension())
+func (in *FileView) URL() string {
+	return fmt.Sprintf("/file/%d/%s", in.ID, in.OriginalFileName)
 }
 
-func (in *FileView) URL() string {
-	return "/file/" + in.Filename()
+func (in *FileView) FileSizeText() string {
+	s := in.Size
+	if s < 1000 {
+		return fmt.Sprintf("%d B", s)
+	}
+	if s /= 1000; s < 1000 {
+		return fmt.Sprintf("%d kB", s)
+	}
+	if s /= 1000; s < 1000 {
+		return fmt.Sprintf("%d MB", s)
+	}
+	s /= 1000
+	return fmt.Sprintf("%d GB", s)
 }

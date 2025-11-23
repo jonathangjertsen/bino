@@ -33,7 +33,7 @@ type ReadResult struct {
 }
 
 type CommitResult struct {
-	Commited       []string
+	Commited       map[string]FileInfo
 	Failed         []string
 	Error          error
 	HTTPStatusCode int
@@ -197,6 +197,21 @@ func (lfs *LocalFileStorage) DeleteTemp(ctx context.Context, id string) (out Del
 	return lfs.delete(ctx, lfs.TmpDirectory, id)
 }
 
+func (lfs *LocalFileStorage) readMetaFile(ctx context.Context, dir *os.Root, id string) (FileInfo, error) {
+	metaFile, err := dir.Open(id + "/metadata.json")
+	if err != nil {
+		return FileInfo{}, err
+	}
+	var info FileInfo
+	if err := json.NewDecoder(metaFile).Decode(&info); err != nil {
+		metaFile.Close()
+		return FileInfo{}, err
+	}
+	metaFile.Close()
+
+	return info, nil
+}
+
 func (lfs *LocalFileStorage) ReadTemp(ctx context.Context, id string) (out ReadResult) {
 	if err := uuid.Validate(id); err != nil {
 		return ReadResult{
@@ -204,7 +219,6 @@ func (lfs *LocalFileStorage) ReadTemp(ctx context.Context, id string) (out ReadR
 			HTTPStatusCode: http.StatusBadRequest,
 		}
 	}
-
 	dir, err := os.OpenRoot(lfs.TmpDirectory)
 	if err != nil {
 		return ReadResult{
@@ -214,22 +228,13 @@ func (lfs *LocalFileStorage) ReadTemp(ctx context.Context, id string) (out ReadR
 	}
 	defer dir.Close()
 
-	metaFile, err := dir.Open(id + "/metadata.json")
+	info, err := lfs.readMetaFile(ctx, dir, id)
 	if err != nil {
-		return ReadResult{
-			Error:          err,
-			HTTPStatusCode: http.StatusNotFound,
-		}
-	}
-	var info FileInfo
-	if err := json.NewDecoder(metaFile).Decode(&info); err != nil {
-		metaFile.Close()
 		return ReadResult{
 			Error:          err,
 			HTTPStatusCode: http.StatusInternalServerError,
 		}
 	}
-	metaFile.Close()
 
 	file, err := dir.Open(id + "/" + info.FileName)
 	if err != nil {
@@ -274,7 +279,18 @@ func (lfs *LocalFileStorage) ReadTemp(ctx context.Context, id string) (out ReadR
 
 func (lfs *LocalFileStorage) Commit(ctx context.Context, ids []string) CommitResult {
 	var out CommitResult
+	out.Commited = map[string]FileInfo{}
 	out.HTTPStatusCode = http.StatusOK
+
+	dir, err := os.OpenRoot(lfs.MainDirectory)
+	if err != nil {
+		return CommitResult{
+			Error:          err,
+			HTTPStatusCode: http.StatusInternalServerError,
+		}
+	}
+	defer dir.Close()
+
 	for _, id := range ids {
 		tmpDir := lfs.TmpDirectory + "/" + id
 		mainDir := lfs.MainDirectory + "/" + id
@@ -283,7 +299,14 @@ func (lfs *LocalFileStorage) Commit(ctx context.Context, ids []string) CommitRes
 			out.Error = err
 			out.HTTPStatusCode = http.StatusInternalServerError
 		} else {
-			out.Commited = append(out.Commited, id)
+			meta, err := lfs.readMetaFile(ctx, dir, id)
+			if err != nil {
+				out.Failed = append(out.Failed, id)
+				out.Error = err
+				out.HTTPStatusCode = http.StatusInternalServerError
+			} else {
+				out.Commited[id] = meta
+			}
 		}
 	}
 	return out

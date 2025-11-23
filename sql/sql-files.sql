@@ -1,12 +1,10 @@
--- name: RegisterFiles :one
-WITH ins AS (
-  INSERT INTO file (uuid, accessibility, creator, created)
-  SELECT u, @accessibility, @creator, @created
-  FROM unnest(@uuids::text[]) AS u
-  RETURNING id
-)
-SELECT array_agg(id)::int[] AS ids
-FROM ins
+-- name: RegisterFile :one
+INSERT
+INTO file
+  (uuid, accessibility, creator, created, filename, mimetype, size)
+VALUES 
+  (@uuid, @accessibility, @creator, @created, @filename, @mimetype, @size)
+RETURNING id
 ;
 
 -- name: DeregisterFile :exec

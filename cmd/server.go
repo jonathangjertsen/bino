@@ -170,7 +170,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, gdri
 	staticDir := fmt.Sprintf("/static/%s/", buildKey)
 	mux.Handle("GET "+staticDir, http.StripPrefix(staticDir, http.FileServer(http.Dir(config.HTTP.StaticDir))))
 	// User content
-	mux.Handle("GET /file/{name}", chainf(server.fileHandler, requiresLogin...))
+	mux.Handle("GET /file/{id}/{filename}", chainf(server.fileHandler, requiresLogin...))
 
 	//// LOGIN
 	mux.Handle("GET /login", chainf(server.loginHandler))
@@ -191,6 +191,7 @@ func startServer(ctx context.Context, conn *pgxpool.Pool, queries *Queries, gdri
 	mux.Handle("GET /search", loggedInHandler(server.searchHandler, CapSearch))
 	mux.Handle("GET /search/live", loggedInHandler(server.searchLiveHandler, CapSearch))
 	mux.Handle("GET /file", loggedInHandler(server.filePage, CapUploadFile))
+	mux.Handle("GET /editor", loggedInHandler(server.editor, CapEditWiki))
 	// Forms
 	mux.Handle("POST /checkin", loggedInHandler(server.postCheckinHandler, CapCheckInPatient))
 	mux.Handle("POST /privacy", loggedInHandler(server.postPrivacyHandler, CapSetOwnPreferences))

@@ -87,32 +87,36 @@ func (q *Queries) GetFilesForUser(ctx context.Context, arg GetFilesForUserParams
 	return items, nil
 }
 
-const registerFiles = `-- name: RegisterFiles :one
-WITH ins AS (
-  INSERT INTO file (uuid, accessibility, creator, created)
-  SELECT u, $1, $2, $3
-  FROM unnest($4::text[]) AS u
-  RETURNING id
-)
-SELECT array_agg(id)::int[] AS ids
-FROM ins
+const registerFile = `-- name: RegisterFile :one
+INSERT
+INTO file
+  (uuid, accessibility, creator, created, filename, mimetype, size)
+VALUES 
+  ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id
 `
 
-type RegisterFilesParams struct {
+type RegisterFileParams struct {
+	Uuid          string
 	Accessibility int32
 	Creator       int32
 	Created       pgtype.Timestamptz
-	Uuids         []string
+	Filename      string
+	Mimetype      string
+	Size          int64
 }
 
-func (q *Queries) RegisterFiles(ctx context.Context, arg RegisterFilesParams) ([]int32, error) {
-	row := q.db.QueryRow(ctx, registerFiles,
+func (q *Queries) RegisterFile(ctx context.Context, arg RegisterFileParams) (int32, error) {
+	row := q.db.QueryRow(ctx, registerFile,
+		arg.Uuid,
 		arg.Accessibility,
 		arg.Creator,
 		arg.Created,
-		arg.Uuids,
+		arg.Filename,
+		arg.Mimetype,
+		arg.Size,
 	)
-	var ids []int32
-	err := row.Scan(&ids)
-	return ids, err
+	var id int32
+	err := row.Scan(&id)
+	return id, err
 }

@@ -237,6 +237,7 @@ body {
 
 .b-container {
     max-width: $mobilethreshold;
+    width: 100%;
     margin: auto;
 }
 
@@ -676,6 +677,7 @@ mark.hl {
 
 .file-container {
     max-width: 800px;
+    margin: auto;
 }
 
 .dark-on-hover:hover {
@@ -686,15 +688,41 @@ mark.hl {
     max-width: 100%;
 }
 
-.user-image {
+.user-image, .user-video, .user-audio, .user-pdf {
     max-width: 100%;
 }
 
-.user-file-accessibility {
+.user-pdf {
+    height: 600px;
+}
+
+.user-metadata {
     font-weight: normal;
+}
+
+.file-container {
+    margin: auto;
 }
 
 .card-gripper {
     align-self: center;
     color: $slightdark;
+}
+
+.editor-container {
+    max-width: 99%;
+    margin: auto;
+    height: 100%;
+    color: $dark;
+    height: calc(100% - 1em); 
+    border: 1px solid $slightdark;
+    background: $light;
+}
+
+.form-switch > input[type="checkbox"] {
+    border-radius: 1em;
+}
+
+.cdx-notifies {
+    color: $dark;
 }

@@ -57,11 +57,13 @@ const (
 	CapDebug Capability = 21
 	// CapUploadFile is a Capability of type UploadFile.
 	CapUploadFile Capability = 22
+	// CapEditWiki is a Capability of type EditWiki.
+	CapEditWiki Capability = 23
 )
 
 var ErrInvalidCapability = errors.New("not a valid Capability")
 
-const _CapabilityName = "ViewAllActivePatientsViewAllFormerPatientsViewAllHomesViewAllUsersViewCalendarSearchSetOwnPreferencesCheckInPatientManageOwnPatientsManageAllPatientsManageOwnHomesManageAllHomesCreatePatientJournalManageSpeciesManageUsersDeleteUsersViewAdminToolsViewGDriveSettingsInviteToGDriveInviteToBinoUseImportToolDebugUploadFile"
+const _CapabilityName = "ViewAllActivePatientsViewAllFormerPatientsViewAllHomesViewAllUsersViewCalendarSearchSetOwnPreferencesCheckInPatientManageOwnPatientsManageAllPatientsManageOwnHomesManageAllHomesCreatePatientJournalManageSpeciesManageUsersDeleteUsersViewAdminToolsViewGDriveSettingsInviteToGDriveInviteToBinoUseImportToolDebugUploadFileEditWiki"
 
 var _CapabilityMap = map[Capability]string{
 	CapViewAllActivePatients: _CapabilityName[0:21],
@@ -87,6 +89,7 @@ var _CapabilityMap = map[Capability]string{
 	CapUseImportTool:         _CapabilityName[290:303],
 	CapDebug:                 _CapabilityName[303:308],
 	CapUploadFile:            _CapabilityName[308:318],
+	CapEditWiki:              _CapabilityName[318:326],
 }
 
 // String implements the Stringer interface.
@@ -128,6 +131,7 @@ var _CapabilityValue = map[string]Capability{
 	_CapabilityName[290:303]: CapUseImportTool,
 	_CapabilityName[303:308]: CapDebug,
 	_CapabilityName[308:318]: CapUploadFile,
+	_CapabilityName[318:326]: CapEditWiki,
 }
 
 // ParseCapability attempts to convert a string to a Capability.

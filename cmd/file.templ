@@ -11,6 +11,7 @@ templ FileUploadPage(data *CommonData, files []FileView) {
         @Head(data)
         <link href="https://unpkg.com/filepond@^4/dist/filepond.css" rel="stylesheet" />
         <link href="https://unpkg.com/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.css" rel="stylesheet" />
+        <link href="https://unpkg.com/filepond-plugin-image-edit/dist/filepond-plugin-image-edit.css" rel="stylesheet"/>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.5/css/lightbox.min.css" />
         <link
     href="https://unpkg.com/filepond-plugin-image-edit/dist/filepond-plugin-image-edit.css"
@@ -39,6 +40,7 @@ templ FileUploadPage(data *CommonData, files []FileView) {
     <script src="https://unpkg.com/filepond-plugin-image-crop/dist/filepond-plugin-image-crop.js"></script>
     <script src="https://unpkg.com/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.js"></script>
     <script src="https://unpkg.com/filepond-plugin-image-transform/dist/filepond-plugin-image-transform.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-file-validate-size/dist/filepond-plugin-file-validate-size.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.5/js/lightbox.min.js"></script>
     <script src="https://unpkg.com/filepond@^4/dist/filepond.js"></script>
@@ -59,6 +61,7 @@ templ FileUploader(data *CommonData, url string) {
             data-max-files="10"
         >
         <button
+            disabled
             type="submit"
             class="btn btn-success w-100"
             id="general-file-submit"
@@ -71,7 +74,10 @@ templ (file *FileView) Component(data *CommonData) {
         <div class="card-header d-flex justify-content-between">
             <div>
                 <div class="user-file-name">{file.OriginalFileName}</div>
-                <div class="user-file-accessibility small">{data.User.Language.FileAccessibility[file.Accessibility]}</div>
+                <div class="user-metadata d-flex gap-2">
+                    <div class="user-file-accessibility small bg-gradient p-1 border border-black border-1 rounded-2">{data.User.Language.FileAccessibility[file.Accessibility]}</div>
+                    <div class="user-file-size small bg-gradient p-1 border border-black border-1 rounded-2">{file.FileSizeText()}</div>
+                </div>
             </div>
             @SingleButtonForm(
                 fmt.Sprintf("/file/%d/delete", file.ID),

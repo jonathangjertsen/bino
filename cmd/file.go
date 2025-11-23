@@ -2,13 +2,12 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
-	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -25,19 +24,11 @@ type FileAccessibility int32
 func (server *Server) fileHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	name, err := server.getPathValue(r, "name")
+	id, err := server.getPathID(r, "id")
 	if err != nil {
 		ajaxError(w, r, err, http.StatusNotFound)
 		return
 	}
-	ext := filepath.Ext(name)
-	idStr := strings.TrimSuffix(name, ext)
-	id64, err := strconv.ParseInt(idStr, 10, 32)
-	if err != nil {
-		ajaxError(w, r, err, http.StatusNotFound)
-		return
-	}
-	id := int32(id64)
 
 	file, err := server.Queries.GetFileByID(ctx, id)
 	if err != nil {
@@ -107,25 +98,36 @@ func (server *Server) filepondSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if result := server.FileBackend.Commit(ctx, uuids); result.Error != nil {
-		data.Error(data.User.Language.GenericFailed, err)
+	result := server.FileBackend.Commit(ctx, uuids)
+	if result.Error != nil {
+		data.Error(data.User.Language.GenericFailed, result.Error)
 		server.redirect(w, r, "/file")
 		return
 	}
 
-	ids, err := server.Queries.RegisterFiles(ctx, RegisterFilesParams{
-		Uuids:         uuids,
-		Creator:       data.User.AppuserID,
-		Created:       pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		Accessibility: int32(FileAccessibilityInternal),
-	})
-	if err != nil {
-		data.Error(data.User.Language.GenericFailed, err)
+	if err := server.Transaction(ctx, func(ctx context.Context, q *Queries) error {
+		errs := []error{}
+		for uuid, fileInfo := range result.Commited {
+			_, err := server.Queries.RegisterFile(ctx, RegisterFileParams{
+				Uuid:          uuid,
+				Creator:       data.User.AppuserID,
+				Created:       pgtype.Timestamptz{Time: time.Now(), Valid: true},
+				Accessibility: int32(FileAccessibilityInternal),
+				Filename:      fileInfo.FileName,
+				Mimetype:      fileInfo.MIMEType,
+				Size:          fileInfo.Size,
+			})
+			if err != nil {
+				errs = append(errs, fmt.Errorf("committing %s: %w"))
+				data.Error(data.User.Language.GenericFailed, err)
+			}
+		}
+		return errors.Join(errs...)
+	}); err != nil {
+		data.Error(data.User.Language.GenericFailed, result.Error)
 		server.redirect(w, r, "/file")
 		return
 	}
-
-	data.Success(data.User.Language.TODO(fmt.Sprintf("uploaded %d images", len(ids))))
 
 	server.redirect(w, r, "/file")
 }

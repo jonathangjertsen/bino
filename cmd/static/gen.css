@@ -11858,6 +11858,7 @@ body {
 
 .b-container {
   max-width: 1000px;
+  width: 100%;
   margin: auto;
 }
 
@@ -12303,6 +12304,7 @@ mark.hl {
 
 .file-container {
   max-width: 800px;
+  margin: auto;
 }
 
 .dark-on-hover:hover {
@@ -12313,17 +12315,43 @@ mark.hl {
   max-width: 100%;
 }
 
-.user-image {
+.user-image, .user-video, .user-audio, .user-pdf {
   max-width: 100%;
 }
 
-.user-file-accessibility {
+.user-pdf {
+  height: 600px;
+}
+
+.user-metadata {
   font-weight: normal;
+}
+
+.file-container {
+  margin: auto;
 }
 
 .card-gripper {
   align-self: center;
   color: rgb(126.75, 127.125, 141.875);
+}
+
+.editor-container {
+  max-width: 99%;
+  margin: auto;
+  height: 100%;
+  color: rgb(60, 60, 80);
+  height: calc(100% - 1em);
+  border: 1px solid rgb(126.75, 127.125, 141.875);
+  background: rgb(238, 239, 245);
+}
+
+.form-switch > input[type=checkbox] {
+  border-radius: 1em;
+}
+
+.cdx-notifies {
+  color: rgb(60, 60, 80);
 }
 
 /*# sourceMappingURL=gen.css.map */

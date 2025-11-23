@@ -1,0 +1,32 @@
+package main
+
+templ EditorPage(data *CommonData) {
+    <!doctype html>
+    <html lang="en">
+    <head>
+        @Head(data)
+    </head>
+    <body data-lang={templ.JSONString(data.User.Language)}>
+        @Body(data) {
+            <div class={"main b-container"}>
+                <div class="card editor-container shadow-lg">
+                    <div class="card-header d-flex justify-content-between">
+                        <div class="editor-document-name">Test</div>
+                        <div class="editor-edit-toggle form-check form-switch p-1">
+                            <input class="form-check-input" type="checkbox" role="switch" id="editor-edit-toggler" autocomplete="off">
+                            <label class="form-check-label" for="flexSwitchCheckDefault">Rediger</label>
+                        </div>
+                    </div>
+                    <div id="editorjs" class="card-content">
+                    </div>
+                </div>
+            </div>
+        }
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/list@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/header@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/simple-image@latest"></script>
+    <script src={data.StaticFile("editor.js")}></script>
+    </body>
+    </html>
+}

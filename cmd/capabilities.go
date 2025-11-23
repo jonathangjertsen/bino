@@ -27,6 +27,7 @@ import "slices"
 // UseImportTool,
 // Debug,
 // UploadFile,
+// EditWiki,
 // )
 type Capability int32
 
@@ -51,6 +52,7 @@ var RequiredAccessLevel = map[Capability]AccessLevel{
 	CapManageAllHomes: AccessLevelCoordinator,
 	CapManageSpecies:  AccessLevelCoordinator,
 	CapUseImportTool:  AccessLevelCoordinator,
+	CapEditWiki:       AccessLevelCoordinator,
 
 	CapManageUsers:    AccessLevelAdmin,
 	CapDeleteUsers:    AccessLevelAdmin,
